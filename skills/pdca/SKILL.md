@@ -23,6 +23,7 @@ agents:
   iterate: bkit:pdca-iterator
   report: bkit:report-generator
   team: bkit:cto-lead
+  pm: bkit:pm-lead
   default: null
 allowed-tools:
   - Read
@@ -57,6 +58,7 @@ task-template: "[PDCA] {feature}"
 
 | Argument | Description | Example |
 |----------|-------------|---------|
+| `pm [feature]` | Run PM Agent Team analysis (pre-Plan) | `/pdca pm user-auth` |
 | `plan [feature]` | Create Plan document | `/pdca plan user-auth` |
 | `design [feature]` | Create Design document | `/pdca design user-auth` |
 | `do [feature]` | Do phase guide (start implementation) | `/pdca do user-auth` |
@@ -73,8 +75,35 @@ task-template: "[PDCA] {feature}"
 
 ## Action Details
 
+### pm (PM Analysis Phase)
+
+Run PM Agent Team for product discovery and strategy analysis before Plan phase.
+
+1. **Call pm-lead Agent** (orchestrates 4 sub-agents)
+2. pm-lead runs Phase 1: Context Collection (project info, git history)
+3. pm-lead runs Phase 2: Parallel Analysis (3 agents simultaneously)
+   - pm-discovery: Opportunity Solution Tree (Teresa Torres)
+   - pm-strategy: Value Proposition (JTBD 6-Part) + Lean Canvas
+   - pm-research: 3 Personas + 5 Competitors + TAM/SAM/SOM
+4. pm-lead runs Phase 3: PRD Synthesis via pm-prd agent
+   - Beachhead Segment (Geoffrey Moore) + GTM Strategy
+   - 8-section PRD generation
+5. Output PRD to `docs/00-pm/{feature}.prd.md`
+6. Create Task: `[PM] {feature}`
+7. Update .bkit-memory.json: phase = "pm"
+8. Guide user to next step: `/pdca plan {feature}`
+
+**Output Path**: `docs/00-pm/{feature}.prd.md`
+
+**Requirements**:
+- Agent Teams enabled: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+- Project level: Dynamic or Enterprise (Starter not supported)
+
 ### plan (Plan Phase)
 
+0. **PRD Auto-Reference**: Check if `docs/00-pm/{feature}.prd.md` exists
+   - If found: Read PRD and use as context for Plan document (improves quality significantly)
+   - If not found: Proceed normally (tip: run `/pdca pm {feature}` first for better results)
 1. Check if `docs/01-plan/features/{feature}.plan.md` exists
 2. If not, create based on `plan.template.md`
 3. If exists, display content and suggest modifications
@@ -322,7 +351,8 @@ Iteration: 2/5
 **Phase Guide**:
 | Current | Next | Suggestion |
 |---------|------|------------|
-| None | plan | `/pdca plan [feature]` |
+| None | pm | `/pdca pm [feature]` (recommended) or `/pdca plan [feature]` |
+| pm | plan | `/pdca plan [feature]` (PRD auto-referenced) |
 | plan | design | `/pdca design [feature]` |
 | design | do | Implementation start guide |
 | do | check | `/pdca analyze [feature]` |
@@ -349,6 +379,8 @@ Each PDCA phase automatically integrates with Task System:
 ```
 Task Creation Pattern:
 ┌────────────────────────────────────────┐
+│ [PM] {feature}                         │
+│   ↓ (optional, pre-Plan)               │
 │ [Plan] {feature}                       │
 │   ↓ (blockedBy)                        │
 │ [Design] {feature}                     │
@@ -371,6 +403,7 @@ Task Creation Pattern:
 
 | Action | Agent | Role |
 |--------|-------|------|
+| pm | pm-lead | Orchestrate PM Agent Team (4 sub-agents) |
 | analyze | gap-detector | Compare Design vs Implementation |
 | iterate | pdca-iterator | Auto code fix and re-verification |
 | report | report-generator | Generate completion report |
@@ -378,6 +411,9 @@ Task Creation Pattern:
 ## Usage Examples
 
 ```bash
+# Run PM analysis (recommended before planning)
+/pdca pm user-authentication
+
 # Start new feature
 /pdca plan user-authentication
 
@@ -459,6 +495,7 @@ Auto-suggest related action when detecting these keywords:
 
 | Keyword | Suggested Action |
 |---------|------------------|
+| "pm", "product discovery", "PRD", "market analysis" | pm |
 | "plan", "planning", "roadmap" | plan |
 | "design", "architecture", "spec" | design |
 | "implement", "develop", "build" | do |
