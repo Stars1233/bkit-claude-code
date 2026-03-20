@@ -8,7 +8,7 @@
  * Converted from: scripts/phase4-api-stop.sh
  */
 
-const { outputAllow } = require('../lib/common.js');
+const { outputAllow } = require('../lib/core/hook-io');
 
 // Output guidance for next steps after API phase
 const message = `🎯 API Phase completed.

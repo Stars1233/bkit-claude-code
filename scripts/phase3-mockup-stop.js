@@ -8,7 +8,9 @@
  * v1.4.0: Pipeline Phase automation
  */
 
-const { outputAllow, checkPhaseDeliverables, loadPdcaStatus } = require('../lib/common.js');
+const { outputAllow } = require('../lib/core/hook-io');
+const { checkPhaseDeliverables } = require('../lib/pdca/phase');
+const { loadPdcaStatus } = require('../lib/pdca/status');
 
 // Check if Phase 3 deliverables are complete
 const deliverables = checkPhaseDeliverables(3);

@@ -14,7 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { PROJECT_DIR } = require('../lib/common.js');
+const { PROJECT_DIR } = require('../lib/core/platform');
 const { resolveDocPaths, getArchivePath } = require('../lib/core/paths');
 const { deleteFeatureFromStatus, updatePdcaStatus, archiveFeatureToSummary } = require('../lib/pdca/status');
 

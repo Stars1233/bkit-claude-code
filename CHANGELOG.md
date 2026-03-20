@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-03-20
+
+### Added — AI Native Development OS
+- **Workflow Automation Engine**: Declarative PDCA state machine (20 transitions, 9 guards, 15 actions), YAML workflow DSL with 3 presets (default, hotfix, enterprise), Do phase detection (3-layer), Full-Auto Do (Design→code generation), parallel feature management (max 3), circuit breaker, resume system
+- **Controllable AI (L0-L4)**: 5-level automation controller with 10 gate configs, destructive operation detector (8 rules, G-001~G-008), blast radius analyzer (6 rules), checkpoint manager (SHA-256 integrity), loop breaker (4 rules), trust engine (5-component scoring), scope limiter
+- **Visualization UX**: CLI dashboard with progress bar, workflow map, agent panel, impact view, control panel, ANSI styling library with NO_COLOR support
+- **Architecture Refactoring**: constants.js (33 constants), errors.js (BkitError with 7 domains), state-store.js (atomic writes with file locking), hook-io.js (lightweight Hook I/O), backup-scheduler.js, session-start.js split into 5 startup modules
+- **CC Feature Integration**: 6 new hook scripts (SessionEnd, PostToolUseFailure, InstructionsLoaded, ConfigChange, PermissionRequest, Notification)
+- **MCP Servers**: bkit-pdca-server (10 tools + 3 resources), bkit-analysis-server (6 tools)
+- **New Skills**: `/control` (automation level), `/audit` (decision transparency), `/rollback` (checkpoint management), `/pdca-batch` (parallel features)
+- **Comprehensive Test Suite**: 2,717 TC across 10 categories (99.6% pass rate, 0 failures), 2 new categories (Architecture Tests, Controllable AI Tests)
+
+### Changed
+- Skills: 31 → 36 (+5: control, audit, rollback, pdca-batch, btw)
+- Agents: 29 → 31 (+2: pdca-eval-design, pm-lead-skill-patch)
+- Hook Events: 12 → 18 (+6 new events)
+- Lib Modules: 36 → 76 (+40 new modules across 10 subdirectories)
+- Hook Scripts: 49 → 21 (consolidated with unified handlers)
+- Exports: 210 → ~465 (+255 new functions)
+- Test Cases: 1,151 → 2,645+ (+1,494)
+
+### Removed
+- `lib/skill-loader.js` (795 LOC) — orphaned, never imported
+- `lib/skill-quality-reporter.js` (479 LOC) — orphaned, never imported
+- `docs/github-stats-bkit-gemini.md` — separate repository stats
+- Gemini CLI references from script comments (Claude Code exclusive since v1.5.0)
+- `common.js` usage in hooks/scripts (57 scripts migrated to direct imports)
+
+### Architecture
+- 7 new lib domains: `lib/audit/`, `lib/control/`, `lib/ui/`, `lib/pdca/` (expanded), `lib/core/` (expanded)
+- State management: `.bkit/state/`, `.bkit/runtime/`, `.bkit/snapshots/`
+- YAML workflows: `.bkit/workflows/` (3 presets)
+- MCP servers: `servers/bkit-pdca-server/`, `servers/bkit-analysis-server/`
+
 ## [1.6.2] - 2026-03-18
 
 ### Added

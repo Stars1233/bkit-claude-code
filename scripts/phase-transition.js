@@ -12,13 +12,9 @@
  *   node phase-transition.js 4 --auto  # Auto-advance from phase 4 to 5
  */
 
-const {
-  outputAllow,
-  loadPdcaStatus,
-  savePdcaStatus,
-  checkPhaseDeliverables,
-  validatePdcaTransition
-} = require('../lib/common.js');
+const { outputAllow } = require('../lib/core/hook-io');
+const { loadPdcaStatus, savePdcaStatus } = require('../lib/pdca/status');
+const { checkPhaseDeliverables, validatePdcaTransition } = require('../lib/pdca/phase');
 
 // Phase definitions with level-specific applicability
 const PHASES = {

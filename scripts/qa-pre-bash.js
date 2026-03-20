@@ -8,7 +8,7 @@
  * Converted from: scripts/qa-pre-bash.sh
  */
 
-const { readStdinSync, parseHookInput, outputAllow, outputBlock } = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputBlock } = require('../lib/core/hook-io');
 
 // Read input from stdin
 const input = readStdinSync();

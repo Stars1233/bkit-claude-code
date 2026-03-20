@@ -7,14 +7,9 @@
  * - qa-monitor: qa-monitor-post.js
  */
 
-const {
-  readStdinSync,
-  parseHookInput,
-  debugLog,
-  getActiveSkill,
-  getActiveAgent,
-  outputAllow
-} = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { getActiveSkill, getActiveAgent } = require('../lib/task/context');
 
 // ============================================================
 // Handler: qa-monitor-post (Bash)
@@ -72,6 +67,34 @@ debugLog('UnifiedBashPost', 'Context', { activeSkill, activeAgent });
 if (activeAgent === 'qa-monitor') {
   handleQaMonitorBashPost(input);
 }
+
+// v2.0.0: Audit logging for bash commands
+try {
+  const toolInput = input.tool_input || {};
+  const command = toolInput.command || '';
+  const audit = require('../lib/audit/audit-logger');
+  audit.writeAuditLog({
+    actor: 'system', actorId: 'unified-bash-post',
+    action: 'command_executed',
+    category: 'bash',
+    target: command.substring(0, 200), targetType: 'command',
+    result: 'success', destructiveOperation: false
+  });
+} catch (_) {}
+
+// v2.0.0: Loop detection for repeated commands
+try {
+  const toolInput = input.tool_input || {};
+  const command = toolInput.command || '';
+  const lb = require('../lib/control/loop-breaker');
+  lb.recordAction('bash_command', command.substring(0, 100));
+  const loopCheck = lb.checkLoop();
+  if (loopCheck.detected) {
+    debugLog('UnifiedBashPost', 'Loop detected in bash commands', {
+      command: command.substring(0, 100), details: loopCheck
+    });
+  }
+} catch (_) {}
 
 // Output allow (PostToolUse doesn't block)
 outputAllow('', 'PostToolUse');

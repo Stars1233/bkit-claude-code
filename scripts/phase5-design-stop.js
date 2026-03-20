@@ -11,13 +11,8 @@
 
 const path = require('path');
 
-let common = null;
-function getCommon() {
-  if (!common) {
-    common = require('../lib/common.js');
-  }
-  return common;
-}
+const { debugLog } = require('../lib/core/debug');
+const { readBkitMemory, writeBkitMemory } = require('../lib/pdca/status');
 
 /**
  * Generate phase completion message
@@ -66,17 +61,15 @@ function formatOutput(result) {
  * Main execution
  */
 async function main() {
-  const lib = getCommon();
-
   try {
-    lib.debugLog('Phase5Stop', 'Design System phase completed');
+    debugLog('Phase5Stop', 'Design System phase completed');
 
     const result = generatePhaseCompletion();
 
     console.log(formatOutput(result));
 
     // Update pipeline status
-    const memory = lib.readBkitMemory();
+    const memory = readBkitMemory();
     if (memory) {
       if (!memory.pipelineStatus) {
         memory.pipelineStatus = {};
@@ -88,11 +81,11 @@ async function main() {
       if (!memory.pipelineStatus.completedPhases.includes(5)) {
         memory.pipelineStatus.completedPhases.push(5);
       }
-      lib.writeBkitMemory(memory);
+      writeBkitMemory(memory);
     }
 
   } catch (e) {
-    lib.debugLog('Phase5Stop', 'Error', { error: e.message });
+    debugLog('Phase5Stop', 'Error', { error: e.message });
     console.log(JSON.stringify({ status: 'error', error: e.message }));
   }
 }

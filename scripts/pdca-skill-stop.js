@@ -13,22 +13,13 @@
 const fs = require('fs');
 const path = require('path');
 
-// Import common utilities
+// Direct module imports
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getBkitConfig } = require('../lib/core/config');
+const { getPdcaStatusFull, updatePdcaStatus, extractFeatureFromContext } = require('../lib/pdca/status');
 const {
-  readStdinSync,
-  debugLog,
-  getPdcaStatusFull,
-  updatePdcaStatus,
-  extractFeatureFromContext,
   emitUserPrompt,
-  getBkitConfig,
-  outputAllow,
-  // v1.4.4 FR-06: Phase transition and task creation
-  autoCreatePdcaTask,
-  updatePdcaTaskStatus,
-  // v1.4.7 FR-01: Task Chain auto generation
-  createPdcaTaskChain,
-  getTaskChainStatus,
   // v1.4.7 Full-Auto Mode
   isFullAutoMode,
   shouldAutoAdvance,
@@ -37,9 +28,11 @@ const {
   // v1.5.9: Executive Summary + AskUserQuestion
   buildNextActionQuestion,
   formatAskUserQuestion,
-  generateExecutiveSummary,
-  formatExecutiveSummary,
-} = require('../lib/common.js');
+} = require('../lib/pdca/automation');
+const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/pdca/executive-summary');
+// v1.4.4 FR-06: Phase transition and task creation
+const { autoCreatePdcaTask, createPdcaTaskChain, getTaskChainStatus } = require('../lib/task/creator');
+const { updatePdcaTaskStatus } = require('../lib/task/tracker');
 
 // ============================================================
 // v1.4.4 FR-06: PDCA Phase Transition Map

@@ -14,30 +14,33 @@
  * Converted from: scripts/iterator-stop.sh
  */
 
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getBkitConfig } = require('../lib/core/config');
 const {
-  readStdinSync,
-  outputAllow,
-  generateTaskGuidance,
-  debugLog,
   updatePdcaStatus,
   extractFeatureFromContext,
   getPdcaStatusFull,
   getFeatureStatus,
   completePdcaFeature,
-  // v1.4.0 Automation Functions
+} = require('../lib/pdca/status');
+// v1.4.0 Automation Functions
+const {
   emitUserPrompt,
-  getBkitConfig,
   autoAdvancePdcaPhase,
-  // v1.4.4 FR-07: Task Status Update
-  updatePdcaTaskStatus,
-  // v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
-  triggerNextPdcaAction,
-  savePdcaTaskId,
   // v1.4.7 Full-Auto Mode
   isFullAutoMode,
   shouldAutoAdvance,
-  getAutomationLevel
-} = require('../lib/common.js');
+  getAutomationLevel,
+} = require('../lib/pdca/automation');
+const { generateTaskGuidance } = require('../lib/task/creator');
+// v1.4.4 FR-07: Task Status Update
+// v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
+const {
+  updatePdcaTaskStatus,
+  triggerNextPdcaAction,
+  savePdcaTaskId,
+} = require('../lib/task/tracker');
 
 // Log execution start
 debugLog('Agent:pdca-iterator:Stop', 'Hook started');
@@ -219,7 +222,7 @@ let autoCreatedTasks = [];
 let autoTrigger = null;
 
 try {
-  const { autoCreatePdcaTask } = require('../lib/common.js');
+  const { autoCreatePdcaTask } = require('../lib/task/creator');
 
   // v1.4.4 FR-07: Update Act Task status
   if (feature) {
@@ -346,6 +349,25 @@ const response = {
         ? `- **Re-analyze** → Run /pdca-analyze ${feature || ''}\n- **Continue fixing** → Provide guidance\n- **Complete** → Run /pdca-report`
         : `- **Re-analyze** → Run /pdca-analyze ${feature || ''}\n- **Continue iterating** → Run /pdca-iterate ${feature || ''}\n- **Complete** → Run /pdca-report`)
 };
+
+// v2.0.0: State machine integration
+try {
+  const sm = require('../lib/pdca/state-machine');
+  const smCtx = sm.loadContext(feature) || sm.createContext(feature || 'unknown');
+  sm.transition('act', 'ANALYZE_DONE', smCtx);
+} catch (_) {}
+
+// v2.0.0: Regression guard auto-rule generation
+try {
+  const rg = require('../lib/quality/regression-guard');
+  rg.addRulesFromIteratorResult({
+    feature: feature || 'unknown',
+    iteration: currentIteration,
+    matchRate,
+    status,
+    changedFiles
+  }, feature || 'unknown');
+} catch (_) {}
 
 console.log(JSON.stringify(response));
 process.exit(0);

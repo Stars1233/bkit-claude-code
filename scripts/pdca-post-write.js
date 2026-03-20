@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 /**
- * pdca-post-write.js - Guide next steps after Write operation (v1.4.0)
- * Supports: Claude Code (PostToolUse), Gemini CLI (AfterTool)
+ * pdca-post-write.js - Guide next steps after Write operation (v2.0.0)
  *
  * Purpose: Suggest gap analysis after source file modifications
- * Hook: PostToolUse (Claude Code) / AfterTool (Gemini CLI)
+ * Hook: PostToolUse (Claude Code)
  *
  * v1.4.0 Changes:
  * - Added debug logging for hook verification
@@ -14,17 +13,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  parseHookInput,
-  isSourceFile,
-  extractFeature,
-  outputAllow,
-  outputEmpty,
-  generateTaskGuidance,
-  debugLog,
-  PROJECT_DIR
-} = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputEmpty } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { isSourceFile, extractFeature } = require('../lib/core/file');
+const { generateTaskGuidance } = require('../lib/task/creator');
+const { PROJECT_DIR } = require('../lib/core/platform');
 
 // ============================================================
 // v1.4.4: Main Logic (exported for unified handler usage)

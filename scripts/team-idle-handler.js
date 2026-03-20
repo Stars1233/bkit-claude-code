@@ -8,12 +8,9 @@
  * 3. If all tasks complete, guide to team cleanup
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
 
 let teamModule = null;
 try {

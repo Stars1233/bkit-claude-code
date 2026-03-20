@@ -8,13 +8,9 @@
  * 3. Team 정리 안내 메시지 출력
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-  addPdcaHistory,
-} = require('../lib/common.js');
+const { outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull, addPdcaHistory } = require('../lib/pdca/status');
 
 function run(context) {
   debugLog('TeamStop', 'Team cleanup started');

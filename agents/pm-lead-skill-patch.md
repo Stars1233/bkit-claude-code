@@ -7,6 +7,7 @@ description: |
 model: sonnet
 effort: medium
 maxTurns: 20
+memory: project
 tools:
   - Read
   - Glob

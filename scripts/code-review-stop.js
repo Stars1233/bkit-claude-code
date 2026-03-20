@@ -7,23 +7,15 @@
  * @version 1.6.0
  */
 
-const path = require('path');
-
-// Load common utilities
-let common;
-try {
-  common = require(path.join(__dirname, '..', 'lib', 'common.js'));
-} catch (e) {
-  console.error('[code-review-stop] Failed to load common.js:', e.message);
-  process.exit(0);
-}
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
 
 async function main() {
   try {
-    common.debugLog('CodeReviewStop', 'Hook triggered');
+    debugLog('CodeReviewStop', 'Hook triggered');
 
     // Get current PDCA status
-    const pdcaStatus = common.getPdcaStatusFull();
+    const pdcaStatus = getPdcaStatusFull();
     const currentFeature = pdcaStatus?.currentFeature;
     const currentPhase = pdcaStatus?.features?.[currentFeature]?.phase;
 
@@ -69,7 +61,7 @@ Review discovered issues and proceed with necessary fixes.
     console.log(suggestion);
 
   } catch (error) {
-    common.debugLog('CodeReviewStop', 'Error in hook', { error: error.message });
+    debugLog('CodeReviewStop', 'Error in hook', { error: error.message });
   }
 }
 

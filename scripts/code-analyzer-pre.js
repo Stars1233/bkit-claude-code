@@ -8,7 +8,7 @@
  * Created for: v1.4.2 PreToolUse hooks improvement (Design Doc Section 5)
  */
 
-const { outputBlock } = require('../lib/common.js');
+const { outputBlock } = require('../lib/core/hook-io');
 
 // Code analyzer agent is read-only - block all write/edit operations
 outputBlock('Code analyzer agent is read-only and cannot modify files');

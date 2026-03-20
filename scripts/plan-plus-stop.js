@@ -10,19 +10,12 @@
  * @module scripts/plan-plus-stop
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  getPdcaStatusFull,
-  updatePdcaStatus,
-  extractFeatureFromContext,
-  buildNextActionQuestion,
-  formatAskUserQuestion,
-  generateExecutiveSummary,
-  formatExecutiveSummary,
-  outputAllow,
-  createPdcaTaskChain,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull, updatePdcaStatus, extractFeatureFromContext } = require('../lib/pdca/status');
+const { buildNextActionQuestion, formatAskUserQuestion } = require('../lib/pdca/automation');
+const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/pdca/executive-summary');
+const { createPdcaTaskChain } = require('../lib/task/creator');
 
 debugLog('Skill:plan-plus:Stop', 'Hook started');
 

@@ -9,18 +9,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  debugLog,
-  detectNewFeatureIntent,
-  matchImplicitAgentTrigger,
-  matchImplicitSkillTrigger,
-  calculateAmbiguityScore,
-  outputAllow,
-  outputEmpty,
-  truncateContext,
-  PLUGIN_ROOT
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow, outputEmpty, truncateContext } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { PLUGIN_ROOT } = require('../lib/core/platform');
+const { detectNewFeatureIntent, matchImplicitAgentTrigger, matchImplicitSkillTrigger } = require('../lib/intent/trigger');
+const { calculateAmbiguityScore } = require('../lib/intent/ambiguity');
 
 // v1.4.2: Import Resolver (FR-02)
 let importResolver;

@@ -14,31 +14,34 @@
  * Converted from: scripts/gap-detector-stop.sh
  */
 
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getBkitConfig } = require('../lib/core/config');
 const {
-  readStdinSync,
-  outputAllow,
-  generateTaskGuidance,
-  debugLog,
   updatePdcaStatus,
   extractFeatureFromContext,
   getPdcaStatusFull,
-  // v1.4.0 Automation Functions
+} = require('../lib/pdca/status');
+// v1.4.0 Automation Functions
+const {
   emitUserPrompt,
-  getBkitConfig,
   autoAdvancePdcaPhase,
-  // v1.4.0 P2: Requirement Fulfillment Integration
-  extractRequirementsFromPlan,
-  calculateRequirementFulfillment,
-  // v1.4.4 FR-07: Task Status Update
-  updatePdcaTaskStatus,
-  // v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
-  triggerNextPdcaAction,
-  savePdcaTaskId,
   // v1.4.7 Full-Auto Mode
   isFullAutoMode,
   shouldAutoAdvance,
-  getAutomationLevel
-} = require('../lib/common.js');
+  getAutomationLevel,
+} = require('../lib/pdca/automation');
+// v1.4.0 P2: Requirement Fulfillment Integration (stubs - not yet implemented)
+const extractRequirementsFromPlan = () => null;
+const calculateRequirementFulfillment = () => null;
+const { generateTaskGuidance } = require('../lib/task/creator');
+// v1.4.4 FR-07: Task Status Update
+// v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
+const {
+  updatePdcaTaskStatus,
+  triggerNextPdcaAction,
+  savePdcaTaskId,
+} = require('../lib/task/tracker');
 
 // Log execution start
 debugLog('Agent:gap-detector:Stop', 'Hook started');
@@ -378,7 +381,7 @@ const phaseAdvance = autoAdvancePdcaPhase(feature, 'check', { matchRate });
 // v1.4.4 FR-06/FR-07: Auto-create PDCA Tasks and Update Task Status
 let autoCreatedTasks = [];
 try {
-  const { autoCreatePdcaTask } = require('../lib/common.js');
+  const { autoCreatePdcaTask } = require('../lib/task/creator');
 
   // v1.4.4 FR-07: Update Check Task status
   if (feature) {
@@ -509,6 +512,36 @@ const response = {
       ? `- **Generate report** → Run /pdca-report ${feature || ''}\n- **/simplify code cleanup** → Run /simplify then generate report\n- **Continue improving** → Run /pdca-iterate ${feature || ''}\n- **Later** → Keep current state`
       : `- **Auto-improve** → Run /pdca-iterate ${feature || ''}\n- **Manual fix** → Provide guidance\n- **Complete as-is** → Run /pdca-report with warning`)
 };
+
+// v2.0.0: State machine integration
+try {
+  const sm = require('../lib/pdca/state-machine');
+  const smCtx = sm.loadContext(feature) || sm.createContext(feature || 'unknown');
+  if (matchRate >= threshold) {
+    sm.transition('check', 'MATCH_PASS', { ...smCtx, matchRate });
+  } else {
+    sm.transition('check', 'ITERATE', { ...smCtx, matchRate });
+  }
+} catch (_) {}
+
+// v2.0.0: Metrics collection
+try {
+  const mc = require('../lib/quality/metrics-collector');
+  mc.collectMetric('M1', feature || 'unknown', matchRate, 'gap-detector');
+} catch (_) {}
+
+// v2.0.0: Audit logging
+try {
+  const audit = require('../lib/audit/audit-logger');
+  audit.writeAuditLog({
+    actor: 'agent', actorId: 'gap-detector',
+    action: matchRate >= threshold ? 'gate_passed' : 'gate_failed',
+    category: 'quality',
+    target: feature || 'unknown', targetType: 'feature',
+    details: { matchRate, threshold },
+    result: matchRate >= threshold ? 'success' : 'failure'
+  });
+} catch (_) {}
 
 console.log(JSON.stringify(response));
 process.exit(0);

@@ -22,6 +22,8 @@ maxTurns: 15
 imports:
   - ${PLUGIN_ROOT}/templates/shared/error-handling-patterns.md
 permissionMode: acceptEdits
+disallowedTools:
+  - Agent
 memory: project
 hooks:
   Stop:
