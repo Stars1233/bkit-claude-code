@@ -10,13 +10,9 @@
  * @module scripts/notification-handler
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  getPdcaStatusFull,
-  outputAllow,
-  outputEmpty,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow, outputEmpty } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
 
 let input;
 try {

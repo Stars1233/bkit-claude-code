@@ -18,11 +18,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  debugLog,
-  getPdcaStatusFull,
-} = require('../lib/common.js');
+const { readStdinSync } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
 
 let input;
 try {

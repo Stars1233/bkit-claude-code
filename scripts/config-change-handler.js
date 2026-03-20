@@ -11,11 +11,8 @@
  */
 
 const fs = require('fs');
-const {
-  readStdinSync,
-  debugLog,
-  outputEmpty,
-} = require('../lib/common.js');
+const { readStdinSync, outputEmpty } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
 
 // Dangerous config patterns that should be flagged
 const DANGEROUS_PATTERNS = [

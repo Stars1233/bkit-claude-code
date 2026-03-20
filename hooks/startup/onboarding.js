@@ -6,14 +6,12 @@
  */
 
 const fs = require('fs');
-const {
-  detectLevel,
-  debugLog,
-  getPdcaStatusFull,
-  emitUserPrompt,
-  calculateAmbiguityScore,
-  getBkitConfig,
-} = require('../../lib/common.js');
+const { detectLevel } = require('../../lib/pdca/level');
+const { debugLog } = require('../../lib/core/debug');
+const { getPdcaStatusFull } = require('../../lib/pdca/status');
+const { emitUserPrompt } = require('../../lib/pdca/automation');
+const { calculateAmbiguityScore } = require('../../lib/intent/ambiguity');
+const { getBkitConfig } = require('../../lib/core/config');
 
 /**
  * Detect current PDCA phase from status file

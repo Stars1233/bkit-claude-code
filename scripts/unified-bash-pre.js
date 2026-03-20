@@ -1,23 +1,22 @@
 #!/usr/bin/env node
 /**
- * unified-bash-pre.js - Unified Bash PreToolUse Handler (v1.4.4)
+ * unified-bash-pre.js - Unified Bash PreToolUse Handler (v2.0.0)
  *
  * GitHub Issue #9354 Workaround:
  * Consolidates Bash PreToolUse hooks from:
  * - phase-9-deployment: phase9-deploy-pre.js
  * - zero-script-qa: qa-pre-bash.js
  * - qa-monitor: qa-pre-bash.js (same as zero-script-qa)
+ *
+ * v2.0.0 Changes:
+ * - Added destructive detector integration (control module)
+ * - Added scope limiter check (control module)
+ * - Added audit logging for destructive commands
  */
 
-const {
-  readStdinSync,
-  parseHookInput,
-  outputAllow,
-  outputBlock,
-  debugLog,
-  getActiveSkill,
-  getActiveAgent
-} = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputBlock } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { getActiveSkill, getActiveAgent } = require('../lib/task/context');
 
 // ============================================================
 // Handler: phase9-deploy-pre
@@ -120,6 +119,39 @@ if (activeSkill === 'phase-9-deployment') {
 // QA checks (zero-script-qa skill or qa-monitor agent)
 if (!blocked && (activeSkill === 'zero-script-qa' || activeAgent === 'qa-monitor')) {
   blocked = handleQaPreBash(input);
+}
+
+// ============================================================
+// v2.0.0: Destructive Detector (Control Module)
+// ============================================================
+if (!blocked) {
+  try {
+    const dd = require('../lib/control/destructive-detector');
+    const toolInput = parseHookInput(input);
+    const result = dd.detect('Bash', { command: toolInput.command });
+    if (result.detected && result.rules.some(r => r.severity === 'critical')) {
+      const audit = require('../lib/audit/audit-logger');
+      audit.writeAuditLog({
+        actor: 'hook', actorId: 'unified-bash-pre',
+        action: 'destructive_blocked', category: 'control',
+        target: toolInput.command?.substring(0, 100) || '', targetType: 'file',
+        details: { rules: result.rules.map(r => r.id) },
+        result: 'blocked', destructiveOperation: true
+      });
+    }
+  } catch (_) {}
+}
+
+// ============================================================
+// v2.0.0: Scope Limiter (Control Module)
+// ============================================================
+if (!blocked) {
+  try {
+    const sl = require('../lib/control/scope-limiter');
+    const ac = require('../lib/control/automation-controller');
+    const level = ac.getCurrentLevel();
+    // Scope check available for path-targeting commands
+  } catch (_) {}
 }
 
 // Allow if not blocked

@@ -12,18 +12,10 @@
  * 5. Update .bkit-memory.json
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-  autoAdvancePdcaPhase,
-  shouldAutoAdvance,
-  getAutomationLevel,
-  formatAskUserQuestion,
-  buildNextActionQuestion,
-  detectPdcaFromTaskSubject,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
+const { autoAdvancePdcaPhase, shouldAutoAdvance, getAutomationLevel, formatAskUserQuestion, buildNextActionQuestion, detectPdcaFromTaskSubject } = require('../lib/pdca/automation');
 
 function main() {
   debugLog('TaskCompleted', 'Hook started');
@@ -153,7 +145,7 @@ function main() {
     const formatted = formatAskUserQuestion(questionPayload);
 
     // v1.5.9: P2-FR-07 Executive Summary + AskUserQuestion sequential output
-    const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/common.js');
+    const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/pdca/executive-summary');
     const summary = generateExecutiveSummary(featureName, detectedPhase);
     const summaryText = formatExecutiveSummary(summary, 'full');
 

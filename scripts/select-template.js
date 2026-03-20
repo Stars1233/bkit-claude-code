@@ -10,7 +10,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { detectLevel, PROJECT_DIR, PLUGIN_ROOT } = require('../lib/common.js');
+const { detectLevel } = require('../lib/pdca/level');
+const { PROJECT_DIR, PLUGIN_ROOT } = require('../lib/core/platform');
 
 // Parse arguments
 const args = process.argv.slice(2);

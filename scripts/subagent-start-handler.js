@@ -10,12 +10,9 @@
  * Design Reference: docs/02-design/features/team-visibility.design.md Section 5.1
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
 
 function main() {
   debugLog('SubagentStart', 'Hook started');

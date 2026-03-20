@@ -10,11 +10,8 @@
  * Design Reference: docs/02-design/features/team-visibility.design.md Section 5.2
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
 
 function main() {
   debugLog('SubagentStop', 'Hook started');

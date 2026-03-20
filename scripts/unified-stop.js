@@ -8,15 +8,44 @@
  */
 
 const path = require('path');
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-  getActiveSkill,
-  getActiveAgent,
-  clearActiveContext
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
+const { getActiveSkill, getActiveAgent, clearActiveContext } = require('../lib/task/context');
+
+// ============================================================
+// v2.0.0 Lazy Module Loaders
+// ============================================================
+
+let _stateMachine = null;
+function getStateMachine() {
+  if (!_stateMachine) try { _stateMachine = require('../lib/pdca/state-machine'); } catch (_) {}
+  return _stateMachine;
+}
+
+let _checkpointManager = null;
+function getCheckpointManager() {
+  if (!_checkpointManager) try { _checkpointManager = require('../lib/control/checkpoint-manager'); } catch (_) {}
+  return _checkpointManager;
+}
+
+let _auditLogger = null;
+function getAuditLogger() {
+  if (!_auditLogger) try { _auditLogger = require('../lib/audit/audit-logger'); } catch (_) {}
+  return _auditLogger;
+}
+
+let _gateManager = null;
+function getGateManager() {
+  if (!_gateManager) try { _gateManager = require('../lib/quality/gate-manager'); } catch (_) {}
+  return _gateManager;
+}
+
+let _metricsCollector = null;
+function getMetricsCollector() {
+  if (!_metricsCollector) try { _metricsCollector = require('../lib/quality/metrics-collector'); } catch (_) {}
+  return _metricsCollector;
+}
 
 // ============================================================
 // Handler Registry
@@ -226,6 +255,90 @@ if (!handled && activeSkill && SKILL_HANDLERS[activeSkill]) {
   } else {
     handled = executeHandler(SKILL_HANDLERS[activeSkill], hookContext);
   }
+}
+
+// ============================================================
+// v2.0.0 Module Integrations
+// ============================================================
+
+// Extract PDCA context for v2.0.0 modules
+const pdcaStatus = getPdcaStatusFull();
+const feature = pdcaStatus?.feature || pdcaStatus?.session?.feature || null;
+const currentPhase = pdcaStatus?.currentPhase || pdcaStatus?.session?.currentPhase || null;
+const nextPhase = pdcaStatus?.session?.nextPhase || null;
+const matchRate = pdcaStatus?.session?.matchRate || null;
+const level = pdcaStatus?.projectLevel || null;
+const agentName = activeAgent || activeSkill || null;
+
+// v2.0.0: Checkpoint creation before phase transitions
+if (feature && currentPhase && nextPhase) {
+  try {
+    const cp = getCheckpointManager();
+    if (cp) {
+      cp.createCheckpoint(feature, currentPhase, 'phase_transition', `${currentPhase} → ${nextPhase}`);
+      debugLog('UnifiedStop', 'v2.0.0 checkpoint created', { feature, currentPhase, nextPhase });
+    }
+  } catch (_) {}
+}
+
+// v2.0.0: Quality gate check when transitioning from check phase
+if (feature && currentPhase && currentPhase.toLowerCase() === 'check') {
+  try {
+    const gates = getGateManager();
+    const metrics = getMetricsCollector();
+    if (gates && metrics) {
+      const currentMetrics = metrics.readCurrentMetrics(feature);
+      if (currentMetrics) {
+        const gateResult = gates.checkGate('check', {
+          feature,
+          projectLevel: level || 'Dynamic',
+          automationLevel: 2,
+          metrics: currentMetrics
+        });
+        debugLog('UnifiedStop', 'v2.0.0 quality gate check', { feature, passed: gateResult?.passed, phase: 'check' });
+      }
+    }
+  } catch (_) {}
+}
+
+// v2.0.0: State machine transition after handler execution
+if (feature && currentPhase) {
+  try {
+    const sm = getStateMachine();
+    if (sm) {
+      const ctx = sm.createContext(feature);
+      sm.transition(currentPhase, 'COMPLETE', ctx);
+      debugLog('UnifiedStop', 'v2.0.0 state machine transition', { feature, currentPhase, event: 'COMPLETE' });
+    }
+  } catch (_) {}
+}
+
+// v2.0.0: Audit logging for stop events
+if (handled || feature) {
+  try {
+    const audit = getAuditLogger();
+    if (audit) {
+      audit.writeAuditLog({
+        actor: 'system',
+        actorId: agentName || 'unified-stop',
+        action: feature && nextPhase ? 'phase_transition' : 'stop_event',
+        category: 'pdca',
+        target: feature || activeSkill || activeAgent || 'unknown',
+        targetType: 'feature',
+        details: {
+          from: currentPhase,
+          to: nextPhase,
+          matchRate,
+          activeSkill,
+          activeAgent,
+          handled
+        },
+        result: 'success',
+        destructiveOperation: false
+      });
+      debugLog('UnifiedStop', 'v2.0.0 audit log written', { action: feature && nextPhase ? 'phase_transition' : 'stop_event' });
+    }
+  } catch (_) {}
 }
 
 // Clear active context after stop

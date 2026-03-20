@@ -10,17 +10,12 @@
  */
 
 const path = require('path');
+const { debugLog } = require('../lib/core/debug');
+const { setActiveSkill } = require('../lib/task/context');
+const { getPdcaStatusFull, updatePdcaStatus } = require('../lib/pdca/status');
 
 // Lazy load modules
-let common = null;
 let orchestrator = null;
-
-function getCommon() {
-  if (!common) {
-    common = require('../lib/common.js');
-  }
-  return common;
-}
 
 function getOrchestrator() {
   if (!orchestrator) {
@@ -143,7 +138,6 @@ function generateJsonOutput(suggestions, skillName) {
  * Main execution
  */
 async function main() {
-  const lib = getCommon();
   const orch = getOrchestrator();
 
   try {
@@ -164,7 +158,7 @@ async function main() {
         hookContext = JSON.parse(input);
       }
     } catch (e) {
-      lib.debugLog('SkillPost', 'Failed to parse hook input', { error: e.message });
+      debugLog('SkillPost', 'Failed to parse hook input', { error: e.message });
     }
 
     // Extract skill info from tool_input
@@ -172,16 +166,16 @@ async function main() {
     const { skillName, args } = parseSkillInvocation(toolInput);
 
     if (!skillName) {
-      lib.debugLog('SkillPost', 'No skill name found in context');
+      debugLog('SkillPost', 'No skill name found in context');
       console.log(JSON.stringify({ status: 'skip', reason: 'no skill name' }));
       return;
     }
 
-    lib.debugLog('SkillPost', 'Processing skill post-execution', { skillName, args });
+    debugLog('SkillPost', 'Processing skill post-execution', { skillName, args });
 
     // v1.4.4: Set active skill for unified hooks (GitHub #9354 workaround)
-    lib.setActiveSkill(skillName);
-    lib.debugLog('SkillPost', 'Active skill set for unified hooks', { skillName });
+    setActiveSkill(skillName);
+    debugLog('SkillPost', 'Active skill set for unified hooks', { skillName });
 
     // Get orchestration result
     const result = await orch.orchestrateSkillPost(skillName, {}, { args });
@@ -192,21 +186,53 @@ async function main() {
     output.status = 'success';
     console.log(JSON.stringify(output, null, 2));
 
+    // v2.0.0: Audit logging for skill execution
+    try {
+      const audit = require('../lib/audit/audit-logger');
+      audit.writeAuditLog({
+        actor: 'system', actorId: 'skill-post',
+        action: 'skill_executed',
+        category: 'skill',
+        target: skillName, targetType: 'skill',
+        result: 'success', destructiveOperation: false
+      });
+    } catch (_) {}
+
+    // v2.0.0: Decision tracing when skills make PDCA phase decisions
+    try {
+      const skillCfg = orch.getSkillConfig(skillName);
+      if (skillCfg && skillCfg['pdca-phase']) {
+        const dt = require('../lib/audit/decision-tracer');
+        const feature = args.feature || getPdcaStatusFull()?.currentFeature || '';
+        dt.recordDecision({
+          feature,
+          phase: skillCfg['pdca-phase'],
+          decisionType: 'phase_transition',
+          question: `Skill ${skillName} completed - advance PDCA phase?`,
+          chosenOption: `Advance to ${skillCfg['pdca-phase']}`,
+          rationale: `Skill ${skillName} maps to pdca-phase ${skillCfg['pdca-phase']}`,
+          confidence: 0.9,
+          impact: 'medium',
+          affectedFiles: [],
+          reversible: true
+        });
+      }
+    } catch (_) {}
+
     // Update PDCA status if skill has pdca-phase
     const skillConfig = orch.getSkillConfig(skillName);
     if (skillConfig && skillConfig['pdca-phase']) {
       const phase = skillConfig['pdca-phase'];
-      const feature = args.feature || lib.getPdcaStatusFull()?.currentFeature;
+      const feature = args.feature || getPdcaStatusFull()?.currentFeature;
 
       if (feature) {
-        lib.updatePdcaStatus(phase, feature);
-        lib.debugLog('SkillPost', 'PDCA status updated', { phase, feature });
+        updatePdcaStatus(phase, feature);
+        debugLog('SkillPost', 'PDCA status updated', { phase, feature });
       }
     }
 
   } catch (e) {
-    const lib = getCommon();
-    lib.debugLog('SkillPost', 'Error in post-execution', { error: e.message });
+    debugLog('SkillPost', 'Error in post-execution', { error: e.message });
     console.log(JSON.stringify({
       status: 'error',
       error: e.message

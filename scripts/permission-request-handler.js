@@ -14,11 +14,9 @@
  * @module scripts/permission-request-handler
  */
 
-const {
-  readStdinSync,
-  debugLog,
-  getAutomationLevel,
-} = require('../lib/common.js');
+const { readStdinSync } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { getAutomationLevel } = require('../lib/pdca/automation');
 
 // Safe bash command patterns (prefix match)
 const SAFE_BASH_PREFIXES = [

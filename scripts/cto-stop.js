@@ -8,12 +8,9 @@
  * 3. Add CTO session end to PDCA history
  */
 
-const {
-  debugLog,
-  outputAllow,
-  getPdcaStatusFull,
-  addPdcaHistory,
-} = require('../lib/common.js');
+const { debugLog } = require('../lib/core/debug');
+const { outputAllow } = require('../lib/core/hook-io');
+const { getPdcaStatusFull, addPdcaHistory } = require('../lib/pdca/status');
 
 function run(context) {
   debugLog('CTOStop', 'CTO session cleanup started');
@@ -55,6 +52,19 @@ function run(context) {
       debugLog('CTOStop', 'Agent state cleanup failed (non-fatal)', { error: e.message });
     }
   }
+
+  // v2.0.0: Audit logging
+  try {
+    const audit = require('../lib/audit/audit-logger');
+    audit.writeAuditLog({
+      actor: 'agent', actorId: 'cto-lead',
+      action: 'session_ended',
+      category: 'lifecycle',
+      target: feature || 'unknown', targetType: 'feature',
+      details: { phase: pdcaStatus.features?.[feature]?.phase },
+      result: 'success'
+    });
+  } catch (_) {}
 
   outputAllow('CTO session ended. Team state saved for next session.', 'CTOStop');
   debugLog('CTOStop', 'CTO session cleanup completed');

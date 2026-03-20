@@ -8,7 +8,7 @@
  * Converted from: scripts/gap-detector-post.sh
  */
 
-const { readStdinSync, parseHookInput, outputAllow, outputEmpty } = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputEmpty } = require('../lib/core/hook-io');
 
 // Read input from stdin
 const input = readStdinSync();

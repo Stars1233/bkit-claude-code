@@ -2,15 +2,17 @@
 /**
  * bkit Vibecoding Kit - SessionStart Hook (v2.0.0)
  *
- * Thin orchestrator that delegates to 5 startup modules:
+ * Thin orchestrator that delegates to 6 startup modules:
  *   1. migration   - Legacy path migration (docs/ → .bkit/)
  *   2. restore     - PLUGIN_DATA backup restoration
- *   3. contextInit - Context Hierarchy, Memory Store, Import Resolver, Fork cleanup
+ *   3. contextInit - Context Hierarchy, Memory Store, Import Resolver, Fork cleanup, ensureBkitDirs
  *   4. onboarding  - Onboarding message generation, env vars, trigger table
  *   5. sessionCtx  - additionalContext string building for hook output
+ *   6. dashboard   - PDCA progress bar rendering (prepended to additionalContext)
  */
 
-const { BKIT_PLATFORM, debugLog } = require('../lib/common.js');
+const { BKIT_PLATFORM } = require('../lib/core/platform');
+const { debugLog } = require('../lib/core/debug');
 
 // Log session start
 debugLog('SessionStart', 'Hook executed', {
@@ -58,6 +60,21 @@ try {
   additionalContext = sessionContext.build(null, onboardingContext);
 } catch (e) {
   debugLog('SessionStart', 'Session context module failed', { error: e.message });
+}
+
+// --- 6. PDCA Dashboard: Render progress bar into additionalContext ---
+try {
+  const { renderPdcaProgressBar } = require('../lib/ui/progress-bar');
+  const { getPdcaStatusFull } = require('../lib/pdca/status');
+  const pdcaStatus = getPdcaStatusFull();
+  if (pdcaStatus && pdcaStatus.primaryFeature) {
+    const dashboardBar = renderPdcaProgressBar(pdcaStatus, { compact: false });
+    if (dashboardBar) {
+      additionalContext = dashboardBar + '\n\n' + additionalContext;
+    }
+  }
+} catch (e) {
+  debugLog('SessionStart', 'PDCA dashboard rendering failed', { error: e.message });
 }
 
 // --- Output Response ---

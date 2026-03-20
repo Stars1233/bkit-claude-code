@@ -6,7 +6,7 @@
  */
 
 const fs = require('fs');
-const { debugLog } = require('../../lib/common.js');
+const { debugLog } = require('../../lib/core/debug');
 
 /**
  * Run legacy path migration.

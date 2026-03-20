@@ -5,7 +5,7 @@
  * and backup integrity verification.
  */
 
-const { debugLog } = require('../../lib/common.js');
+const { debugLog } = require('../../lib/core/debug');
 
 /**
  * Run PLUGIN_DATA restore.

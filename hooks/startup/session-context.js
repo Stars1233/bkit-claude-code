@@ -8,11 +8,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  detectLevel,
-  debugLog,
-  getPdcaStatusFull,
-} = require('../../lib/common.js');
+const { detectLevel } = require('../../lib/pdca/level');
+const { debugLog } = require('../../lib/core/debug');
+const { getPdcaStatusFull } = require('../../lib/pdca/status');
 
 /**
  * Build onboarding context section.

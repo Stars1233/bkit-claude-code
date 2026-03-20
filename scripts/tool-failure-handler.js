@@ -12,12 +12,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  debugLog,
-  outputAllow,
-  outputEmpty,
-} = require('../lib/common.js');
+const { readStdinSync, outputAllow, outputEmpty } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
 
 let input;
 try {

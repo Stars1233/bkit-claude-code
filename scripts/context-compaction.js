@@ -9,13 +9,10 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  debugLog,
-  getPdcaStatusFull,
-  PROJECT_DIR,
-  outputEmpty
-} = require('../lib/common.js');
+const { readStdinSync, outputEmpty } = require('../lib/core/io');
+const { debugLog } = require('../lib/core/debug');
+const { getPdcaStatusFull } = require('../lib/pdca/status');
+const { PROJECT_DIR } = require('../lib/core/platform');
 
 // Read compaction event from stdin
 let input;

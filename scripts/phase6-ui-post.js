@@ -8,7 +8,8 @@
  * Converted from: scripts/phase6-ui-post.sh
  */
 
-const { readStdinSync, parseHookInput, isUiFile, outputAllow, outputEmpty } = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputEmpty } = require('../lib/core/hook-io');
+const { isUiFile } = require('../lib/core/file');
 
 // Read input from stdin
 const input = readStdinSync();

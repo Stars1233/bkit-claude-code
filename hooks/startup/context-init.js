@@ -7,14 +7,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  BKIT_PLATFORM,
-  detectLevel,
-  debugLog,
-  initPdcaStatusIfNotExists,
-  getPdcaStatusFull,
-  getBkitConfig,
-} = require('../../lib/common.js');
+const { BKIT_PLATFORM } = require('../../lib/core/platform');
+const { detectLevel } = require('../../lib/pdca/level');
+const { debugLog } = require('../../lib/core/debug');
+const { initPdcaStatusIfNotExists, getPdcaStatusFull } = require('../../lib/pdca/status');
+const { getBkitConfig } = require('../../lib/core/config');
 
 // Lazy-load optional modules with graceful fallback
 function safeRequire(modulePath) {
@@ -38,8 +35,23 @@ function run(_input) {
   const importResolver = safeRequire('../../lib/import-resolver.js');
   const contextFork = safeRequire('../../lib/context-fork.js');
 
+  // v2.0.0: Ensure all bkit directories exist (audit/, checkpoints/, decisions/, workflows/, etc.)
+  try {
+    const { ensureBkitDirs } = require('../../lib/core/paths');
+    ensureBkitDirs();
+  } catch (e) {
+    debugLog('SessionStart', 'ensureBkitDirs failed', { error: e.message });
+  }
+
   // Initialize PDCA status file if not exists
   initPdcaStatusIfNotExists();
+
+  // v2.0.0: Trigger pdca-status auto-migration (v2 → v3 schema) if needed
+  try {
+    getPdcaStatusFull();
+  } catch (e) {
+    debugLog('SessionStart', 'PDCA status migration check failed', { error: e.message });
+  }
 
   // Context Hierarchy initialization (FR-01)
   if (contextHierarchy) {

@@ -14,17 +14,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const {
-  readStdinSync,
-  parseHookInput,
-  isSourceFile,
-  extractFeature,
-  outputAllow,
-  outputEmpty,
-  generateTaskGuidance,
-  debugLog,
-  PROJECT_DIR
-} = require('../lib/common.js');
+const { readStdinSync, parseHookInput, outputAllow, outputEmpty } = require('../lib/core/hook-io');
+const { debugLog } = require('../lib/core/debug');
+const { isSourceFile, extractFeature } = require('../lib/core/file');
+const { generateTaskGuidance } = require('../lib/task/creator');
+const { PROJECT_DIR } = require('../lib/core/platform');
 
 // ============================================================
 // v1.4.4: Main Logic (exported for unified handler usage)
