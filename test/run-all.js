@@ -3,7 +3,7 @@
 
 /**
  * bkit v2.0.0 Comprehensive Test Runner
- * ~2150 TC across 10 perspectives
+ * ~3100+ TC across 10 perspectives
  *
  * Usage:
  *   node test/run-all.js                    # Run all tests (Node layer only, ~1850 TC)
@@ -79,8 +79,17 @@ const CATEGORIES = {
       'unit/agent-panel.test.js',
       'unit/impact-view.test.js',
       'unit/control-panel.test.js',
+      'unit/core-modules.test.js',
+      'unit/task-modules.test.js',
+      'unit/team-modules.test.js',
+      'unit/pdca-modules.test.js',
+      'unit/root-modules.test.js',
+      'unit/index-modules.test.js',
+      'unit/v200-skills.test.js',
+      'unit/v200-mcp-servers.test.js',
+      'unit/v200-workflows.test.js',
     ],
-    expected: 850,
+    expected: 1120,
   },
   integration: {
     name: 'Integration Tests',
@@ -97,8 +106,11 @@ const CATEGORIES = {
       'integration/control-pipeline.test.js',
       'integration/common-removal.test.js',
       'integration/mcp-server.test.js',
+      'integration/v200-wiring.test.js',
+      'integration/v200-dashboard.test.js',
+      'integration/v200-common-bridge.test.js',
     ],
-    expected: 200,
+    expected: 285,
   },
   security: {
     name: 'Security Tests',
@@ -130,8 +142,10 @@ const CATEGORIES = {
       'regression/skills-35.test.js',
       'regression/agents-29.test.js',
       'regression/status-v3-migration.test.js',
+      'regression/skills-36.test.js',
+      'regression/agents-31.test.js',
     ],
-    expected: 260,
+    expected: 335,
   },
   performance: {
     name: 'Performance Tests',
