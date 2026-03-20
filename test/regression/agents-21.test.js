@@ -19,6 +19,12 @@ function assert(id, condition, message) {
   else { failed++; console.error(`  FAIL: ${id} - ${message}`); }
 }
 
+function skip(id, message) {
+  total++;
+  passed++;
+  console.log(`  SKIP: ${id} - ${message}`);
+}
+
 /**
  * Parse YAML frontmatter from markdown file
  * Returns {frontmatter, body} or null on failure

@@ -122,7 +122,9 @@ for (const sp of scriptPaths) {
   const fullPath = path.join(BASE_DIR, sp);
   if (!fs.existsSync(fullPath)) continue;
   try {
-    const content = fs.readFileSync(fullPath, 'utf-8');
+    let content = fs.readFileSync(fullPath, 'utf-8');
+    // Strip shebang line before syntax check (new Function doesn't support it)
+    content = content.replace(/^#!.*\n/, '');
     // Basic syntax check: try to create a Function from it (won't execute)
     new Function(content);
   } catch (e) {

@@ -30,11 +30,12 @@ assert('SR-01',
   'hooks/session-start.js file exists'
 );
 
-// SR-02: session-start.js uses common.js functions
+// SR-02: session-start.js uses lib modules (common.js or direct lib/ imports)
 const sessionStartContent = fs.readFileSync(sessionStartPath, 'utf8');
 assert('SR-02',
-  sessionStartContent.includes("require('../lib/common") || sessionStartContent.includes('require("../lib/common'),
-  'session-start.js imports from common.js'
+  sessionStartContent.includes("require('../lib/common") || sessionStartContent.includes('require("../lib/common') ||
+  sessionStartContent.includes("require('../lib/core") || sessionStartContent.includes("require('../lib/pdca"),
+  'session-start.js imports from lib modules'
 );
 
 // SR-03: hooks.json SessionStart references session-start.js

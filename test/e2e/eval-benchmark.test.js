@@ -112,7 +112,7 @@ async function runTests() {
     const totalSkills = (results.summary.workflow.total || 0) +
                        (results.summary.capability.total || 0) +
                        (results.summary.hybrid.total || 0);
-    assertEquals(totalSkills, 28, 'Total skill count is 28');
+    assertEquals(totalSkills, 29, 'Total skill count is 29');
     testResults.passed++;
 
     // E2E-006: Passed skill count >= 25
@@ -173,10 +173,10 @@ async function runTests() {
     assertTrue(hybridResults.total >= 1, `Hybrid skills count (${hybridResults.total}) >= 1`);
     testResults.passed++;
 
-    // E2E-015: Sum of classifications = 28
-    console.log('\n[E2E-015] Validate classification count sum = 28');
+    // E2E-015: Sum of classifications = 29
+    console.log('\n[E2E-015] Validate classification count sum = 29');
     const classifyTotal = workflowResults.total + capabilityResults.total + hybridResults.total;
-    assertEquals(classifyTotal, 28, 'Sum of classifications = 28');
+    assertEquals(classifyTotal, 29, 'Sum of classifications = 29');
     testResults.passed++;
 
     // E2E-016: Benchmark performance < 35s

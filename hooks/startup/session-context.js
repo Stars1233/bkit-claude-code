@@ -255,15 +255,19 @@ function buildVersionEnhancementsContext(detectedLevel) {
   ctx += `- 37 consecutive CC compatible releases (v2.1.34~v2.1.71)\n`;
   ctx += `\n`;
 
-  // v1.6.2: CC v2.1.73~v2.1.78
-  ctx += `## v1.6.2 Enhancements (CC v2.1.78 Integration)\n`;
-  ctx += `- CC recommended version: v2.1.78 (PLUGIN_DATA, plugin agent frontmatter, StopFailure hook)\n`;
-  ctx += `- 1M context window default for Opus 4.6 (Max/Team/Enterprise plans, CC v2.1.75+)\n`;
-  ctx += `- Agent frontmatter: effort/maxTurns native support (CC v2.1.78+)\n`;
-  ctx += `- \${CLAUDE_PLUGIN_DATA} persistent backup for state files (ENH-119)\n`;
-  ctx += `- Hook events: 12 in hooks.json (PostCompact, StopFailure added)\n`;
-  ctx += `- Output token: Opus 64K default, 128K upper limit (CC v2.1.77+)\n`;
-  ctx += `- 44 consecutive CC compatible releases (v2.1.34~v2.1.78)\n`;
+  // v2.0.0: Full PDCA automation
+  ctx += `## v2.0.0 Enhancements (AI Native Development OS)\n`;
+  ctx += `- Declarative PDCA state machine (20 transitions, 9 guards)\n`;
+  ctx += `- YAML workflow DSL (3 presets: default, hotfix, enterprise)\n`;
+  ctx += `- L0-L4 controllable AI automation levels\n`;
+  ctx += `- CLI dashboard: progress-bar, workflow-map, control-panel, agent-panel, impact-view\n`;
+  ctx += `- Audit logging + decision tracing for full AI transparency\n`;
+  ctx += `- Quality gates (7 stages) + metrics collector (M1-M10)\n`;
+  ctx += `- Checkpoint/rollback per phase transition\n`;
+  ctx += `- Destructive operation detector (8 rules) + blast radius analysis\n`;
+  ctx += `- MCP servers: bkit-pdca (10 tools) + bkit-analysis (6 tools)\n`;
+  ctx += `- Hook events: 18 in hooks.json (+6 new)\n`;
+  ctx += `- 45 consecutive CC compatible releases (v2.1.34~v2.1.79)\n`;
   ctx += `\n`;
 
   // v1.5.7
@@ -385,7 +389,7 @@ function build(_input, context) {
   const { onboardingData, triggerTable } = context;
   const detectedLevel = detectLevel();
 
-  let additionalContext = `# bkit Vibecoding Kit v1.6.2 - Session Startup\n\n`;
+  let additionalContext = `# bkit Vibecoding Kit v2.0.0 - Session Startup\n\n`;
 
   additionalContext += buildOnboardingContext(onboardingData);
   additionalContext += buildAgentTeamsContext(detectedLevel);

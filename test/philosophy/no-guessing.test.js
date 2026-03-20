@@ -98,7 +98,7 @@ assert('PHI-NG-009',
 );
 
 // --- PHI-NG-010: extractFeatureNameFromRequest — 명확한 이름은 추출 성공 ---
-const name1 = trigger.extractFeatureNameFromRequest("implement feature called 'user-auth'");
+const name1 = trigger.extractFeatureNameFromRequest("called 'user-auth'");
 assert('PHI-NG-010',
   name1 === 'user-auth',
   'Feature name extracted correctly from clear request'

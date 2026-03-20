@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
- * unified-stop.js - Unified Stop Event Handler (v1.5.1)
+ * unified-stop.js - Unified Stop Event Handler (v2.0.0)
  *
  * GitHub Issue #9354 Workaround:
  * ${CLAUDE_PLUGIN_ROOT} doesn't expand in markdown files,
  * so all skill/agent stop hooks are consolidated here.
+ *
+ * v2.0.0: Wired workflow-engine, circuit-breaker, trust-engine,
+ * explanation-generator for full PDCA lifecycle integration.
  */
 
 const path = require('path');
@@ -45,6 +48,36 @@ let _metricsCollector = null;
 function getMetricsCollector() {
   if (!_metricsCollector) try { _metricsCollector = require('../lib/quality/metrics-collector'); } catch (_) {}
   return _metricsCollector;
+}
+
+let _workflowEngine = null;
+function getWorkflowEngine() {
+  if (!_workflowEngine) try { _workflowEngine = require('../lib/pdca/workflow-engine'); } catch (_) {}
+  return _workflowEngine;
+}
+
+let _circuitBreaker = null;
+function getCircuitBreaker() {
+  if (!_circuitBreaker) try { _circuitBreaker = require('../lib/pdca/circuit-breaker'); } catch (_) {}
+  return _circuitBreaker;
+}
+
+let _trustEngine = null;
+function getTrustEngine() {
+  if (!_trustEngine) try { _trustEngine = require('../lib/control/trust-engine'); } catch (_) {}
+  return _trustEngine;
+}
+
+let _explanationGenerator = null;
+function getExplanationGenerator() {
+  if (!_explanationGenerator) try { _explanationGenerator = require('../lib/audit/explanation-generator'); } catch (_) {}
+  return _explanationGenerator;
+}
+
+let _decisionTracer = null;
+function getDecisionTracer() {
+  if (!_decisionTracer) try { _decisionTracer = require('../lib/audit/decision-tracer'); } catch (_) {}
+  return _decisionTracer;
 }
 
 // ============================================================
@@ -302,18 +335,85 @@ if (feature && currentPhase && currentPhase.toLowerCase() === 'check') {
 }
 
 // v2.0.0: State machine transition after handler execution
+let transitionSuccess = false;
 if (feature && currentPhase) {
   try {
     const sm = getStateMachine();
     if (sm) {
       const ctx = sm.createContext(feature);
       sm.transition(currentPhase, 'COMPLETE', ctx);
+      transitionSuccess = true;
       debugLog('UnifiedStop', 'v2.0.0 state machine transition', { feature, currentPhase, event: 'COMPLETE' });
     }
   } catch (_) {}
 }
 
-// v2.0.0: Audit logging for stop events
+// v2.0.0: Workflow-engine advancement after state transitions
+if (feature && currentPhase && transitionSuccess) {
+  try {
+    const wfe = getWorkflowEngine();
+    if (wfe) {
+      const execution = wfe.loadWorkflowState(feature);
+      if (execution && execution.status === 'running') {
+        // Update workflow context with current match rate
+        if (matchRate != null) {
+          execution.context.matchRate = matchRate;
+        }
+        // Load workflow definition to advance
+        const workflowDef = wfe.selectWorkflow(feature, level);
+        if (workflowDef) {
+          const result = wfe.advanceWorkflow(execution, workflowDef);
+          debugLog('UnifiedStop', 'v2.0.0 workflow advanced', {
+            feature,
+            nextPhase: result.nextPhase,
+            action: result.action,
+            completed: result.completed
+          });
+        }
+      }
+    }
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.0.0: Circuit breaker recording based on transition result
+if (feature) {
+  try {
+    const cb = getCircuitBreaker();
+    if (cb) {
+      if (transitionSuccess) {
+        cb.recordSuccess(feature);
+      } else if (currentPhase) {
+        // Only record failure if a transition was attempted but failed
+        cb.recordFailure(feature, 'State machine transition failed');
+      }
+      debugLog('UnifiedStop', 'v2.0.0 circuit breaker updated', {
+        feature,
+        success: transitionSuccess
+      });
+    }
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.0.0: Trust engine event recording for completed transitions
+if (feature && transitionSuccess) {
+  try {
+    const te = getTrustEngine();
+    if (te) {
+      // Record PDCA cycle completion when transitioning to report/completed
+      if (nextPhase === 'report' || nextPhase === 'completed' || nextPhase === 'archived') {
+        te.recordEvent('pdca_complete', { feature, from: currentPhase, to: nextPhase });
+      }
+      // Record gate pass/fail based on quality gate results
+      if (currentPhase && currentPhase.toLowerCase() === 'check') {
+        const gateEventType = matchRate >= 90 ? 'gate_pass' : 'gate_fail';
+        te.recordEvent(gateEventType, { feature, matchRate });
+      }
+      debugLog('UnifiedStop', 'v2.0.0 trust engine event recorded', { feature, currentPhase, nextPhase });
+    }
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.0.0: Audit logging for stop events (with explanation-generator for decision traces)
 if (handled || feature) {
   try {
     const audit = getAuditLogger();
@@ -339,6 +439,22 @@ if (handled || feature) {
       debugLog('UnifiedStop', 'v2.0.0 audit log written', { action: feature && nextPhase ? 'phase_transition' : 'stop_event' });
     }
   } catch (_) {}
+
+  // v2.0.0: Generate human-readable explanation from recent decision traces
+  try {
+    const eg = getExplanationGenerator();
+    const dt = getDecisionTracer();
+    if (eg && dt && feature) {
+      const recentTraces = dt.readDecisions({ feature, limit: 5 });
+      if (recentTraces.length > 0) {
+        const latestTrace = recentTraces[recentTraces.length - 1];
+        const explanation = eg.generateExplanation(latestTrace, 'brief');
+        if (explanation) {
+          debugLog('UnifiedStop', 'v2.0.0 decision explanation generated', { explanation });
+        }
+      }
+    }
+  } catch (_) { /* non-critical */ }
 }
 
 // Clear active context after stop
@@ -361,9 +477,38 @@ if (!handled) {
 // Default output if no handler matched
 if (!handled) {
   debugLog('UnifiedStop', 'No handler matched, using default output');
+
+  // v2.0.0: Include trust score in stop output when control skill is active
+  let trustInfo = '';
+  if (activeSkill === 'control') {
+    try {
+      const te = getTrustEngine();
+      if (te) {
+        const profile = te.loadTrustProfile();
+        const score = te.calculateScore(profile);
+        trustInfo = `\nTrust Score: ${score}/100 (L${profile.currentLevel})`;
+      }
+    } catch (_) { /* non-critical */ }
+  }
+
+  // v2.0.0: Include decision summary in stop output when audit skill is active
+  let auditInfo = '';
+  if (activeSkill === 'audit' && feature) {
+    try {
+      const eg = getExplanationGenerator();
+      const dt = getDecisionTracer();
+      if (eg && dt) {
+        const recentTraces = dt.readDecisions({ feature, limit: 10 });
+        if (recentTraces.length > 0) {
+          auditInfo = '\n' + eg.summarizeDecisionHistory(recentTraces);
+        }
+      }
+    } catch (_) { /* non-critical */ }
+  }
+
   // v1.5.6: Conditionally add /copy tip (when session was a code generation skill)
   const copyTip = activeSkill ? '\nTip: Use /copy to copy code blocks from this session.' : '';
-  outputAllow(`Stop event processed.${copyTip}`, 'Stop');
+  outputAllow(`Stop event processed.${trustInfo}${auditInfo}${copyTip}`, 'Stop');
 }
 
 debugLog('UnifiedStop', 'Hook completed', {
