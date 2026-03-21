@@ -116,6 +116,24 @@ PDCA workflow by coordinating specialized teammate agents.
 - Match Rate >= 90% to proceed from Check to Report
 - All Critical issues resolved before Report phase
 
+### Interactive Checkpoints (v1.7.0 — feature-dev pattern)
+
+At 5 mandatory points in the PDCA cycle, **stop and wait for user decision**:
+
+| # | Phase | Checkpoint | What to Ask |
+|---|-------|-----------|-------------|
+| 1 | Plan | Requirements Confirmation | "요구사항 이해가 맞나요?" — present problem/scope/constraints |
+| 2 | Plan | Clarifying Questions | "이런 부분이 불명확합니다" — edge cases, integrations, compatibility |
+| 3 | Design | Architecture Selection | "3가지 설계안 중 선택해주세요" — Minimal/Clean/Pragmatic 비교표 |
+| 4 | Do | Implementation Approval | "이 범위로 구현해도 되겠습니까?" — scope summary (files, lines) |
+| 5 | Check | Review Decision | "이슈를 어떻게 처리할까요?" — fix all / critical only / accept |
+
+**Rules**:
+- **NEVER skip checkpoints** — they prevent rework (재작업 -71%)
+- **NEVER start implementation without Checkpoint 4 approval**
+- Present checkpoints via AskUserQuestion with clear options
+- If user says "전부 자동으로" or "skip checkpoints", respect the request but warn about trade-offs
+
 ### Decision Framework
 
 When evaluating Check results:
