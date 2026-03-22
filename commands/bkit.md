@@ -28,11 +28,11 @@ Display the following help message:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PDCA (Document-Driven Development)
-  /pdca pm <feature>         PM Agent Team analysis (pre-Plan, v1.6.0)
-  /pdca plan <feature>       Start planning a new feature
-  /pdca design <feature>     Create design document
-  /pdca do <feature>         Implementation guide
-  /pdca analyze <feature>    Gap analysis (design vs implementation)
+  /pdca pm <feature>         PM Agent Team analysis (43 frameworks, v2.0.2)
+  /pdca plan <feature>       Plan with Checkpoints 1-2 (requirements + questions)
+  /pdca design <feature>     Design with Checkpoint 3 (3 architecture options)
+  /pdca do <feature>         Implement with Checkpoint 4 (scope approval)
+  /pdca analyze <feature>    Gap analysis with Checkpoint 5 (fix strategy)
   /pdca iterate <feature>    Auto-improvement iteration
   /pdca report <feature>     Generate completion report
   /pdca archive <feature>    Archive completed PDCA documents
@@ -143,23 +143,25 @@ Output Styles (v1.5.3)
 | qa-strategist | test strategy, QA plan, quality metrics | sonnet | Test strategy, quality metrics coordination |
 | security-architect | security, vulnerability, OWASP | opus | Vulnerability analysis, authentication design review |
 
-#### PM Agent Team (5, v1.6.0)
+#### PM Agent Team (5, v2.0.2 — 43 frameworks)
 
-| Agent | Trigger Keywords | Model | Role |
-|-------|-----------------|-------|------|
-| pm-lead | pm team, product discovery, PM analysis | sonnet | PM Team orchestrator, discovery workflow |
-| pm-discovery | market research, user research | sonnet | Market and user research |
-| pm-strategy | product strategy, positioning | sonnet | Product strategy and positioning |
-| pm-research | competitive analysis, trend research | sonnet | Competitive analysis, data gathering |
-| pm-prd | PRD, product requirements document | sonnet | PRD document generation |
+| Agent | Trigger Keywords | Model | Frameworks |
+|-------|-----------------|-------|------------|
+| pm-lead | pm team, product discovery, PM analysis | sonnet | Team orchestration, 4-phase workflow |
+| pm-discovery | market research, user research | sonnet | OST, Brainstorm, Assumption Risk Assessment |
+| pm-strategy | product strategy, positioning | sonnet | JTBD, Lean Canvas, SWOT, PESTLE, Porter's, Growth Loops |
+| pm-research | competitive analysis, trend research | sonnet | Personas, Competitors, TAM/SAM/SOM, Customer Journey, ICP |
+| pm-prd | PRD, product requirements document | sonnet | PRD v2.0 + Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Battlecards) |
 
-**How to Use PM Agent Team (v1.6.0):**
+Based on [pm-skills](https://github.com/phuryn/pm-skills) by Pawel Huryn (MIT License).
+
+**How to Use PM Agent Team (v2.0.2):**
 ```bash
-# Run PM analysis before planning (recommended)
+# Run PM analysis with 43 frameworks (recommended)
 /pdca pm {feature}
 
-# PM Team produces PRD → docs/00-pm/{feature}.prd.md
-# Then continue with PDCA Plan (PRD auto-referenced)
+# PM Team produces PRD v2.0 → docs/00-pm/{feature}.prd.md
+# Then Plan with Interactive Checkpoints (PRD auto-referenced)
 /pdca plan {feature}
 ```
 
@@ -198,6 +200,17 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 | Output Styles | `/output-style` | Custom response formatting |
 | TaskCompleted Hook | Automatic | Auto-advance PDCA phases on task completion |
 | TeammateIdle Hook | Automatic | Assign work to idle teammates |
+
+### v2.0.2 Features
+
+| Feature | Activation | Description |
+|---------|-----------|-------------|
+| PM Frameworks 43 | `/pdca pm {feature}` | pm-skills MIT integration (9→43 frameworks) |
+| Interactive Checkpoints | Automatic in `/pdca` | 5 AskUserQuestion gates across PDCA phases |
+| Confidence Filtering | Automatic in code-analyzer | Only ≥80% confidence issues reported |
+| 3 Architecture Options | `/pdca design {feature}` | Minimal / Clean / Pragmatic comparison |
+| btw Team Integration | `/btw` in CTO Team | teamContext tracking, phase transition summaries |
+| PRD v2.0 Template | `/pdca pm {feature}` | Execution Deliverables (Pre-mortem, Stories, etc.) |
 
 ### v1.6.0 Features
 

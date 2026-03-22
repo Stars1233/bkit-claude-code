@@ -1,8 +1,8 @@
 # bkit - Vibecoding Kit
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.79+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.0.0-green.svg)](CHANGELOG.md)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.81+-purple.svg)](https://code.claude.com)
+[![Version](https://img.shields.io/badge/Version-2.0.2-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 > **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
@@ -61,7 +61,9 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 
 ![bkit Features](images/bkit-features.png)
 
-- **AI Native Development OS (v2.0.0)** - Declarative PDCA state machine (20 transitions), YAML workflow DSL (3 presets), L0-L4 controllable AI automation, CLI dashboard (progress-bar, workflow-map, control-panel), audit logging + decision tracing, quality gates (7 stages), checkpoint/rollback, destructive operation detector (8 rules), MCP servers (bkit-pdca + bkit-analysis), 2,645+ TC, ~465 exports, 76 lib modules, 36 skills, 31 agents, 18 hook events
+- **PM Skills Integration + Interactive Checkpoints (v2.0.2)** - PM Agent Team expanded from 9→43 frameworks ([pm-skills](https://github.com/phuryn/pm-skills) MIT), PDCA Interactive Checkpoints 1~5 (AskUserQuestion-gated), code-analyzer Confidence-Based Filtering (≥80%), Design phase 3 Architecture Options (Minimal/Clean/Pragmatic), btw CTO Team Integration, pm-prd template v2.0 with Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Growth Loops)
+- **Cross-Project Isolation Fix (v2.0.1)** - PLUGIN_DATA backup/restore project identity guard via meta.json, globalCache project namespace, prevents cross-project PDCA state leakage ([#48](https://github.com/popup-studio-ai/bkit-claude-code/issues/48))
+- **AI Native Development OS (v2.0.0)** - Declarative PDCA state machine (20 transitions), YAML workflow DSL (3 presets), L0-L4 controllable AI automation, CLI dashboard (progress-bar, workflow-map, control-panel), audit logging + decision tracing, quality gates (7 stages), checkpoint/rollback, destructive operation detector (8 rules), MCP servers (bkit-pdca + bkit-analysis), 3,175+ TC, ~465 exports, 76 lib modules, 36 skills, 31 agents, 18 hook events
 - **CC v2.1.78 Full Integration (v1.6.2)** - 14 ENH items (ENH-117~130), PostCompact/StopFailure hooks, ${CLAUDE_PLUGIN_DATA} persistent backup, agent effort/maxTurns, 1M context default, 128K output, 1186 TC (99.7%), 260+ exports, 54 scripts, CC v2.1.78 recommended
 - **CTO Orchestration Redesign + Quality Hardening (v1.6.1)** - Main Session as CTO pattern (CC v2.1.69+ compatibility), P0 bug fixes (4), Config-Code synchronization, 3-Tier Agent Security Model, 1073 TC comprehensive test (99.6% pass), CE Level 5 assessment (88/100), 72 files ~1,400 LOC
 - **Skills 2.0 Complete Integration (v1.6.0)** - 19 ENH items (ENH-85~103), Skill Evals framework with 28 eval definitions, Skill Classification (Workflow/Capability/Hybrid), A/B testing, template-validator, frontmatter hooks migration, context:fork deprecation, PM Agent Team integration
@@ -192,7 +194,7 @@ Skill Evals connect directly to bkit's PDCA workflow:
 
 | Requirement | Minimum Version | Notes |
 |-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.0.0 uses agent frontmatter (effort/maxTurns/disallowedTools), 18 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.79+. |
+| **Claude Code** | **v2.1.78+** | Required. bkit v2.0.2 uses agent frontmatter (effort/maxTurns/disallowedTools), 18 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.81+. |
 | Node.js | v18+ | For hook script execution |
 | Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
 
@@ -340,11 +342,14 @@ git commit -m "feat: customize bkit starter skill"
 /enterprise   # Microservices with K8s (Enterprise level)
 ```
 
-### PDCA Workflow (v2.0.0)
+### PDCA Workflow (v2.0.2)
+
+> **v2.0.2**: Each phase now includes Interactive Checkpoints that pause for user confirmation before proceeding. Plan confirms requirements, Design presents 3 architecture options, Do confirms implementation scope, Check offers fix strategy choices.
+
 ```bash
-/pdca pm {feature}       # PM analysis & PRD generation (pre-Plan)
-/pdca plan {feature}     # Create plan document
-/pdca design {feature}   # Create design document
+/pdca pm {feature}       # PM analysis & PRD generation (43 frameworks)
+/pdca plan {feature}     # Create plan document (Checkpoint 1-2)
+/pdca design {feature}   # Create design document (Checkpoint 3: 3 architecture options)
 /pdca do {feature}       # Implementation guide
 /pdca analyze {feature}  # Run gap analysis
 /pdca iterate {feature}  # Auto-fix with Evaluator-Optimizer pattern
@@ -408,9 +413,14 @@ PM Agent Team runs **before** the Plan phase to produce a comprehensive PRD (Pro
 
 **How it works:**
 1. pm-lead (opus) collects project context and git history
-2. Three agents run in parallel: discovery (Opportunity Solution Tree), strategy (JTBD + Lean Canvas), research (Personas + Competitors + TAM/SAM/SOM)
-3. pm-prd synthesizes all findings into an 8-section PRD at `docs/00-pm/{feature}.prd.md`
+2. Three agents run in parallel with 43 frameworks:
+   - discovery: Opportunity Solution Tree + Brainstorm + Assumption Risk Assessment
+   - strategy: JTBD + Lean Canvas + SWOT + PESTLE + Porter's Five Forces + Growth Loops
+   - research: Personas + Competitors + TAM/SAM/SOM + Customer Journey Map + ICP
+3. pm-prd synthesizes all findings into a PRD with 6 sections + Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Battlecards) at `docs/00-pm/{feature}.prd.md`
 4. Plan phase automatically references the PRD for higher-quality planning
+
+**Frameworks**: Based on [pm-skills](https://github.com/phuryn/pm-skills) by Pawel Huryn (MIT License)
 
 ---
 

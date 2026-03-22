@@ -39,6 +39,10 @@
 > **v1.6.2**: CC v2.1.78 Integration (14 ENH), 12 hook events, 29 agents, 31 skills, 49 scripts, 210 exports, 1186 TC, CC v2.1.78
 >
 > **v2.0.0**: Architecture expansion — 18 hook events, 31 agents, 36 skills, 54 scripts, 260+ exports
+>
+> **v2.0.1**: Cross-project isolation fix — meta.json project identity guard, globalCache namespace (#48)
+>
+> **v2.0.2**: PM Skills Integration — 43 PM frameworks (pm-skills MIT), PDCA Interactive Checkpoints 1~5, code-analyzer Confidence-Based Filtering, Design 3 Architecture Options, btw CTO Team Integration, pm-prd template v2.0
 
 ## Purpose of This Document
 

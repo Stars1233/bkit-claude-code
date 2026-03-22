@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-03-22
+
+### Added — PM Skills Integration + Interactive Checkpoints
+- **PM Frameworks 9→43**: Integrated [pm-skills](https://github.com/phuryn/pm-skills) (MIT License) into PM Agent Team — Brainstorm, SWOT, PESTLE, Porter's Five Forces, Pre-mortem, Growth Loops, Customer Journey Map, ICP, Battlecards, User/Job Stories, Test Scenarios, Stakeholder Map
+- **PDCA Interactive Checkpoints 1~5**: AskUserQuestion-gated confirmation at Plan (requirements + clarifying questions), Design (3 architecture options selection), Do (implementation scope approval), Check (fix strategy choice: all/critical-only/skip)
+- **code-analyzer Confidence-Based Filtering**: Only reports issues with confidence ≥80%, Critical/Important severity classification, filtered count summary
+- **CTO Lead Interactive Checkpoints**: v1.7.0 feature-dev pattern for CTO Team sessions
+- **btw CTO Team Integration**: teamContext field (isTeamSession, phase, role, pattern), Phase Transition Hook, cto-stop.js session summary with btw stats
+- **Design Template Architecture Options**: 3 options comparison table (Option A: Minimal / Option B: Clean / Option C: Pragmatic)
+- **pm-prd Template v2.0**: Section 6 Execution Deliverables (Pre-mortem, User Stories, Job Stories, Test Scenarios, Stakeholder Map), SWOT Analysis, Customer Journey Map, ICP, Battlecards, Growth Loops
+- **Integration Test**: pm-skills-integration.test.js (50 TC, 100% pass)
+
+### Changed
+- `agents/pm-discovery.md`: +167 LOC (Brainstorm, Assumption Risk frameworks)
+- `agents/pm-strategy.md`: +166 LOC (SWOT, PESTLE, Growth Loops)
+- `agents/pm-research.md`: +107 LOC (Customer Journey, ICP)
+- `agents/pm-prd.md`: +165 LOC (Pre-mortem, User/Job Stories, Stakeholder Map)
+- `agents/pm-lead.md`: +33 LOC (team orchestration improvements)
+- `agents/code-analyzer.md`: +19 LOC (Confidence-Based Filtering)
+- `agents/cto-lead.md`: +48 LOC (Interactive Checkpoints)
+- `skills/pdca/SKILL.md`: +48 LOC (Checkpoints 1~5)
+- `skills/btw/SKILL.md`: +42 LOC (CTO Team Integration)
+- `scripts/cto-stop.js`: +37 LOC (btw session summary)
+- `templates/design.template.md`: +21 LOC (Architecture Options)
+- `templates/pm-prd.template.md`: v1.0→v2.0, +136 LOC
+- CC recommended version: v2.1.78+ → v2.1.81+
+- CC compatibility: v2.1.34~v2.1.81 = 47 consecutive compatible releases
+
+## [2.0.1] - 2026-03-21
+
+### Fixed
+- **Cross-Project PDCA State Leakage** ([#48](https://github.com/popup-studio-ai/bkit-claude-code/issues/48)): `restoreFromPluginData()` now validates project identity via `meta.json` before restoring backup, preventing Project A's PDCA state from leaking into Project B
+- `backupToPluginData()`: Writes `meta.json` with `projectDir` identifier on every backup
+- `restoreFromPluginData()`: 5-stage validation guard (meta exists → parseable → has projectDir → realpathSync normalize → match current project)
+- `globalCache`: Cache keys namespaced as `pdca-status:${PROJECT_DIR}` to prevent in-memory pollution across projects
+
+### Added
+- `test/unit/project-isolation.test.js`: 10 new test cases for cross-project restore guard
+- PDCA documents: plan, design, analysis, report for globalcache-project-isolation
+
 ## [2.0.0] - 2026-03-20
 
 ### Added — AI Native Development OS

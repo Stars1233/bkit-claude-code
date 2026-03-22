@@ -97,10 +97,12 @@ Based on research from industry leaders (Addy Osmani, Sapphire Ventures, DevOps.
 
 ### 4. Human Oversight by Design (Controllable AI)
 
-**Principle**: Humans govern AI through progressive trust and 5-level automation control.
+**Principle**: Humans govern AI through progressive trust, 5-level automation control, and interactive checkpoints.
 
-**bkit v2.0.0 Controllable AI**:
+**bkit v2.0.2 Controllable AI**:
 - **L0-L4 automation levels**: Manual → Guided → Semi-Auto → Auto → Full-Auto
+- **Interactive Checkpoints (v2.0.2)**: 5 AskUserQuestion gates — Plan (requirements + questions), Design (3 architecture options), Do (scope approval), Check (fix strategy)
+- **Confidence-Based Analysis (v2.0.2)**: code-analyzer reports only ≥80% confidence issues with Critical/Important severity
 - **Trust Score (0-100)**: Earned through track record, 6 weighted components
 - **Quality Gates (7 stages)**: Configurable thresholds per phase transition
 - **Audit trail**: JSONL logging + decision tracer for full transparency
@@ -224,16 +226,19 @@ code-explorer → code-architect → implementation → code-reviewer → qa-mon
 
 | bkit Feature | Implementation |
 |--------------|----------------|
-| **PDCA Methodology** | Checkpoint at each phase |
-| **Check Phase** | Human verification of AI work |
-| **Act Phase** | Human approval before proceeding |
+| **Interactive Checkpoints (v2.0.2)** | 5 AskUserQuestion gates: requirements, questions, architecture, scope, fix strategy |
+| **PDCA Methodology** | Quality gate at each phase transition |
+| **Confidence-Based Analysis** | code-analyzer reports only ≥80% confidence issues |
 | **Iteration Reports** | Transparent progress documentation |
 
-**Verification Points (v2.0.0 — State Machine + Quality Gates)**:
+**Verification Points (v2.0.2 — State Machine + Quality Gates + Interactive Checkpoints)**:
 ```
-idle → [PM Gate] → Plan → [Plan Gate] → Design → [Design Gate] → Do
-  → [Do Gate] → Check → [Check Gate: ≥90%] → Report → Completed
-                    └──→ [Iterate Gate: <90%] → Act → Check (max 5)
+idle → [PM Gate] → Plan [CP1: Requirements] [CP2: Questions]
+  → [Plan Gate] → Design [CP3: 3 Architecture Options]
+  → [Design Gate] → Do [CP4: Implementation Scope Approval]
+  → [Do Gate] → Check [CP5: Fix Strategy Selection]
+  → [Check Gate: ≥90%] → Report → Completed
+  └──→ [Iterate Gate: <90%] → Act → Check (max 5)
 ```
 
 ### Principle 5: CTO-Led Agent Teams (v1.5.3)
