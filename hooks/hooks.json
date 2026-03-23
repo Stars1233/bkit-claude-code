@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-hooks.json",
-  "description": "bkit Vibecoding Kit v2.0.3 - Claude Code",
+  "description": "bkit Vibecoding Kit v2.0.4 - Claude Code",
   "hooks": {
     "SessionStart": [
       {
@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js\"",
             "timeout": 5000
           }
         ]
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/pre-write.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-write.js\"",
             "timeout": 5000
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/unified-bash-pre.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/unified-bash-pre.js\"",
             "timeout": 5000
           }
         ]
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/unified-write-post.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/unified-write-post.js\"",
             "timeout": 5000
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/unified-bash-post.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/unified-bash-post.js\"",
             "timeout": 5000
           }
         ]
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/skill-post.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-post.js\"",
             "timeout": 5000
           }
         ]
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/unified-stop.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/unified-stop.js\"",
             "timeout": 10000
           }
         ]
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/stop-failure-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop-failure-handler.js\"",
             "timeout": 5000
           }
         ]
@@ -95,7 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/user-prompt-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/user-prompt-handler.js\"",
             "timeout": 3000
           }
         ]
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/context-compaction.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/context-compaction.js\"",
             "timeout": 5000
           }
         ]
@@ -118,7 +118,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/post-compaction.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/post-compaction.js\"",
             "timeout": 5000
           }
         ]
@@ -129,7 +129,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/pdca-task-completed.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pdca-task-completed.js\"",
             "timeout": 5000
           }
         ]
@@ -140,7 +140,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/subagent-start-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/subagent-start-handler.js\"",
             "timeout": 5000
           }
         ]
@@ -151,7 +151,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/subagent-stop-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/subagent-stop-handler.js\"",
             "timeout": 5000
           }
         ]
@@ -162,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/team-idle-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/team-idle-handler.js\"",
             "timeout": 5000
           }
         ]
@@ -173,7 +173,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/session-end-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-end-handler.js\"",
             "timeout": 1500
           }
         ]
@@ -185,7 +185,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/tool-failure-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/tool-failure-handler.js\"",
             "timeout": 5000
           }
         ]
@@ -196,7 +196,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/instructions-loaded-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/instructions-loaded-handler.js\"",
             "timeout": 3000
           }
         ]
@@ -208,7 +208,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/config-change-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/config-change-handler.js\"",
             "timeout": 3000
           }
         ]
@@ -220,7 +220,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/permission-request-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/permission-request-handler.js\"",
             "timeout": 3000
           }
         ]
@@ -232,7 +232,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/notification-handler.js",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/notification-handler.js\"",
             "timeout": 2000
           }
         ]

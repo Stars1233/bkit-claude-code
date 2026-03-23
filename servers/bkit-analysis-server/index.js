@@ -386,7 +386,7 @@ function handleMessage(msg) {
     case 'initialize':
       return jsonRpcOk(id, {
         protocolVersion: '2024-11-05',
-        serverInfo: { name: 'bkit-analysis-server', version: '2.0.3' },
+        serverInfo: { name: 'bkit-analysis-server', version: '2.0.4' },
         capabilities: { tools: {} },
       });
 

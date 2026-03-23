@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * bkit v2.0.3 Comprehensive Test Runner
+ * bkit v2.0.4 Comprehensive Test Runner
  * ~3100+ TC across 10 perspectives
  *
  * Usage:
@@ -126,8 +126,9 @@ const CATEGORIES = {
       'security/checkpoint-integrity.test.js',
       'security/scope-limiter.test.js',
       'security/trust-score-safety.test.js',
+      'security/hook-path-quoting.test.js',
     ],
-    expected: 205,
+    expected: 217,
   },
   regression: {
     name: 'Regression Tests',
@@ -146,8 +147,9 @@ const CATEGORIES = {
       'regression/status-v3-migration.test.js',
       'regression/skills-36.test.js',
       'regression/agents-31.test.js',
+      'regression/issue-53-path-quoting.test.js',
     ],
-    expected: 416,
+    expected: 426,
   },
   performance: {
     name: 'Performance Tests',
@@ -352,7 +354,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log('='.repeat(60));
-  console.log('bkit v2.0.3 Comprehensive Test Runner');
+  console.log('bkit v2.0.4 Comprehensive Test Runner');
   console.log(`Date: ${new Date().toISOString()}`);
   console.log('='.repeat(60));
 

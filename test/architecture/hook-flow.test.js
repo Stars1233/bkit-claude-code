@@ -85,7 +85,7 @@ for (const [eventName, entries] of Object.entries(hooksConfig.hooks)) {
     for (const hook of hooksList) {
       if (hook.command) {
         // Extract script path from command
-        const match = hook.command.match(/node\s+\$\{CLAUDE_PLUGIN_ROOT\}\/([^\s]+)/);
+        const match = hook.command.match(/node\s+"?\$\{CLAUDE_PLUGIN_ROOT\}\/([^\s"]+)"?/);
         if (match) {
           allScripts.push({ event: eventName, script: match[1] });
         }

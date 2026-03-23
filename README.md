@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.81+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.0.3-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.0.4-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 > **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
@@ -194,7 +194,7 @@ Skill Evals connect directly to bkit's PDCA workflow:
 
 | Requirement | Minimum Version | Notes |
 |-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.0.3 uses agent frontmatter (effort/maxTurns/disallowedTools), 18 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.81+. |
+| **Claude Code** | **v2.1.78+** | Required. bkit v2.0.4 uses agent frontmatter (effort/maxTurns/disallowedTools), 18 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.81+. |
 | Node.js | v18+ | For hook script execution |
 | Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
 

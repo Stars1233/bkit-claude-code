@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2026-03-23
+
+### Fixed — Hook Path Quoting for Windows Compatibility
+
+**Critical Bug Fix ([#53](https://github.com/popup-studio-ai/bkit-claude-code/issues/53))**
+- All 18 hook commands in `hooks/hooks.json` now properly quote `${CLAUDE_PLUGIN_ROOT}` paths with double-quotes
+- Fixes bash syntax error when Windows username contains parentheses (e.g., `홍길동(HongGildong)`)
+- Affects: SessionStart, PreToolUse, PostToolUse, Stop, StopFailure, UserPromptSubmit, PreCompact, PostCompact, TaskCompleted, SubagentStart, SubagentStop, TeammateIdle, SessionEnd, PostToolUseFailure, InstructionsLoaded, ConfigChange, PermissionRequest, Notification
+- Before: `node ${CLAUDE_PLUGIN_ROOT}/scripts/foo.js` → syntax error on paths with `(` or `)`
+- After: `node "${CLAUDE_PLUGIN_ROOT}/scripts/foo.js"` → works on all platforms
+
+**Version Alignment**
+- Bumped all version references from 2.0.3 to 2.0.4: plugin.json, bkit.config.json, marketplace.json, evals/config.json, MCP server packages, audit-logger.js, session-start.js, session-context.js, paths.js
+
+### Test Enhancements
+- Added `test/security/hook-path-quoting.test.js`: 12 TCs for path quoting validation
+- Added `test/regression/issue-53-path-quoting.test.js`: 10 TCs for Windows path edge cases
+- Updated test runner expected counts for new TCs
+
 ## [2.0.3] - 2026-03-22
 
 ### Fixed — Documentation & Architecture Sync

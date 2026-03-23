@@ -202,7 +202,7 @@ lib/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                bkit Trigger System (v2.0.3)                      │
+│                bkit Trigger System (v2.0.4)                      │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
@@ -374,7 +374,7 @@ bkit v1.6.0 integrates CC 2.1.0 Skills 2.0 features:
 - `pm-research` — Competitive analysis and data gathering
 - `pm-prd` — PRD document generation
 
-### Component Counts (v2.0.3)
+### Component Counts (v2.0.4)
 
 | Component | Count |
 |-----------|-------|

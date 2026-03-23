@@ -1,6 +1,6 @@
 # Scripts Overview
 
-> 54 Node.js Scripts used by bkit hooks (v2.0.3)
+> 54 Node.js Scripts used by bkit hooks (v2.0.4)
 >
 > **v1.5.0**: Claude Code Exclusive - Gemini CLI support removed, simplified architecture
 > **v1.4.7**: Core Modularization - lib/ split into 4 modules, Task Management Integration
@@ -77,7 +77,7 @@ All scripts are at root level (not in .claude/):
 
 ```
 bkit-claude-code/
-├── lib/                       # Modular Library (v2.0.3, ~580+ exports)
+├── lib/                       # Modular Library (v2.0.4, ~580+ exports)
 │   ├── common.js              # Migration Bridge (re-exports all modules)
 │   ├── core/                  # Core utilities (7 files, 40 exports)
 │   │   ├── index.js           # Entry point
@@ -220,7 +220,7 @@ bkit-claude-code/
 
 > **Note**: pdca-pre-write.js was deprecated and deleted in v1.4.2. Its functionality is integrated into pre-write.js.
 
-## Shared Library: lib/ (v2.0.3)
+## Shared Library: lib/ (v2.0.4)
 
 > **v2.0.3**: 10 subdirectories, 76 modules with ~580+ exports total
 > **v1.6.2**: 5 module directories with 210 exports total
@@ -228,7 +228,7 @@ bkit-claude-code/
 > **v1.4.2**: 6 library modules with 86+ functions total
 > **v1.4.0**: Expanded from 38 to 80+ functions with dual platform support
 
-### Library Modules (v2.0.3)
+### Library Modules (v2.0.4)
 
 | Module | Files | Exports | Purpose |
 |--------|:-----:|:-------:|---------|

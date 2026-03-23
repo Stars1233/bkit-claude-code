@@ -1,6 +1,6 @@
 # Agents Overview
 
-> List of 31 Agents defined in bkit and their roles (v2.0.3)
+> List of 31 Agents defined in bkit and their roles (v2.0.4)
 >
 > **v1.4.1**: Added Context Engineering perspective - Role-based Behavioral Rules Layer
 > **v1.5.0**: Claude Code Exclusive
