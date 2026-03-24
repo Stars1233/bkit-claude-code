@@ -1,0 +1,12 @@
+# Invariants Registry Schema v1.0
+# Critical business rules written by developer (10-20 rules)
+# Location: .bkit/invariants.yaml
+
+version: "1.0"
+invariants:
+  - id: ""            # Unique ID (e.g., "INV-001")
+    rule: ""          # Human-readable rule description
+    files: []         # Source files this rule applies to
+    check: ""         # Logical condition (for documentation)
+    severity: ""      # "critical" (blocks fix) | "warning" (flags only)
+    category: ""      # "business-rule" | "state-machine" | "security" | "performance"

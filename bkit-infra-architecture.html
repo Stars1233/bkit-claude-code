@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bkit Self-Healing CI/CD Architecture with Living Context</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  @page{size:A1 landscape;margin:0}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',-apple-system,sans-serif;background:#080c18;color:#e0e6f0;overflow-x:hidden}
+
+  .header{text-align:center;padding:24px 20px 4px;background:linear-gradient(180deg,#0f1629,#080c18)}
+  .header h1{font-size:22px;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .header p{font-size:10px;color:#6b7280;font-weight:300;margin-top:2px}
+
+  .legend-bar{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;padding:8px 20px}
+  .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#9ca3af}
+  .lsw{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+  .lln{width:18px;height:0;border-top:2px solid;flex-shrink:0}
+  .lda{width:18px;height:0;border-top:2px dashed;flex-shrink:0}
+
+  .canvas{position:relative;width:1580px;min-height:2650px;margin:6px auto;padding:20px}
+  svg.C{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+  .layer{position:absolute;border-radius:14px;border:1px solid;z-index:0}
+  .layer-t{position:absolute;top:-11px;left:20px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:2px 10px;border-radius:5px;z-index:3}
+
+  .node{position:absolute;z-index:5;border-radius:12px;padding:12px 14px;text-align:center;cursor:default;transition:all .25s;border:1px solid;backdrop-filter:blur(10px);min-width:110px}
+  .node:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  .node i{font-size:22px;margin-bottom:3px;display:block;font-style:normal}
+  .node b{font-size:10px;font-weight:600;display:block;margin-bottom:2px}
+  .node s{font-size:7.5px;font-weight:300;opacity:.7;line-height:1.3;text-decoration:none;display:block}
+
+  .n-blue{background:linear-gradient(135deg,rgba(59,130,246,.13),rgba(59,130,246,.04));border-color:rgba(59,130,246,.28);color:#93c5fd}
+  .n-orange{background:linear-gradient(135deg,rgba(249,115,22,.13),rgba(249,115,22,.04));border-color:rgba(249,115,22,.28);color:#fdba74}
+  .n-green{background:linear-gradient(135deg,rgba(16,185,129,.13),rgba(16,185,129,.04));border-color:rgba(16,185,129,.28);color:#6ee7b7}
+  .n-red{background:linear-gradient(135deg,rgba(239,68,68,.13),rgba(239,68,68,.04));border-color:rgba(239,68,68,.28);color:#fca5a5}
+  .n-purple{background:linear-gradient(135deg,rgba(168,85,247,.13),rgba(168,85,247,.04));border-color:rgba(168,85,247,.28);color:#c4b5fd}
+  .n-yellow{background:linear-gradient(135deg,rgba(234,179,8,.13),rgba(234,179,8,.04));border-color:rgba(234,179,8,.28);color:#fde68a}
+  .n-cyan{background:linear-gradient(135deg,rgba(6,182,212,.13),rgba(6,182,212,.04));border-color:rgba(6,182,212,.28);color:#67e8f9}
+  .n-pink{background:linear-gradient(135deg,rgba(236,72,153,.13),rgba(236,72,153,.04));border-color:rgba(236,72,153,.28);color:#f9a8d4}
+  .n-teal{background:linear-gradient(135deg,rgba(20,184,166,.13),rgba(20,184,166,.04));border-color:rgba(20,184,166,.28);color:#5eead4}
+
+  .env-box{position:absolute;z-index:3;border-radius:12px;border:1px dashed}
+  .env-box-t{position:absolute;top:-10px;left:14px;font-size:9px;font-weight:700;letter-spacing:.8px;padding:2px 8px;border-radius:4px}
+
+  .inner-box{position:absolute;z-index:4;border:1px dashed;border-radius:9px;padding:8px}
+  .inner-label{position:absolute;top:-9px;left:12px;font-size:8px;font-weight:500;background:#080c18;padding:0 5px;letter-spacing:.5px}
+
+  .badge{position:absolute;z-index:20;display:flex;align-items:center;gap:4px;border-radius:14px;padding:3px 9px;font-size:8px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+  .b-human{background:rgba(251,191,36,.15);border:1.5px solid rgba(251,191,36,.5);color:#fbbf24}
+  .b-auto{background:rgba(139,92,246,.15);border:1.5px solid rgba(139,92,246,.5);color:#a78bfa}
+  .b-ctx{background:rgba(236,72,153,.15);border:1.5px solid rgba(236,72,153,.5);color:#f472b6}
+  .b-bkit{background:rgba(59,130,246,.15);border:1.5px solid rgba(59,130,246,.5);color:#60a5fa}
+  .b-guard{background:rgba(16,185,129,.15);border:1.5px solid rgba(16,185,129,.5);color:#34d399}
+
+  .fl{position:absolute;z-index:6;font-size:8px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.3px}
+  .fl-blue{background:rgba(59,130,246,.18);color:#93c5fd}
+  .fl-green{background:rgba(16,185,129,.18);color:#6ee7b7}
+  .fl-red{background:rgba(239,68,68,.18);color:#fca5a5}
+  .fl-purple{background:rgba(168,85,247,.18);color:#c4b5fd}
+  .fl-orange{background:rgba(249,115,22,.18);color:#fdba74}
+  .fl-pink{background:rgba(236,72,153,.18);color:#f9a8d4}
+  .fl-cyan{background:rgba(6,182,212,.18);color:#67e8f9}
+  .fl-teal{background:rgba(20,184,166,.18);color:#5eead4}
+
+  /* Living Context sidebar */
+  .ctx-panel{position:absolute;z-index:5;border-radius:14px;border:1.5px solid rgba(236,72,153,.2);background:rgba(236,72,153,.02);padding:16px}
+  .ctx-title{font-size:10px;font-weight:700;color:#f472b6;margin-bottom:10px;text-align:center;letter-spacing:.5px}
+  .ctx-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+  .ctx-item:last-child{border-bottom:none}
+  .ctx-icon{font-size:20px;flex-shrink:0}
+  .ctx-name{font-size:9px;font-weight:700;color:#f9a8d4;margin-bottom:1px}
+  .ctx-desc{font-size:7px;color:#9ca3af;line-height:1.4}
+  .ctx-tag{font-size:6.5px;padding:1px 5px;border-radius:3px;display:inline-block;margin-top:2px}
+  .ctx-file{font-size:6.5px;font-family:monospace;color:#4b5563;margin-top:1px}
+
+  /* PDCA box */
+  .pdca-box{position:absolute;z-index:5;border:1.5px solid rgba(59,130,246,.3);border-radius:12px;padding:10px;background:rgba(59,130,246,.02)}
+  .pdca-label{position:absolute;top:-9px;left:12px;font-size:8px;font-weight:700;color:#60a5fa;background:#080c18;padding:0 6px;border-radius:3px}
+  .pdca-cell{display:inline-block;border-radius:7px;padding:6px 10px;text-align:center;border:1px solid;margin:2px;min-width:70px}
+  .pdca-cell i{font-size:14px;font-style:normal;display:block}
+  .pdca-cell b{font-size:7.5px;font-weight:700;display:block}
+  .pdca-cell s{font-size:6px;font-weight:300;opacity:.7;text-decoration:none;display:block}
+
+  /* Callout */
+  .human-callout{position:absolute;z-index:10;background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.15);border-radius:12px;padding:14px 18px}
+  .human-callout-title{font-size:10px;font-weight:700;color:#fbbf24;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+  .human-callout-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 30px}
+  .human-callout-item{font-size:8px;color:#d4a017;padding-left:14px;position:relative;line-height:1.5}
+  .human-callout-item::before{content:'>';position:absolute;left:2px;top:0;font-size:7px;font-weight:700;color:#fbbf24}
+
+  /* Deploy state machine */
+  .dsm-panel{position:absolute;z-index:5;border-radius:14px;border:1.5px solid rgba(168,85,247,.2);background:rgba(168,85,247,.02);padding:16px}
+  .dsm-title{font-size:10px;font-weight:700;color:#a78bfa;margin-bottom:8px;text-align:center}
+
+  /* Metrics panel */
+  .metrics-panel{position:absolute;z-index:5;border-radius:14px;border:1.5px solid rgba(16,185,129,.2);background:rgba(16,185,129,.02);padding:16px}
+  .metrics-title{font-size:10px;font-weight:700;color:#34d399;margin-bottom:8px;text-align:center}
+  .metric-box{text-align:center;padding:8px;border-radius:8px;border:1px solid;display:inline-block;min-width:90px;margin:3px}
+  .metric-val{font-size:18px;font-weight:800}
+  .metric-label{font-size:7px;color:#6b7280;margin-top:1px}
+
+  @keyframes dashMove{to{stroke-dashoffset:-20}}
+  .animated-dash{stroke-dasharray:8,6;animation:dashMove 1s linear infinite}
+  @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+  .pulse{animation:pulse 2.5s ease-in-out infinite}
+
+  @media(max-width:1600px){.canvas{transform:scale(.85);transform-origin:top center}}
+  @media(max-width:1300px){.canvas{transform:scale(.7);transform-origin:top center}}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>bkit Self-Healing CI/CD Architecture with Living Context</h1>
+  <p>6-Layer Infrastructure + 4-Layer Living Context + bkit PDCA Auto-Recovery Pipeline &nbsp;|&nbsp; bkit v3.0 Projected &nbsp;|&nbsp; 2026-03-24</p>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="lsw" style="background:rgba(251,191,36,.2);border:1.5px solid rgba(251,191,36,.5)"></div><span style="color:#fbbf24;font-weight:600">Human</span></div>
+  <div class="legend-item"><div class="lsw" style="background:rgba(139,92,246,.2);border:1.5px solid rgba(139,92,246,.5)"></div><span style="color:#a78bfa;font-weight:600">Automated</span></div>
+  <div class="legend-item"><div class="lsw" style="background:rgba(16,185,129,.2);border:1.5px solid rgba(16,185,129,.5)"></div><span style="color:#34d399;font-weight:600">Guardrail</span></div>
+  <div class="legend-item"><div class="lsw" style="background:rgba(236,72,153,.2);border:1.5px solid rgba(236,72,153,.5)"></div><span style="color:#f472b6;font-weight:600">Living Context</span></div>
+  <div class="legend-item"><div class="lsw" style="background:rgba(59,130,246,.2);border:1.5px solid rgba(59,130,246,.5)"></div><span style="color:#60a5fa;font-weight:600">bkit PDCA</span></div>
+  <div class="legend-item"><div class="lln" style="border-color:#3b82f6"></div><span>CI/CD Flow</span></div>
+  <div class="legend-item"><div class="lln" style="border-color:#10b981"></div><span>Monitoring</span></div>
+  <div class="legend-item"><div class="lln" style="border-color:#ef4444"></div><span>Error</span></div>
+  <div class="legend-item"><div class="lda" style="border-color:#a855f7"></div><span>Self-Healing Loop</span></div>
+  <div class="legend-item"><div class="lda" style="border-color:#ec4899"></div><span>Context Flow</span></div>
+</div>
+
+<div class="canvas">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER BACKGROUNDS                      -->
+<!-- ═══════════════════════════════════════ -->
+<div class="layer" style="top:10px;left:20px;width:1100px;height:130px;background:rgba(59,130,246,.03);border-color:rgba(59,130,246,.12)">
+  <div class="layer-t" style="background:rgba(59,130,246,.1);color:#60a5fa">① Source & CI/CD Pipeline</div>
+</div>
+<div class="layer" style="top:170px;left:20px;width:1100px;height:480px;background:rgba(249,115,22,.02);border-color:rgba(249,115,22,.08)">
+  <div class="layer-t" style="background:rgba(249,115,22,.08);color:#fb923c">② AWS Infrastructure — Terraform Managed (GitOps Templates)</div>
+</div>
+<div class="layer" style="top:680px;left:20px;width:1100px;height:120px;background:rgba(236,72,153,.02);border-color:rgba(236,72,153,.08)">
+  <div class="layer-t" style="background:rgba(236,72,153,.08);color:#ec4899">③ Security Layer</div>
+</div>
+<div class="layer" style="top:830px;left:20px;width:1100px;height:200px;background:rgba(16,185,129,.02);border-color:rgba(16,185,129,.08)">
+  <div class="layer-t" style="background:rgba(16,185,129,.08);color:#34d399">④ Full Observability (3-Pillar)</div>
+</div>
+<div class="layer" style="top:1060px;left:20px;width:1100px;height:120px;background:rgba(239,68,68,.02);border-color:rgba(239,68,68,.08)">
+  <div class="layer-t" style="background:rgba(239,68,68,.08);color:#f87171">⑤ Error Tracking & Alerting</div>
+</div>
+<div class="layer" style="top:1210px;left:20px;width:1100px;height:340px;background:rgba(168,85,247,.025);border-color:rgba(168,85,247,.12)">
+  <div class="layer-t" style="background:rgba(168,85,247,.1);color:#a78bfa">⑥ Self-Healing — bkit PDCA + Living Context</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 1: CI/CD NODES                   -->
+<!-- ═══════════════════════════════════════ -->
+<div class="badge b-human" style="top:18px;left:45px">🧑‍💻 코드 작성</div>
+<div class="node n-blue" style="top:40px;left:40px;width:105px"><i>👨‍💻</i><b>Developer</b><s>git commit & push</s></div>
+<div class="node n-blue" style="top:40px;left:180px;width:105px"><i>🐙</i><b>GitHub</b><s>GitFlow</s></div>
+
+<div class="badge b-auto" style="top:18px;left:325px">⚙️ CI/CD 자동</div>
+<div class="node n-blue" style="top:40px;left:320px;width:115px"><i>⚡</i><b>GitHub Actions</b><s>Build · Deploy</s></div>
+<div class="node n-teal" style="top:40px;left:468px;width:105px"><i>🧪</i><b>Test & Lint</b><s>Unit · Coverage</s></div>
+<div class="node n-teal" style="top:40px;left:606px;width:110px"><i>🔒</i><b>Security Scan</b><s>SAST · Trivy</s></div>
+
+<div class="badge b-bkit" style="top:18px;left:755px">/pdca deploy</div>
+<div class="node n-purple" style="top:40px;left:750px;width:105px"><i>🏗️</i><b>Terraform</b><s>IaC Templates</s></div>
+<div class="node n-orange" style="top:40px;left:890px;width:100px"><i>☁️</i><b>AWS</b><s>Multi-Env</s></div>
+
+<div class="badge b-guard" style="top:18px;left:1010px">🛡️ Approval Gate</div>
+<div class="node n-teal" style="top:40px;left:1010px;width:90px"><i>✋</i><b>Approval</b><s>Prod 승인</s></div>
+
+<!-- Branch labels -->
+<div class="fl fl-green" style="top:155px;left:165px">feature / develop</div>
+<div class="fl fl-orange" style="top:155px;left:470px">release</div>
+<div class="fl fl-red" style="top:155px;left:780px">main</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 2: ENV BOXES                     -->
+<!-- ═══════════════════════════════════════ -->
+<!-- DEV -->
+<div class="env-box" style="top:205px;left:40px;width:310px;height:420px;border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.01)">
+  <div class="env-box-t" style="background:rgba(34,197,94,.18);color:#86efac">DEV Environment</div>
+</div>
+<div class="inner-box" style="top:240px;left:60px;width:270px;height:250px;border-color:rgba(96,165,250,.25);background:rgba(96,165,250,.02)">
+  <div class="inner-label" style="color:#60a5fa">🐳 EC2 Docker Compose</div>
+</div>
+<div class="node n-green" style="top:275px;left:75px;width:110px"><i>📦</i><b>App Container</b><s>Application</s></div>
+<div class="node n-green" style="top:275px;left:205px;width:110px"><i>🗄️</i><b>DB Container</b><s>PostgreSQL</s></div>
+<div class="node n-green" style="top:390px;left:75px;width:110px"><i>🌐</i><b>Nginx</b><s>Reverse Proxy</s></div>
+<div class="node n-green" style="top:390px;left:205px;width:110px"><i>⚡</i><b>Redis</b><s>Cache</s></div>
+<div class="node n-green" style="top:510px;left:120px;width:130px;padding:8px"><i>📊</i><b>Prometheus Node</b><s>Metrics Export</s></div>
+
+<!-- STAGING -->
+<div class="env-box" style="top:205px;left:390px;width:310px;height:420px;border-color:rgba(234,179,8,.25);background:rgba(234,179,8,.01)">
+  <div class="env-box-t" style="background:rgba(234,179,8,.18);color:#fde68a">STAGING (On-Demand EKS)</div>
+</div>
+<div class="inner-box" style="top:240px;left:410px;width:270px;height:150px;border-color:rgba(6,182,212,.25);background:rgba(6,182,212,.015)">
+  <div class="inner-label" style="color:#22d3ee;font-size:7.5px">☸ EKS (ns: staging)</div>
+</div>
+<div class="node n-cyan" style="top:265px;left:420px;width:110px;padding:8px"><i>🔄</i><b>ArgoCD</b><s>GitOps Sync</s></div>
+<div class="node n-orange" style="top:265px;left:550px;width:110px;padding:8px"><i>🎯</i><b>Helm Charts</b><s>staging values</s></div>
+<div class="node n-yellow" style="top:345px;left:420px;width:110px;padding:8px"><i>🚀</i><b>API Pod</b><s>HPA Auto</s></div>
+<div class="node n-yellow" style="top:345px;left:550px;width:110px;padding:8px"><i>🚀</i><b>Worker Pod</b><s>Deploy</s></div>
+<div class="node n-orange" style="top:430px;left:420px;width:110px;padding:8px"><i>🛢️</i><b>RDS</b><s>Staging DB</s></div>
+<div class="node n-yellow" style="top:430px;left:550px;width:110px;padding:8px"><i>⚖️</i><b>ALB</b><s>Staging LB</s></div>
+<div class="node n-teal" style="top:530px;left:455px;width:130px;padding:8px"><i>⏱️</i><b>단기 운영</b><s>On-Demand 생성/파괴</s></div>
+
+<!-- PRODUCTION -->
+<div class="env-box" style="top:205px;left:740px;width:360px;height:420px;border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.01)">
+  <div class="env-box-t" style="background:rgba(239,68,68,.18);color:#fca5a5">PRODUCTION</div>
+</div>
+<div class="inner-box" style="top:240px;left:760px;width:320px;height:200px;border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.015)">
+  <div class="inner-label" style="color:#f87171;font-size:7.5px">☸ EKS Cluster (ns: production)</div>
+</div>
+<div class="node n-cyan" style="top:265px;left:770px;width:95px;padding:8px"><i>🔄</i><b>ArgoCD</b><s>Auto Sync</s></div>
+<div class="node n-orange" style="top:265px;left:878px;width:95px;padding:8px"><i>🎯</i><b>Helm</b><s>prod values</s></div>
+<div class="node n-teal" style="top:265px;left:986px;width:80px;padding:8px"><i>🐤</i><b>Canary</b><s>Argo Rollouts</s></div>
+<div class="node n-red" style="top:360px;left:770px;width:85px;padding:7px"><i>🚀</i><b>API Pod</b><s>HPA</s></div>
+<div class="node n-red" style="top:360px;left:868px;width:85px;padding:7px"><i>🚀</i><b>Worker</b><s>CronJob</s></div>
+<div class="node n-red" style="top:360px;left:966px;width:85px;padding:7px"><i>🌐</i><b>Ingress</b><s>NGINX+ALB</s></div>
+
+<div class="node n-orange" style="top:465px;left:770px;width:95px;padding:7px"><i>🛢️</i><b>RDS</b><s>Multi-AZ</s></div>
+<div class="node n-orange" style="top:465px;left:878px;width:95px;padding:7px"><i>🔐</i><b>Secrets Mgr</b><s>Auto Rotate</s></div>
+<div class="node n-teal" style="top:465px;left:986px;width:80px;padding:7px"><i>💰</i><b>Karpenter</b><s>Spot Nodes</s></div>
+<div class="node n-red" style="top:560px;left:870px;width:95px;padding:7px"><i>⚖️</i><b>ALB</b><s>Prod LB</s></div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 3: SECURITY                      -->
+<!-- ═══════════════════════════════════════ -->
+<div class="node n-pink" style="top:705px;left:40px;width:115px;padding:8px"><i>🌐</i><b>CloudFront</b><s>CDN + DDoS</s></div>
+<div class="node n-pink" style="top:705px;left:175px;width:115px;padding:8px"><i>🛡️</i><b>AWS WAF</b><s>OWASP Rules</s></div>
+<div class="node n-pink" style="top:705px;left:310px;width:115px;padding:8px"><i>🔒</i><b>VPC Design</b><s>Private/Public</s></div>
+<div class="node n-pink" style="top:705px;left:445px;width:115px;padding:8px"><i>🔑</i><b>IAM (IRSA)</b><s>Pod-level</s></div>
+<div class="node n-pink" style="top:705px;left:580px;width:115px;padding:8px"><i>🔐</i><b>Network Policy</b><s>Calico</s></div>
+<div class="node n-pink" style="top:705px;left:715px;width:115px;padding:8px"><i>📜</i><b>ACM</b><s>TLS Auto</s></div>
+<div class="node n-pink" style="top:705px;left:850px;width:115px;padding:8px"><i>🔄</i><b>Secrets Rotation</b><s>Auto Policy</s></div>
+<div class="node n-pink" style="top:705px;left:985px;width:115px;padding:8px"><i>📋</i><b>Backup / DR</b><s>Cross-Region</s></div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 4: OBSERVABILITY                 -->
+<!-- ═══════════════════════════════════════ -->
+<!-- Metrics group -->
+<div class="inner-box" style="top:860px;left:40px;width:340px;height:145px;border-color:rgba(16,185,129,.15);background:rgba(16,185,129,.01)">
+  <div class="inner-label" style="color:#6ee7b7">📊 Metrics</div>
+</div>
+<div class="node n-green" style="top:885px;left:55px;width:95px;padding:8px"><i>🔥</i><b>Prometheus</b><s>kube-prom</s></div>
+<div class="node n-green" style="top:885px;left:165px;width:95px;padding:8px"><i>📊</i><b>Grafana</b><s>Dashboard</s></div>
+<div class="node n-green" style="top:885px;left:275px;width:90px;padding:8px"><i>🔔</i><b>AlertMgr</b><s>Routing</s></div>
+
+<!-- Logs group -->
+<div class="inner-box" style="top:860px;left:400px;width:310px;height:145px;border-color:rgba(20,184,166,.15);background:rgba(20,184,166,.01)">
+  <div class="inner-label" style="color:#5eead4">📝 Logs</div>
+</div>
+<div class="node n-teal" style="top:885px;left:415px;width:85px;padding:8px"><i>📝</i><b>Loki</b><s>Log Agg</s></div>
+<div class="node n-teal" style="top:885px;left:515px;width:85px;padding:8px"><i>📡</i><b>Promtail</b><s>DaemonSet</s></div>
+<div class="node n-cyan" style="top:885px;left:615px;width:80px;padding:8px"><i>👁️</i><b>CloudWatch</b><s>AWS</s></div>
+
+<!-- Traces group -->
+<div class="inner-box" style="top:860px;left:730px;width:370px;height:145px;border-color:rgba(6,182,212,.15);background:rgba(6,182,212,.01)">
+  <div class="inner-label" style="color:#67e8f9">🔭 Traces</div>
+</div>
+<div class="node n-teal" style="top:885px;left:745px;width:100px;padding:8px"><i>🔭</i><b>OpenTelemetry</b><s>Collector</s></div>
+<div class="node n-teal" style="top:885px;left:860px;width:85px;padding:8px"><i>🎯</i><b>Tempo</b><s>Backend</s></div>
+<div class="node n-teal" style="top:885px;left:960px;width:95px;padding:8px"><i>⏱️</i><b>Uptime</b><s>Blackbox</s></div>
+
+<div class="badge b-human" style="top:1005px;left:165px">🧑‍💻 대시보드 관제</div>
+<div class="badge b-bkit" style="top:1005px;left:360px">gap-detector 메트릭 확장</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 5: ERROR TRACKING                -->
+<!-- ═══════════════════════════════════════ -->
+<div class="badge b-auto" style="top:1070px;left:80px">⚙️ 에러 감지</div>
+<div class="node n-red" style="top:1090px;left:130px;width:140px"><i>🐛</i><b>Sentry</b><s>Error + Performance</s></div>
+<div class="node n-red" style="top:1090px;left:380px;width:140px"><i>💬</i><b>Slack</b><s>#error-alerts P1~P4</s></div>
+<div class="badge b-human" style="top:1070px;left:650px">🧑‍💻 알림 확인 · 판단</div>
+<div class="node n-orange" style="top:1090px;left:670px;width:140px"><i>📟</i><b>PagerDuty</b><s>에스컬레이션</s></div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LAYER 6: SELF-HEALING                  -->
+<!-- ═══════════════════════════════════════ -->
+<div class="badge b-auto" style="top:1220px;left:45px">⚙️ 에러 감지</div>
+<div class="node n-purple" style="top:1245px;left:40px;width:120px"><i>👂</i><b>Slack Listener</b><s>MCP Channel<br/>Error Detect</s></div>
+
+<div class="badge b-ctx" style="top:1220px;left:205px">✨ Living Context</div>
+<div class="node n-pink" style="top:1245px;left:190px;width:130px;border-width:1.5px"><i>📚</i><b>Context Loader</b><s>4-Layer 자동 로딩<br/>시나리오+불변+영향+기록</s></div>
+
+<div class="node n-purple" style="top:1245px;left:355px;width:130px"><i>🤖</i><b>Claude Code</b><s>컨텍스트 포함<br/>에러 분석 + 수정</s></div>
+
+<div class="pdca-box" style="top:1235px;left:520px;width:220px;height:115px">
+  <div class="pdca-label">🔄 bkit /pdca-iterate</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px">
+    <div class="pdca-cell" style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#93c5fd"><i>📋</i><b>Plan</b><s>원인 분석</s></div>
+    <div class="pdca-cell" style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.25);color:#c4b5fd"><i>🔨</i><b>Do</b><s>코드 수정</s></div>
+    <div class="pdca-cell" style="background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:#fdba74"><i>🔄</i><b>Act</b><s>Pass→PR</s></div>
+    <div class="pdca-cell" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:#6ee7b7"><i>✅</i><b>Check</b><s>시나리오 검증</s></div>
+  </div>
+  <div style="text-align:center;font-size:6.5px;color:#6b7280;margin-top:3px">max 5 iterations · 100% Test + Scenario Pass Gate</div>
+</div>
+
+<div class="node n-purple" style="top:1245px;left:775px;width:120px"><i>🔀</i><b>Auto PR</b><s>PDCA 리포트 첨부</s></div>
+
+<div class="badge b-human" style="top:1220px;left:930px">🧑‍💻 PR 리뷰 · 승인</div>
+<div class="node n-blue" style="top:1245px;left:930px;width:120px"><i>✔️</i><b>Review & Merge</b><s>코드 리뷰<br/>ArgoCD Sync</s></div>
+
+<!-- Self-Healing outcome row -->
+<div class="node n-red" style="top:1410px;left:60px;width:120px;padding:8px"><i>🚨</i><b>Escalation</b><s>5회 실패 → 사람<br/>#eng-escalation</s></div>
+<div class="node n-cyan" style="top:1410px;left:220px;width:120px;padding:8px"><i>📝</i><b>PDCA Audit Log</b><s>수정 기록 · 신뢰도</s></div>
+<div class="node n-green" style="top:1410px;left:380px;width:120px;padding:8px"><i>📊</i><b>bkit Report</b><s>전/후 비교 · 커버리지</s></div>
+<div class="node n-teal" style="top:1410px;left:540px;width:120px;padding:8px"><i>⏪</i><b>Auto Rollback</b><s>에러 급증 시 복원</s></div>
+<div class="node n-pink" style="top:1410px;left:700px;width:120px;padding:8px"><i>💾</i><b>Incident Memory</b><s>교훈 자동 기록<br/>anti-pattern 방지</s></div>
+
+<div class="fl fl-purple" style="top:1520px;left:150px">🔁 Self-Healing Loop — Slack → Context Loader(4-Layer) → Claude Code → bkit /pdca-iterate(100% Pass + 시나리오 검증) → Auto PR → Human Review → ArgoCD Sync</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- RIGHT SIDE: Living Context Panel       -->
+<!-- ═══════════════════════════════════════ -->
+<div class="ctx-panel" style="top:10px;left:1150px;width:410px;height:520px">
+  <div class="ctx-title">📚 Living Context System (4-Layer)</div>
+  <div style="font-size:7.5px;color:#6b7280;text-align:center;margin-bottom:8px">Self-Healing 수정 전 자동 로딩되는 컨텍스트</div>
+
+  <div class="ctx-item">
+    <div class="ctx-icon">📋</div>
+    <div>
+      <div class="ctx-name">Layer 1: Scenario Matrix</div>
+      <div class="ctx-desc">각 모듈의 시나리오 정의: 입력/출력/경계값/에러케이스<br/><b>why</b> (왜 이렇게 만들었는지) + <b>constraint</b> (건드리면 안 되는 것)</div>
+      <div class="ctx-file">docs/02-design/scenarios/*.yaml</div>
+      <div class="ctx-tag" style="background:rgba(139,92,246,.12);color:#a78bfa">PDCA Design에서 자동 생성</div>
+    </div>
+  </div>
+
+  <div class="ctx-item">
+    <div class="ctx-icon">🔒</div>
+    <div>
+      <div class="ctx-name">Layer 2: Invariants Registry</div>
+      <div class="ctx-desc">핵심 비즈니스 룰 불변 조건 (예: "잔액 ≥ 0", "주문 역행 불가")<br/>critical 위반 시 <b>수정 거부</b> → 사람 에스컬레이션</div>
+      <div class="ctx-file">.bkit/invariants.yaml</div>
+      <div class="ctx-tag" style="background:rgba(251,191,36,.12);color:#fbbf24">사람이 핵심만 작성 (10~20개)</div>
+    </div>
+  </div>
+
+  <div class="ctx-item">
+    <div class="ctx-icon">🕸️</div>
+    <div>
+      <div class="ctx-name">Layer 3: Impact Map</div>
+      <div class="ctx-desc">모듈 간 의존관계 + blast radius 자동 산정<br/>수정 파일의 영향받는 파일 연쇄 검증</div>
+      <div class="ctx-file">.bkit/impact-map.yaml</div>
+      <div class="ctx-tag" style="background:rgba(139,92,246,.12);color:#a78bfa">code-analyzer 정적 분석 자동 생성</div>
+    </div>
+  </div>
+
+  <div class="ctx-item">
+    <div class="ctx-icon">🧠</div>
+    <div>
+      <div class="ctx-name">Layer 4: Incident Memory</div>
+      <div class="ctx-desc">과거 장애 기록 + 교훈 + anti-pattern<br/>같은 영역 동일 실수 반복 방지</div>
+      <div class="ctx-file">.bkit/incident-memory.yaml</div>
+      <div class="ctx-tag" style="background:rgba(139,92,246,.12);color:#a78bfa">Self-Healing 실행 시 자동 누적</div>
+    </div>
+  </div>
+</div>
+
+<!-- Context Loading Flow Panel -->
+<div class="ctx-panel" style="top:550px;left:1150px;width:410px;height:300px;border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.015)">
+  <div class="ctx-title" style="color:#60a5fa">🔄 Context Loading & Verification Flow</div>
+
+  <div style="padding:6px 0;font-size:8.5px;line-height:2.2;color:#9ca3af">
+    <div><span style="color:#ef4444;font-weight:700;font-size:11px">①</span> 에러 위치 파일 식별 <span style="color:#4b5563">(Stack Trace 파싱)</span></div>
+    <div style="text-align:center;font-size:12px;color:#374151">↓</div>
+    <div><span style="color:#f472b6;font-weight:700;font-size:11px">②</span> Context Loader — <span style="color:#f472b6">4-Layer 자동 로딩</span></div>
+    <div style="padding-left:22px;font-size:7.5px;color:#6b7280;line-height:1.6">
+      scenarios/*.yaml → invariants.yaml → impact-map.yaml<br/>→ incident-memory.yaml → PDCA Plan/Design 문서
+    </div>
+    <div style="text-align:center;font-size:12px;color:#374151">↓</div>
+    <div><span style="color:#a78bfa;font-weight:700;font-size:11px">③</span> Claude Code — <span style="color:#c4b5fd">컨텍스트 포함</span> 수정 생성</div>
+    <div style="text-align:center;font-size:12px;color:#374151">↓</div>
+    <div><span style="color:#34d399;font-weight:700;font-size:11px">④</span> Scenario Runner — <span style="color:#6ee7b7">4중 검증</span></div>
+    <div style="padding-left:22px;font-size:7.5px;color:#6b7280;line-height:1.5">
+      ✓ 시나리오 매트릭스 전체 통과?<br/>
+      ✓ 불변 조건 위반 없음? (critical = 수정 거부)<br/>
+      ✓ blast radius 내 다른 파일 안전?<br/>
+      ✓ 과거 anti-pattern 반복 안 함?
+    </div>
+    <div style="text-align:center;font-size:12px;color:#374151">↓</div>
+    <div><span style="color:#60a5fa;font-weight:700;font-size:11px">⑤</span> <span style="color:#6ee7b7;font-weight:600">Pass → Auto PR</span> <span style="color:#4b5563">/</span> <span style="color:#fca5a5;font-weight:600">Fail → 재시도(max 5)</span> <span style="color:#4b5563">/</span> <span style="color:#fbbf24;font-weight:600">5회 실패 → 에스컬레이션</span></div>
+  </div>
+</div>
+
+<!-- Deploy State Machine Panel -->
+<div class="dsm-panel" style="top:870px;left:1150px;width:410px;height:175px">
+  <div class="dsm-title">🚀 Deploy Sub-State Machine</div>
+  <div style="font-size:7.5px;color:#6b7280;text-align:center;margin-bottom:6px">메인 PDCA: ... → do → <span style="color:#a78bfa;font-weight:700">[deploy]</span> → check → ...</div>
+
+  <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;font-size:7.5px">
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:#93c5fd;font-weight:600">init</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#86efac;font-weight:600">dev</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7;font-weight:600">verify 90%+</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);color:#fde68a;font-weight:600">staging</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7;font-weight:600">verify 95%+</span>
+  </div>
+  <div style="text-align:center;font-size:10px;color:#374151;padding:3px 0">↓</div>
+  <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center;font-size:7.5px">
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24;font-weight:600">🧑‍💻 Human Approval</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-weight:600">prod (Canary 10→25→50→100%)</span>
+    <span style="color:#374151">→</span>
+    <span style="padding:3px 7px;border-radius:5px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7;font-weight:600">complete ✓</span>
+  </div>
+</div>
+
+<!-- Metrics Panel -->
+<div class="metrics-panel" style="top:1065px;left:1150px;width:410px;height:130px">
+  <div class="metrics-title">📊 Target Metrics</div>
+  <div style="text-align:center">
+    <div class="metric-box" style="background:rgba(16,185,129,.04);border-color:rgba(16,185,129,.15)"><div class="metric-val" style="color:#34d399">80%↓</div><div class="metric-label">MTTR 감소</div></div>
+    <div class="metric-box" style="background:rgba(59,130,246,.04);border-color:rgba(59,130,246,.15)"><div class="metric-val" style="color:#60a5fa">≥60%</div><div class="metric-label">PR 승인율</div></div>
+    <div class="metric-box" style="background:rgba(168,85,247,.04);border-color:rgba(168,85,247,.15)"><div class="metric-val" style="color:#a78bfa">95%</div><div class="metric-label">PDCA 커버리지</div></div>
+    <div class="metric-box" style="background:rgba(236,72,153,.04);border-color:rgba(236,72,153,.15)"><div class="metric-val" style="color:#f472b6">100%</div><div class="metric-label">시나리오 통과</div></div>
+  </div>
+</div>
+
+<!-- bkit PDCA Integration Map -->
+<div class="dsm-panel" style="top:1215px;left:1150px;width:410px;height:190px;border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.015)">
+  <div class="dsm-title" style="color:#60a5fa">🔄 bkit PDCA Integration Map</div>
+  <div style="font-size:8px;line-height:2.1;color:#9ca3af;padding:0 4px">
+    <div><span style="color:#93c5fd;font-weight:700">Plan</span> → 인프라 요구사항 + <span style="color:#f472b6">Invariants 초안 작성</span></div>
+    <div><span style="color:#93c5fd;font-weight:700">Design</span> → 아키텍처 설계 + <span style="color:#f472b6">Scenario Matrix 자동 생성</span></div>
+    <div><span style="color:#c4b5fd;font-weight:700">Do</span> → 코드 구현 + <span style="color:#f472b6">Impact Map 자동 생성</span></div>
+    <div><span style="color:#c4b5fd;font-weight:700">Deploy</span> → <span style="color:#fb923c">dev → staging → prod</span> (서브 상태 머신)</div>
+    <div><span style="color:#6ee7b7;font-weight:700">Check</span> → gap-detector + <span style="color:#34d399">운영 메트릭 3축</span> (Obs)</div>
+    <div><span style="color:#fdba74;font-weight:700">Act/Heal</span> → <span style="color:#f472b6">Living Context 로딩</span> → 컨텍스트 인지형 수정</div>
+    <div><span style="color:#6ee7b7;font-weight:700">Report</span> → 운영 메트릭 포함 + <span style="color:#f472b6">Incident Memory 자동 누적</span></div>
+  </div>
+</div>
+
+<!-- Automation Levels Panel -->
+<div class="dsm-panel" style="top:1425px;left:1150px;width:410px;height:130px;border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.015)">
+  <div class="dsm-title" style="color:#a78bfa">⚡ Automation Levels (L0-L6)</div>
+  <div style="font-size:8px;line-height:1.7;padding:0 4px">
+    <span style="color:#4b5563">L0 Manual · L1 Guide · </span><span style="color:#60a5fa;font-weight:600">L2 Semi-Auto ← default</span><span style="color:#4b5563"> · L3 Auto · L4 Full Auto</span>
+    <div style="margin-top:4px;padding:4px 8px;border-radius:6px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.15)">
+      <span style="color:#f59e0b;font-weight:700">L5 Deploy Auto</span> <span style="color:#6b7280">— CI/CD + 환경 승격 자동</span> <span style="font-size:6.5px;padding:1px 4px;border-radius:3px;background:rgba(236,72,153,.15);color:#f472b6;font-weight:600">NEW</span>
+    </div>
+    <div style="margin-top:3px;padding:4px 8px;border-radius:6px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.15)">
+      <span style="color:#a78bfa;font-weight:700">L6 Self-Heal Auto</span> <span style="color:#6b7280">— 에러→수정→PR 자동, 리뷰만 사람</span> <span style="font-size:6.5px;padding:1px 4px;border-radius:3px;background:rgba(236,72,153,.15);color:#f472b6;font-weight:600">NEW</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- HUMAN INTERVENTION SUMMARY             -->
+<!-- ═══════════════════════════════════════ -->
+<div class="human-callout" style="top:1570px;left:20px;width:1540px">
+  <div class="human-callout-title">🧑‍💻 Human Intervention Points (6개) — 자동화 범위를 최대화하면서도 절대 우회 불가한 사람 개입 지점</div>
+  <div class="human-callout-grid">
+    <div class="human-callout-item"><strong>① 코드 작성 & 커밋</strong> — Developer가 코드를 작성하고 git commit/push. 모든 파이프라인의 시작점.</div>
+    <div class="human-callout-item"><strong>② Grafana 대시보드 관제</strong> — Metrics + Logs + Traces 3축 통합 관제. 알림 임계값 설정.</div>
+    <div class="human-callout-item"><strong>③ Slack 알림 확인 & 판단</strong> — P1~P4 심각도 판단, 자동 수정 대상 vs 사람 직접 대응 결정.</div>
+    <div class="human-callout-item"><strong>④ On-Call 긴급 장애 대응</strong> — PagerDuty 에스컬레이션 시 인프라/DB 장애 직접 대응.</div>
+    <div class="human-callout-item"><strong>⑤ PR Review & Prod Approval</strong> — Self-Healing PR 코드 리뷰 + 프로덕션 배포 최종 승인 게이트.</div>
+    <div class="human-callout-item"><strong>⑥ 에스컬레이션 대응</strong> — Self-Healing 5회 실패 시 #eng-escalation 채널에서 사람이 직접 수정.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SVG CONNECTIONS — ALL FLOWS            -->
+<!-- ═══════════════════════════════════════ -->
+<svg class="C" viewBox="0 0 1580 1680" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ab" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#3b82f6" opacity=".7"/></marker>
+    <marker id="ag" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#10b981" opacity=".7"/></marker>
+    <marker id="ar" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ef4444" opacity=".7"/></marker>
+    <marker id="ap" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#a855f7" opacity=".7"/></marker>
+    <marker id="ao" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f97316" opacity=".7"/></marker>
+    <marker id="ac" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#06b6d4" opacity=".7"/></marker>
+    <marker id="ak" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ec4899" opacity=".7"/></marker>
+    <marker id="at" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#14b8a6" opacity=".7"/></marker>
+  </defs>
+
+  <!-- ═══ LAYER 1: CI/CD horizontal flow ═══ -->
+  <line x1="145" y1="80" x2="178" y2="80" stroke="#3b82f6" stroke-width="2" opacity=".6" marker-end="url(#ab)"/>
+  <line x1="285" y1="80" x2="318" y2="80" stroke="#3b82f6" stroke-width="2" opacity=".6" marker-end="url(#ab)"/>
+  <line x1="435" y1="80" x2="466" y2="80" stroke="#3b82f6" stroke-width="2" opacity=".6" marker-end="url(#ab)"/>
+  <line x1="573" y1="80" x2="604" y2="80" stroke="#3b82f6" stroke-width="2" opacity=".6" marker-end="url(#ab)"/>
+  <line x1="716" y1="80" x2="748" y2="80" stroke="#3b82f6" stroke-width="2" opacity=".6" marker-end="url(#ab)"/>
+  <line x1="855" y1="80" x2="888" y2="80" stroke="#a855f7" stroke-width="2" opacity=".6" marker-end="url(#ap)"/>
+  <line x1="990" y1="80" x2="1008" y2="80" stroke="#14b8a6" stroke-width="2" opacity=".6" marker-end="url(#at)"/>
+
+  <!-- ═══ GHA → 3 environments (fan-out) ═══ -->
+  <path d="M 375 115 L 375 150 L 195 150 L 195 200" stroke="#3b82f6" stroke-width="1.5" opacity=".35" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+  <path d="M 375 115 L 375 150 L 545 150 L 545 200" stroke="#3b82f6" stroke-width="1.5" opacity=".35" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+  <path d="M 375 115 L 375 150 L 920 150 L 920 200" stroke="#3b82f6" stroke-width="1.5" opacity=".35" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+
+  <!-- ═══ DEV internal: App ↔ DB ═══ -->
+  <line x1="185" y1="310" x2="203" y2="310" stroke="#10b981" stroke-width="1.5" opacity=".5" marker-end="url(#ag)"/>
+
+  <!-- ═══ Staging: ArgoCD → Helm ═══ -->
+  <line x1="530" y1="295" x2="548" y2="295" stroke="#06b6d4" stroke-width="1.5" opacity=".5" marker-end="url(#ac)"/>
+  <!-- ArgoCD → Pods -->
+  <path d="M 475 320 L 475 342" stroke="#06b6d4" stroke-width="1.2" opacity=".4" marker-end="url(#ac)"/>
+  <path d="M 475 320 L 605 342" stroke="#06b6d4" stroke-width="1.2" opacity=".4" marker-end="url(#ac)"/>
+
+  <!-- ═══ Prod: ArgoCD → Helm → Canary ═══ -->
+  <line x1="865" y1="295" x2="876" y2="295" stroke="#06b6d4" stroke-width="1.5" opacity=".5" marker-end="url(#ac)"/>
+  <line x1="973" y1="295" x2="984" y2="295" stroke="#06b6d4" stroke-width="1.2" opacity=".4" marker-end="url(#ac)"/>
+  <!-- ArgoCD → Pods -->
+  <path d="M 817 320 L 812 358" stroke="#ef4444" stroke-width="1.2" opacity=".35" marker-end="url(#ar)"/>
+  <path d="M 817 320 L 910 358" stroke="#ef4444" stroke-width="1.2" opacity=".35" marker-end="url(#ar)"/>
+  <path d="M 817 320 L 1008 358" stroke="#ef4444" stroke-width="1.2" opacity=".3" marker-end="url(#ar)"/>
+
+  <!-- ═══ GitHub → Prod ArgoCD (GitOps sync) ═══ -->
+  <path d="M 232 115 L 232 185 L 730 185 L 730 230 L 817 262" stroke="#06b6d4" stroke-width="1.5" opacity=".4" stroke-dasharray="5,4" marker-end="url(#ac)"/>
+
+  <!-- ═══ All envs → Prometheus (monitoring flow) ═══ -->
+  <path d="M 185 575 L 185 660 L 103 658 L 103 683" stroke="#10b981" stroke-width="1.5" opacity=".3" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+  <path d="M 185 660 L 185 830 L 103 882" stroke="#10b981" stroke-width="1.2" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <path d="M 520 570 L 520 660 L 120 832 L 103 882" stroke="#10b981" stroke-width="1.2" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <path d="M 900 622 L 900 660 L 120 835 L 115 882" stroke="#10b981" stroke-width="1.2" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+
+  <!-- Prometheus → Grafana -->
+  <line x1="150" y1="920" x2="163" y2="920" stroke="#10b981" stroke-width="2" opacity=".6" marker-end="url(#ag)"/>
+  <!-- Prometheus → AlertManager -->
+  <line x1="150" y1="905" x2="273" y2="905" stroke="#10b981" stroke-width="1.5" opacity=".3" stroke-dasharray="5,3" marker-end="url(#ag)"/>
+
+  <!-- ═══ Envs → Sentry (error flow) ═══ -->
+  <path d="M 250 620 L 250 1058 L 200 1088" stroke="#ef4444" stroke-width="1.5" opacity=".25" stroke-dasharray="5,3" marker-end="url(#ar)"/>
+
+  <!-- ═══ Sentry → Slack ═══ -->
+  <line x1="270" y1="1130" x2="378" y2="1130" stroke="#ef4444" stroke-width="2" opacity=".6" marker-end="url(#ar)"/>
+  <!-- Slack → PagerDuty -->
+  <line x1="520" y1="1130" x2="668" y2="1130" stroke="#f97316" stroke-width="1.5" opacity=".5" stroke-dasharray="6,4" marker-end="url(#ao)"/>
+
+  <!-- ═══ Slack → Slack Listener (to Self-Healing) ═══ -->
+  <path d="M 450 1160 L 450 1195 L 100 1195 L 100 1243" stroke="#a855f7" stroke-width="2" opacity=".5" marker-end="url(#ap)"/>
+
+  <!-- ═══ SELF-HEALING HORIZONTAL FLOW ═══ -->
+  <line x1="160" y1="1285" x2="188" y2="1285" stroke="#a855f7" stroke-width="2.5" opacity=".7" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ap)"/>
+  <line x1="320" y1="1285" x2="353" y2="1285" stroke="#ec4899" stroke-width="2.5" opacity=".7" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ak)"/>
+  <line x1="485" y1="1285" x2="518" y2="1285" stroke="#a855f7" stroke-width="2.5" opacity=".7" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ap)"/>
+  <line x1="740" y1="1290" x2="773" y2="1290" stroke="#a855f7" stroke-width="2.5" opacity=".7" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ap)"/>
+  <line x1="895" y1="1290" x2="928" y2="1290" stroke="#a855f7" stroke-width="2.5" opacity=".7" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ap)"/>
+
+  <!-- ═══ PR Merge → back to GitHub → ArgoCD auto sync (LOOP UP) ═══ -->
+  <path d="M 1050 1285 L 1120 1285 L 1120 80 L 990 80" stroke="#3b82f6" stroke-width="2" opacity=".35" stroke-dasharray="8,6" class="animated-dash" marker-end="url(#ab)"/>
+
+  <!-- ═══ PDCA iterate outputs → outcome row ═══ -->
+  <path d="M 630 1350 L 630 1370 L 120 1370 L 120 1408" stroke="#ef4444" stroke-width="1" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ar)"/>
+  <path d="M 630 1370 L 280 1370 L 280 1408" stroke="#06b6d4" stroke-width="1" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ac)"/>
+  <path d="M 630 1370 L 440 1370 L 440 1408" stroke="#10b981" stroke-width="1" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <path d="M 630 1370 L 600 1370 L 600 1408" stroke="#14b8a6" stroke-width="1" opacity=".25" stroke-dasharray="4,3" marker-end="url(#at)"/>
+  <path d="M 630 1370 L 760 1370 L 760 1408" stroke="#ec4899" stroke-width="1" opacity=".25" stroke-dasharray="4,3" marker-end="url(#ak)"/>
+
+  <!-- ═══ Incident Memory ← → Context Loader (feedback loop) ═══ -->
+  <path d="M 760 1410 L 760 1400 L 1130 1400 L 1130 300 L 1155 300" stroke="#ec4899" stroke-width="1.5" opacity=".3" stroke-dasharray="5,4"/>
+
+  <!-- ═══ Living Context Panel → Context Loader (data flow) ═══ -->
+  <path d="M 1150 400 L 1130 400 L 1130 1285 L 320 1285" stroke="#ec4899" stroke-width="1.5" opacity=".3" stroke-dasharray="5,4" marker-end="url(#ak)"/>
+
+  <!-- ═══ Auto Rollback → ArgoCD (rollback flow) ═══ -->
+  <path d="M 600 1410 L 600 1400 L 1110 1400 L 1110 295 L 1068 295" stroke="#14b8a6" stroke-width="1.2" opacity=".2" stroke-dasharray="5,4" marker-end="url(#at)"/>
+
+</svg>
+
+</div>
+</body>
+</html>
