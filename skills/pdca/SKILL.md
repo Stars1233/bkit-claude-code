@@ -153,21 +153,36 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 
 1. Verify Design document exists (required)
 2. **Read Design document FULLY** (read the entire document, not just a summary. This is critical — full context reload ensures each session starts with complete architectural context)
-3. **Read Plan document Context Anchor + Success Criteria**: Read `docs/01-plan/features/{feature}.plan.md` to load Context Anchor and Success Criteria sections. This ensures implementation decisions are guided by strategic intent, not just technical specs.
-4. **Parse --scope parameter**: If arguments contain `--scope <value>`, extract module list (comma-separated scope keys). Match against Design's Session Guide Module Map. Filter implementation items to show only matching modules.
-5. **Display Context Anchor**: Show the Context Anchor table from Design document header. Format: "📌 Context Anchor" + WHY/WHO/RISK/SUCCESS/SCOPE table. This reminds the user WHY we're building this feature.
-6. **Session Guide Display**:
+3. **Full Upstream Context Loading (Phase 2+3)**: Load the COMPLETE upstream document chain:
+   - Read PRD (`docs/00-pm/{feature}.prd.md`) — extract WHY context (JTBD, value proposition, market positioning)
+   - Read Plan (`docs/01-plan/features/{feature}.plan.md`) — extract Context Anchor, Success Criteria, Requirements
+   - This ensures implementation decisions are guided by strategic intent from PRD→Plan→Design, not just the Design spec
+4. **Decision Record Chain Display**: Extract and display key decisions from PRD→Plan→Design as a unified chain. Format:
+   ```
+   📋 Decision Record Chain
+   [PRD] Target: {market/user segment} — {rationale}
+   [Plan] Architecture: {selected option} — {rationale}
+   [Design] State Mgmt: {selected approach} — {rationale}
+   ```
+5. **Success Criteria Tracking**: Extract Success Criteria from Plan document. Display as implementation checklist — each criterion must be addressed during implementation. Mark criteria that are covered by the current --scope.
+6. **Parse --scope parameter**: If arguments contain `--scope <value>`, extract module list (comma-separated scope keys). Match against Design's Session Guide Module Map. Filter implementation items to show only matching modules.
+7. **Display Context Anchor**: Show the Context Anchor table from Design document header. Format: "📌 Context Anchor" + WHY/WHO/RISK/SUCCESS/SCOPE table. This reminds the user WHY we're building this feature.
+8. **Session Guide Display**:
    - If no --scope: Show full Module Map from Design + recommend session split + proceed with full implementation guide
    - If --scope provided: Show only the selected modules' implementation items
-7. Summarize implementation scope:
+9. Summarize implementation scope:
    - Files to create: N
    - Files to modify: M
    - Estimated changes: ~X lines
-8. **Checkpoint 4 — Implementation Approval**: Present scope summary and use AskUserQuestion: "이 범위로 구현을 시작해도 되겠습니까?" **DO NOT START IMPLEMENTATION WITHOUT USER APPROVAL.**
-9. After approval, provide implementation guide based on `do.template.md`
-10. Reference implementation order from Design document (filtered by --scope if provided)
-11. Create Task: `[Do] {feature}` (blockedBy: Design task)
-12. Update .bkit-memory.json: phase = "do"
+10. **Checkpoint 4 — Implementation Approval**: Present scope summary and use AskUserQuestion: "이 범위로 구현을 시작해도 되겠습니까?" **DO NOT START IMPLEMENTATION WITHOUT USER APPROVAL.**
+11. After approval, provide implementation guide based on `do.template.md`
+12. Reference implementation order from Design document (filtered by --scope if provided)
+13. **Code Comment Convention (Phase 3)**: During implementation, add Design reference comments for key architectural decisions:
+    - At module/file level: `// Design Ref: §{section} — {decision rationale}`
+    - At critical logic: `// Plan SC: {success criteria being addressed}`
+    - These comments create traceable links from code back to design decisions
+14. Create Task: `[Do] {feature}` (blockedBy: Design task)
+15. Update .bkit-memory.json: phase = "do"
 
 **--scope Parameter**:
 ```
@@ -186,18 +201,32 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 ### analyze (Check Phase)
 
 1. Verify Do completion status (implementation code exists)
-2. **Context Anchor Embed**: Read Design document's Context Anchor and embed in Analysis document. This ensures the Check phase evaluates implementation against strategic intent, not just structural compliance.
-3. **Plan Success Criteria Reference**: Read Plan document's Success Criteria section. Include in gap analysis evaluation — gaps that violate Success Criteria should be flagged as Critical, not just Important.
-4. **Call gap-detector Agent**
-5. Compare Design document vs implementation code
-6. Calculate Match Rate and generate Gap list
-7. **Checkpoint 5 — Review Decision**: Present issues by severity (Critical/Important only, confidence ≥80%). Use AskUserQuestion with options:
-   - "지금 모두 수정" — proceed to iterate
-   - "Critical만 수정" — iterate critical only
-   - "그대로 진행" — accept current state
-   Wait for user decision before proceeding.
-8. Create Task: `[Check] {feature}` (blockedBy: Do task)
-9. Update .bkit-memory.json: phase = "check", matchRate
+2. **Full Upstream Context Loading (Phase 2+3)**: Load the COMPLETE upstream document chain for comprehensive evaluation:
+   - Read PRD (`docs/00-pm/{feature}.prd.md`) — verify strategic alignment (was the right problem solved?)
+   - Read Plan (`docs/01-plan/features/{feature}.plan.md`) — verify Requirements fulfillment + Success Criteria
+   - Read Design (`docs/02-design/features/{feature}.design.md`) — verify structural implementation match
+   - This 3-layer verification catches gaps that single-document comparison misses
+3. **Context Anchor Embed**: Copy Context Anchor from Design to Analysis document header.
+4. **Strategic Alignment Check (Phase 3)**: Before structural gap analysis, verify:
+   - Does the implementation address the PRD's core problem (WHY)?
+   - Are Plan Success Criteria met or on track?
+   - Were key Design decisions (architecture, data model, API) followed?
+   - Flag strategic misalignments as Critical regardless of structural match rate
+5. **Success Criteria Evaluation**: For each Success Criteria from Plan:
+   - Mark as ✅ Met / ⚠️ Partial / ❌ Not Met
+   - Include evidence (file:line or test result)
+   - Criteria violations are automatically Critical severity
+6. **Call gap-detector Agent**
+7. Compare Design document vs implementation code
+8. Calculate Match Rate and generate Gap list
+9. **Decision Record Verification (Phase 3)**: Check if key decisions from Decision Record Chain were followed in implementation. Flag deviations.
+10. **Checkpoint 5 — Review Decision**: Present issues by severity (Critical/Important only, confidence ≥80%). Use AskUserQuestion with options:
+    - "지금 모두 수정" — proceed to iterate
+    - "Critical만 수정" — iterate critical only
+    - "그대로 진행" — accept current state
+    Wait for user decision before proceeding.
+11. Create Task: `[Check] {feature}` (blockedBy: Do task)
+12. Update .bkit-memory.json: phase = "check", matchRate
 
 **Output Path**: `docs/03-analysis/{feature}.analysis.md`
 
@@ -217,12 +246,25 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 ### report (Completion Report)
 
 1. Verify Check >= 90% (warn if below)
-2. **Call report-generator Agent**
-3. Integrated report of Plan, Design, Implementation, Analysis
-4. Include `## Executive Summary` with `### 1.3 Value Delivered` reflecting actual results (4 perspectives with metrics)
-5. **MANDATORY**: After completing the report, also output the Executive Summary table in your response
-6. Create Task: `[Report] {feature}`
-6. Update .bkit-memory.json: phase = "completed"
+2. **Full Upstream Context Loading (Phase 2+3)**: Load ALL upstream documents for comprehensive reporting:
+   - Read PRD — compare original value proposition vs delivered value
+   - Read Plan — compare planned Requirements/Success Criteria vs actual results
+   - Read Design — note architecture decisions and deviations
+   - Read Analysis — include final Match Rate and resolved gaps
+   - This ensures the report reflects the FULL journey from PRD→Code
+3. **Call report-generator Agent**
+4. Integrated report of PRD, Plan, Design, Implementation, Analysis
+5. **Decision Record Summary (Phase 3)**: Include section "Key Decisions & Outcomes":
+   - List decisions from PRD→Plan→Design chain
+   - For each: was it followed? what was the outcome?
+   - This creates a learnable record for future PDCA cycles
+6. **Success Criteria Final Status**: Include Plan Success Criteria with final status:
+   - Each criterion: ✅ Met (with evidence) / ❌ Not Met (with reason)
+   - Overall Success Rate: X/Y criteria met
+7. Include `## Executive Summary` with `### 1.3 Value Delivered` reflecting actual results (4 perspectives with metrics)
+8. **MANDATORY**: After completing the report, also output the Executive Summary table in your response
+9. Create Task: `[Report] {feature}`
+10. Update .bkit-memory.json: phase = "completed"
 
 **Output Path**: `docs/04-report/{feature}.report.md`
 

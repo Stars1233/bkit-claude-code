@@ -56,6 +56,29 @@ variables:
 
 ---
 
+## 1.4 Success Criteria Final Status
+
+> From Plan document — final evaluation of each criterion.
+
+| # | Criteria | Status | Evidence |
+|---|---------|:------:|----------|
+| SC-1 | {criteria text} | ✅ Met | {file:line, test result, or metric} |
+| SC-2 | {criteria text} | ✅ Met | {file:line, test result, or metric} |
+
+**Success Rate**: {X}/{Y} criteria met ({percentage}%)
+
+## 1.5 Decision Record Summary
+
+> Key decisions from PRD→Plan→Design chain and their outcomes.
+
+| Source | Decision | Followed? | Outcome |
+|--------|----------|:---------:|---------|
+| [PRD] | {decision} | ✅ | {actual outcome} |
+| [Plan] | {decision} | ✅ | {actual outcome} |
+| [Design] | {decision} | ✅ | {actual outcome} |
+
+---
+
 ## 2. Related Documents
 
 | Phase | Document | Status |

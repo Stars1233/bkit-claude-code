@@ -52,10 +52,44 @@ variables:
 
 ---
 
+## Upstream Context Chain
+
+> Full upstream documents loaded for implementation context continuity.
+
+### Documents Loaded
+
+| Document | Path | Key Context |
+|----------|------|-------------|
+| PRD | `docs/00-pm/{feature}.prd.md` | {WHY — core problem and value proposition} |
+| Plan | `docs/01-plan/features/{feature}.plan.md` | {SUCCESS — criteria to meet} |
+| Design | `docs/02-design/features/{feature}.design.md` | {HOW — architecture and data model} |
+
+### Decision Record Chain
+
+> Key decisions from PRD→Plan→Design that guide implementation.
+
+| Source | Decision | Rationale |
+|--------|----------|-----------|
+| [PRD] | {decision} | {rationale} |
+| [Plan] | {decision} | {rationale} |
+| [Design] | {decision} | {rationale} |
+
+### Success Criteria Tracking
+
+> From Plan document. Each criterion must be addressed during implementation.
+
+| # | Criteria | Scope Module | Status |
+|---|---------|:------------:|:------:|
+| SC-1 | {criteria text} | module-N | ☐ |
+| SC-2 | {criteria text} | module-N | ☐ |
+
+---
+
 ## 1. Pre-Implementation Checklist
 
 ### 1.1 Documents Verified
 
+- [ ] PRD reviewed: `docs/00-pm/{feature}.prd.md`
 - [ ] Plan document reviewed: `docs/01-plan/features/{feature}.plan.md`
 - [ ] Design document reviewed: `docs/02-design/features/{feature}.design.md`
 - [ ] Conventions understood: `CONVENTIONS.md` or `docs/01-plan/conventions.md`
@@ -166,7 +200,28 @@ npm install -D {dev-package1} {dev-package2}
 // Add specific patterns here based on project conventions
 ```
 
-### 5.3 Things to Avoid
+### 5.3 Code-to-Design Traceability (Phase 3)
+
+> Add these comment patterns to create traceable links from code to design decisions.
+
+```typescript
+// At module/file level — link to Design section
+// Design Ref: §3.1 Data Model — MongoDB with embedded documents for performance
+
+// At critical business logic — link to Success Criteria
+// Plan SC: Response time < 200ms for search queries
+
+// At architecture decision points — link to Decision Record
+// Decision: [Design] State Mgmt: Zustand — lightweight, no boilerplate
+```
+
+**Rules:**
+- Add `// Design Ref:` at the top of files that implement a specific Design section
+- Add `// Plan SC:` before code that directly addresses a Success Criteria
+- Add `// Decision:` before code that implements a key architectural decision
+- Keep comments concise (1 line) — they're pointers, not documentation
+
+### 5.4 Things to Avoid
 
 - [ ] Hardcoded values (use constants/config)
 - [ ] Direct DOM manipulation (use React patterns)

@@ -45,6 +45,37 @@ variables:
 
 ---
 
+## Strategic Alignment Check
+
+> Verifies implementation against the full upstream chain: PRD → Plan → Design.
+
+### PRD Alignment
+
+| PRD Element | Expected | Implementation Status |
+|-------------|----------|:---------------------:|
+| Core Problem (WHY) | {from PRD} | ✅ Addressed / ❌ Missed |
+| Target User (WHO) | {from PRD} | ✅ Addressed / ❌ Missed |
+| Value Proposition | {from PRD} | ✅ Delivered / ⚠️ Partial |
+
+### Success Criteria Status
+
+| # | Criteria (from Plan) | Status | Evidence |
+|---|---------------------|:------:|----------|
+| SC-1 | {criteria text} | ✅/⚠️/❌ | {file:line or test result} |
+| SC-2 | {criteria text} | ✅/⚠️/❌ | {file:line or test result} |
+
+**Success Rate**: {X}/{Y} criteria met
+
+### Decision Record Verification
+
+| Source | Decision | Followed? | Deviation |
+|--------|----------|:---------:|-----------|
+| [PRD] | {decision} | ✅/❌ | {deviation if any} |
+| [Plan] | {decision} | ✅/❌ | {deviation if any} |
+| [Design] | {decision} | ✅/❌ | {deviation if any} |
+
+---
+
 ## 1. Analysis Overview
 
 ### 1.1 Analysis Purpose
