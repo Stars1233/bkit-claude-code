@@ -237,6 +237,28 @@
           }
         ]
       }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/cwd-changed-handler.js\"",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/task-created-handler.js\"",
+            "timeout": 3000
+          }
+        ]
+      }
     ]
   }
 }
