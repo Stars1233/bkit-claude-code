@@ -55,10 +55,10 @@ assert('EC-003',
   'core/index.js exports stateStore with read/write methods'
 );
 
-// EC-004: core/index.js exports hookIo
+// EC-004: core/index.js exports I/O functions (v2.1.1: hookIo merged into io)
 assert('EC-004',
-  core.hookIo != null && typeof core.hookIo === 'object',
-  'core/index.js exports hookIo module'
+  typeof core.readStdinSync === 'function' && typeof core.outputAllow === 'function',
+  'core/index.js exports I/O functions (readStdinSync, outputAllow)'
 );
 
 // EC-005: core/index.js exports STATE_PATHS

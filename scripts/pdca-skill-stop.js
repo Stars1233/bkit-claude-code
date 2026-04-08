@@ -14,24 +14,19 @@ const fs = require('fs');
 const path = require('path');
 
 // Direct module imports
-const { readStdinSync, outputAllow } = require('../lib/core/io');
+const { readStdinSync } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
-const { getBkitConfig } = require('../lib/core/config');
 const { getPdcaStatusFull, updatePdcaStatus, extractFeatureFromContext } = require('../lib/pdca/status');
 const {
   emitUserPrompt,
-  // v1.4.7 Full-Auto Mode
-  isFullAutoMode,
   shouldAutoAdvance,
   generateAutoTrigger,
   getAutomationLevel,
-  // v1.5.9: Executive Summary + AskUserQuestion
   buildNextActionQuestion,
   formatAskUserQuestion,
 } = require('../lib/pdca/automation');
 const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/pdca/executive-summary');
-// v1.4.4 FR-06: Phase transition and task creation
-const { autoCreatePdcaTask, createPdcaTaskChain, getTaskChainStatus } = require('../lib/task/creator');
+const { autoCreatePdcaTask, createPdcaTaskChain } = require('../lib/task/creator');
 const { updatePdcaTaskStatus } = require('../lib/task/tracker');
 
 // ============================================================
@@ -397,53 +392,60 @@ if (feature && (action === 'plan' || action === 'design' || action === 'report')
   });
   const formatted = formatAskUserQuestion(questionPayload);
 
+  // v2.1.1: Build sessionTitle with PDCA context
+  const execSessionTitle = feature && action
+    ? `[bkit] ${action.toUpperCase()} ${feature}`
+    : undefined;
+
   const execResponse = {
     decision: 'allow',
-    hookEventName: 'Skill:pdca:Stop',
+    hookSpecificOutput: {
+      hookEventName: 'Skill:pdca:Stop',
+      additionalContext: [
+        guidance,
+        '',
+        summaryText,
+        '',
+        `---`,
+        '',
+        `Please select next step.`
+      ].join('\n'),
+      sessionTitle: execSessionTitle,
+      userPrompt: JSON.stringify(formatted),
+    },
     skillResult: {
       action,
       feature: feature || 'unknown',
       nextAction: nextStep?.nextAction || null,
       automationLevel: automationLevel
     },
-    systemMessage: [
-      guidance,
-      '',
-      summaryText,
-      '',
-      `---`,
-      '',
-      `Please select next step.`
-    ].join('\n'),
-    userPrompt: JSON.stringify(formatted)
   };
 
   console.log(JSON.stringify(execResponse));
   process.exit(0);
 }
 
-// Claude Code: JSON output (default for other actions)
+// v2.1.1: Build sessionTitle for default path
+const defaultSessionTitle = feature && action
+  ? `[bkit] ${action.toUpperCase()} ${feature}`
+  : undefined;
+
+// Claude Code: JSON output conforming to CC hook output schema
 const response = {
   decision: 'allow',
-  hookEventName: 'Skill:pdca:Stop',
+  hookSpecificOutput: {
+    hookEventName: 'Skill:pdca:Stop',
+    additionalContext: guidance || undefined,
+    sessionTitle: defaultSessionTitle,
+    userPrompt: userPrompt,
+  },
   skillResult: {
     action,
     feature: feature || 'unknown',
     nextAction: nextStep?.nextAction || null,
     automationLevel: automationLevel
   },
-  guidance: guidance || null,
-  userPrompt: userPrompt,
-  // v1.4.7: Auto-trigger for full-auto mode
   autoTrigger: autoTrigger,
-  systemMessage: guidance ? (
-    `${guidance}\n\n` +
-    `## MANDATORY: AskUserQuestion\n\n` +
-    `Ask the user to select next step with these parameters:\n\n` +
-    `${userPrompt || '(select next step)'}\n\n` +
-    `### Actions by selection:\n` +
-    (nextStep?.options ? nextStep.options.map(opt => `- **${opt.label}** → ${opt.description}`).join('\n') : '')
-  ) : null
 };
 
 // v2.0.5: Collect M8 (Design Completeness) and M10 (PDCA Cycle Time)

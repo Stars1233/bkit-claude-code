@@ -137,10 +137,13 @@ test('SEC-AF-011', 'Tier 1 agents exclude Bash from tools list', () => {
   }
 });
 
-// SEC-AF-012: starter-guide uses acceptEdits permissionMode (not plan)
-test('SEC-AF-012', 'starter-guide has acceptEdits permissionMode', () => {
+// SEC-AF-012: starter-guide permissionMode (CC ignores permissionMode for plugin agents, so it's commented out)
+test('SEC-AF-012', 'starter-guide permissionMode is commented out (CC limitation)', () => {
   const fm = parseFrontmatter('starter-guide');
-  assert.strictEqual(fm.permissionMode, 'acceptEdits');
+  // permissionMode is commented out in agent file because CC ignores it for plugin agents
+  // YAML parser may return null or undefined for commented-out fields
+  assert.ok(fm.permissionMode == null || fm.permissionMode === 'acceptEdits',
+    `starter-guide permissionMode: ${fm.permissionMode} (null/undefined = commented out, acceptable)`);
 });
 
 // SEC-AF-013: starter-guide uses sonnet model (cost-optimized)

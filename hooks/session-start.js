@@ -104,8 +104,8 @@ if (pdcaStatus && pdcaStatus.primaryFeature) {
     const { renderWorkflowMap } = require('../lib/ui/workflow-map');
     const workflowMap = renderWorkflowMap(pdcaStatus, agentState, {
       feature: pdcaStatus.primaryFeature,
-      showIteration: true,
-      showBranch: true
+      showIteration: false,
+      showBranch: false
     });
     if (workflowMap) dashboardSections.push(workflowMap);
   } catch (e) {
@@ -121,13 +121,15 @@ if (pdcaStatus && pdcaStatus.primaryFeature) {
     debugLog('SessionStart', 'v2.1.1 impact view rendering failed', { error: e.message });
   }
 
-  // 7.2 v2.1.1 UI-01: Agent Panel
-  try {
-    const { renderAgentPanel } = require('../lib/ui/agent-panel');
-    const agentPanel = renderAgentPanel(agentState, {});
-    if (agentPanel) dashboardSections.push(agentPanel);
-  } catch (e) {
-    debugLog('SessionStart', 'v2.1.1 agent panel rendering failed', { error: e.message });
+  // 7.2 v2.1.1 UI-01: Agent Panel (skip when inactive to save ~300 tokens)
+  if (agentState && agentState.enabled) {
+    try {
+      const { renderAgentPanel } = require('../lib/ui/agent-panel');
+      const agentPanel = renderAgentPanel(agentState, {});
+      if (agentPanel) dashboardSections.push(agentPanel);
+    } catch (e) {
+      debugLog('SessionStart', 'v2.1.1 agent panel rendering failed', { error: e.message });
+    }
   }
 
   // 8. Control Panel (last in dashboard)

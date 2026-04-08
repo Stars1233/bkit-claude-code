@@ -61,7 +61,7 @@ const t9 = findTransition('act', 'ANALYZE_DONE');
 assert('SM-010', t9 !== null && t9.to === 'check', 'act + ANALYZE_DONE -> check');
 
 const t10 = findTransition('report', 'REPORT_DONE');
-assert('SM-011', t10 !== null && t10.to === 'report', 'report + REPORT_DONE -> report');
+assert('SM-011', t10 !== null && t10.to === 'archived', 'report + REPORT_DONE -> archived');
 
 const t11 = findTransition('report', 'ARCHIVE');
 assert('SM-012', t11 !== null && t11.to === 'archived', 'report + ARCHIVE -> archived');

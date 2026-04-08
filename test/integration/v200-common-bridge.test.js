@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * v2.0.0 Common Bridge Backward Compatibility Test
+ * v2.1.0+ Module Architecture Compatibility Test
  * @module test/integration/v200-common-bridge
- * @version 2.0.0
+ * @version 2.1.1
  *
- * Verifies common.js backward compatibility bridge still works after v2.0.0 changes.
- * Tests load, export count, submodule accessibility, and circular dependency safety.
+ * Originally tested lib/common.js backward compatibility bridge.
+ * Updated for v2.1.0+ where common.js was removed and replaced by
+ * direct submodule imports: lib/core, lib/pdca, lib/intent, lib/task, lib/team, lib/ui.
+ *
  * 20 TC: CB-001 ~ CB-020
  */
 
@@ -29,127 +31,126 @@ function assert(id, condition, description) {
 }
 
 // ============================================================
-// Section 1: common.js loads without error and has >200 exports (CB-001~005)
+// Section 1: Core module loads and has expected exports (CB-001~005)
 // ============================================================
 
-let common = null;
-let commonLoadError = null;
+let core = null;
+let coreLoadError = null;
 try {
-  common = require(path.join(PROJECT_ROOT, 'lib/common'));
+  core = require(path.join(PROJECT_ROOT, 'lib/core'));
 } catch (e) {
-  commonLoadError = e;
+  coreLoadError = e;
 }
 
-// CB-001: common.js loads without error
+// CB-001: core/index.js loads without error
 assert('CB-001',
-  common !== null && commonLoadError === null,
-  'lib/common.js loads without error'
+  core !== null && coreLoadError === null,
+  'lib/core/index.js loads without error'
 );
 
-// CB-002: common.js exports more than 200 functions/values
-const exportCount = common ? Object.keys(common).length : 0;
+// CB-002: core/index.js exports 40+ functions/values
+const exportCount = core ? Object.keys(core).length : 0;
 assert('CB-002',
-  exportCount > 200,
-  `lib/common.js exports >200 functions/values (actual: ${exportCount})`
+  exportCount >= 40,
+  `lib/core/index.js exports >=40 functions/values (actual: ${exportCount})`
 );
 
-// CB-003: common.js exports are not all undefined
-const definedExports = common ? Object.values(common).filter(v => v !== undefined).length : 0;
+// CB-003: Core exports are not all undefined
+const definedExports = core ? Object.values(core).filter(v => v !== undefined).length : 0;
 assert('CB-003',
-  definedExports > 200,
-  `lib/common.js removed (v2.1.0), was: >200 defined (non-undefined) exports (actual: ${definedExports})`
+  definedExports >= 40,
+  `lib/core/index.js has >=40 defined (non-undefined) exports (actual: ${definedExports})`
 );
 
-// CB-004: common.js exports include function types
-const functionExports = common ? Object.values(common).filter(v => typeof v === 'function').length : 0;
+// CB-004: Core exports include function types
+const functionExports = core ? Object.values(core).filter(v => typeof v === 'function').length : 0;
 assert('CB-004',
-  functionExports > 100,
-  `lib/common.js exports >100 functions (actual: ${functionExports})`
+  functionExports >= 20,
+  `lib/core/index.js exports >=20 functions (actual: ${functionExports})`
 );
 
-// CB-005: common.js module.exports is a plain object (not a class)
+// CB-005: core module.exports is a plain object (not a class)
 assert('CB-005',
-  common !== null && typeof common === 'object' && !Array.isArray(common),
-  'lib/common.js exports a plain object'
+  core !== null && typeof core === 'object' && !Array.isArray(core),
+  'lib/core/index.js exports a plain object'
 );
 
 // ============================================================
-// Section 2: Key functions from each submodule accessible via common.js (CB-006~010)
+// Section 2: Key functions from each submodule accessible (CB-006~010)
 // ============================================================
 
 // CB-006: Core functions accessible - debugLog, getBkitConfig, readStdinSync
 assert('CB-006',
-  common && typeof common.debugLog === 'function' &&
-  typeof common.getBkitConfig === 'function' &&
-  typeof common.readStdinSync === 'function',
-  'Core functions (debugLog, getBkitConfig, readStdinSync) accessible via common.js'
+  core && typeof core.debugLog === 'function' &&
+  typeof core.getBkitConfig === 'function' &&
+  typeof core.readStdinSync === 'function',
+  'Core functions (debugLog, getBkitConfig, readStdinSync) accessible via core/index.js'
 );
 
-// CB-007: PDCA functions accessible - getPdcaStatusFull, updatePdcaStatus
+// CB-007: PDCA functions accessible
+let pdca = null;
+try { pdca = require(path.join(PROJECT_ROOT, 'lib/pdca')); } catch (_) {}
 assert('CB-007',
-  common && typeof common.getPdcaStatusFull === 'function' &&
-  typeof common.updatePdcaStatus === 'function',
-  'PDCA functions (getPdcaStatusFull, updatePdcaStatus) accessible via common.js'
+  pdca && typeof pdca.getPdcaStatusFull === 'function' &&
+  typeof pdca.updatePdcaStatus === 'function',
+  'PDCA functions (getPdcaStatusFull, updatePdcaStatus) accessible via pdca/index.js'
 );
 
-// CB-008: Intent functions accessible - detectLanguage, calculateAmbiguityScore
+// CB-008: Intent functions accessible
+let intent = null;
+try { intent = require(path.join(PROJECT_ROOT, 'lib/intent')); } catch (_) {}
 assert('CB-008',
-  common && typeof common.detectLanguage === 'function' &&
-  typeof common.calculateAmbiguityScore === 'function',
-  'Intent functions (detectLanguage, calculateAmbiguityScore) accessible via common.js'
+  intent && typeof intent.detectLanguage === 'function' &&
+  typeof intent.calculateAmbiguityScore === 'function',
+  'Intent functions (detectLanguage, calculateAmbiguityScore) accessible via intent/index.js'
 );
 
-// CB-009: Task functions accessible - classifyTaskByLines, getPdcaLevel
+// CB-009: Task functions accessible
+let task = null;
+try { task = require(path.join(PROJECT_ROOT, 'lib/task')); } catch (_) {}
 assert('CB-009',
-  common && typeof common.classifyTaskByLines === 'function' &&
-  typeof common.getPdcaLevel === 'function',
-  'Task functions (classifyTaskByLines, getPdcaLevel) accessible via common.js'
+  task && typeof task.classifyTaskByLines === 'function' &&
+  typeof task.getPdcaLevel === 'function',
+  'Task functions (classifyTaskByLines, getPdcaLevel) accessible via task/index.js'
 );
 
 // CB-010: Team functions accessible
-assert('CB-010',
-  common && (typeof common.startTeamSession === 'function' ||
-  typeof common.teamEnabled === 'boolean' ||
-  typeof common.getTeamConfig === 'function'),
-  'Team functions accessible via common.js'
-);
-
-// ============================================================
-// Section 3: Direct imports from lib submodules return same functions (CB-011~015)
-// ============================================================
-
-let core = null, pdca = null, intent = null, task = null, team = null;
-try { core = require(path.join(PROJECT_ROOT, 'lib/core')); } catch (_) {}
-try { pdca = require(path.join(PROJECT_ROOT, 'lib/pdca')); } catch (_) {}
-try { intent = require(path.join(PROJECT_ROOT, 'lib/intent')); } catch (_) {}
-try { task = require(path.join(PROJECT_ROOT, 'lib/task')); } catch (_) {}
+let team = null;
 try { team = require(path.join(PROJECT_ROOT, 'lib/team')); } catch (_) {}
+assert('CB-010',
+  team && typeof team.getTeamConfig === 'function',
+  'Team functions accessible via team/index.js'
+);
 
-// CB-011: lib/core/ loads and exports debugLog same as common.js
+// ============================================================
+// Section 3: Direct imports from lib submodules work independently (CB-011~015)
+// ============================================================
+
+// CB-011: lib/core loads and exports debugLog
 assert('CB-011',
-  core && common && core.debugLog === common.debugLog,
-  'lib/core debugLog is identical to common.debugLog'
+  core && typeof core.debugLog === 'function',
+  'lib/core debugLog is a function'
 );
 
-// CB-012: lib/pdca/ loads and exports getPdcaStatusFull same as common.js
+// CB-012: lib/pdca loads and exports getPdcaStatusFull
 assert('CB-012',
-  pdca && common && pdca.getPdcaStatusFull === common.getPdcaStatusFull,
-  'lib/pdca getPdcaStatusFull is identical to common.getPdcaStatusFull'
+  pdca && typeof pdca.getPdcaStatusFull === 'function',
+  'lib/pdca getPdcaStatusFull is a function'
 );
 
-// CB-013: lib/intent/ loads and exports detectLanguage same as common.js
+// CB-013: lib/intent loads and exports detectLanguage
 assert('CB-013',
-  intent && common && intent.detectLanguage === common.detectLanguage,
-  'lib/intent detectLanguage is identical to common.detectLanguage'
+  intent && typeof intent.detectLanguage === 'function',
+  'lib/intent detectLanguage is a function'
 );
 
-// CB-014: lib/task/ loads and exports classifyTaskByLines same as common.js
+// CB-014: lib/task loads and exports classifyTaskByLines
 assert('CB-014',
-  task && common && task.classifyTaskByLines === common.classifyTaskByLines,
-  'lib/task classifyTaskByLines is identical to common.classifyTaskByLines'
+  task && typeof task.classifyTaskByLines === 'function',
+  'lib/task classifyTaskByLines is a function'
 );
 
-// CB-015: lib/team/ loads without error
+// CB-015: lib/team loads without error
 assert('CB-015',
   team !== null,
   'lib/team loads without error'
@@ -159,19 +160,18 @@ assert('CB-015',
 // Section 4: No circular dependency issues (CB-016~020)
 // ============================================================
 
-// CB-016: Re-requiring common.js returns cached module (no infinite loop)
-let commonSecond = null;
+// CB-016: Re-requiring core returns cached module (no infinite loop)
+let coreSecond = null;
 let reloadError = null;
 try {
-  // Clear require cache for common.js to test fresh load
-  const commonPath = require.resolve(path.join(PROJECT_ROOT, 'lib/common'));
-  commonSecond = require(commonPath);
+  const corePath = require.resolve(path.join(PROJECT_ROOT, 'lib/core'));
+  coreSecond = require(corePath);
 } catch (e) {
   reloadError = e;
 }
 assert('CB-016',
-  commonSecond !== null && reloadError === null,
-  'Re-requiring common.js returns cached module without circular dependency error'
+  coreSecond !== null && reloadError === null,
+  'Re-requiring lib/core returns cached module without circular dependency error'
 );
 
 // CB-017: lib/core loads independently without circular dependency
@@ -226,7 +226,7 @@ assert('CB-020',
 // Summary
 // ============================================================
 console.log('\n========================================');
-console.log('v2.0.0 Common Bridge Compatibility Test Results');
+console.log('v2.1.0+ Module Architecture Compatibility Test Results');
 console.log('========================================');
 console.log(`Total: ${passed + failed} | PASS: ${passed} | FAIL: ${failed}`);
 console.log(`Pass Rate: ${Math.round((passed / (passed + failed)) * 100)}%`);
