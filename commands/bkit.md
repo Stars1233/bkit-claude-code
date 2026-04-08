@@ -34,6 +34,7 @@ PDCA (Document-Driven Development)
   /pdca do <feature>         Implement with Checkpoint 4 (scope approval)
   /pdca do <feature> --scope module-N   Multi-session incremental (v2.0.5)
   /pdca analyze <feature>    Gap analysis with Checkpoint 5 (fix strategy)
+  /pdca qa <feature>         QA phase testing (L1-L5 test levels, v2.1.1)
   /pdca iterate <feature>    Auto-improvement iteration
   /pdca report <feature>     Generate completion report
   /pdca archive <feature>    Archive completed PDCA documents
@@ -56,6 +57,7 @@ Development Pipeline
 
 Quality Management
   /code-review <path>        Code review
+  /qa-phase <feature>        QA phase testing (L1-L5 test levels)
   /zero-script-qa            Start Zero Script QA
 
 Learning
@@ -85,7 +87,7 @@ Output Styles (v1.5.3)
 
 ## Functions Reference
 
-### User-Invocable Skills (12)
+### User-Invocable Skills (13)
 
 | Function | Description |
 |----------|-------------|
@@ -95,6 +97,7 @@ Output Styles (v1.5.3)
 | `/enterprise` | Enterprise project (K8s/Terraform) |
 | `/development-pipeline` | 9-phase development pipeline |
 | `/code-review` | Code quality analysis |
+| `/qa-phase` | QA phase testing with L1-L5 test levels |
 | `/zero-script-qa` | Log-based QA |
 | `/claude-code-learning` | Claude Code learning |
 | `/mobile-app` | Mobile app development (React Native/Flutter/Expo) |
