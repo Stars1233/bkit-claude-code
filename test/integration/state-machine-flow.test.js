@@ -132,8 +132,8 @@ const ctx11 = sm.createContext('test-complete-1', {
 });
 const r11 = sm.transition('check', 'MATCH_PASS', ctx11);
 assert('SF-011',
-  r11.success === true && r11.currentState === 'report',
-  'check -> report via MATCH_PASS when matchRate >= threshold'
+  r11.success === true && r11.currentState === 'qa',
+  'check -> qa via MATCH_PASS when matchRate >= threshold'
 );
 
 // SF-012: MATCH_PASS blocked with low matchRate

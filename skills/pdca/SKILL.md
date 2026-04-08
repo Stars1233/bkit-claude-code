@@ -13,6 +13,7 @@ agents:
   analyze: bkit:gap-detector
   iterate: bkit:pdca-iterator
   report: bkit:report-generator
+  qa: bkit:qa-lead
   team: null
   pm: null
   default: null
@@ -33,6 +34,8 @@ imports:
   - ${PLUGIN_ROOT}/templates/design.template.md
   - ${PLUGIN_ROOT}/templates/do.template.md
   - ${PLUGIN_ROOT}/templates/analysis.template.md
+  - ${PLUGIN_ROOT}/templates/qa-report.template.md
+  - ${PLUGIN_ROOT}/templates/qa-test-plan.template.md
   - ${PLUGIN_ROOT}/templates/report.template.md
   - ${PLUGIN_ROOT}/templates/iteration-report.template.md
 next-skill: null
@@ -54,6 +57,7 @@ task-template: "[PDCA] {feature}"
 | `do [feature]` | Do phase guide (start implementation) | `/pdca do user-auth` |
 | `analyze [feature]` | Run Gap analysis (Check phase) | `/pdca analyze user-auth` |
 | `iterate [feature]` | Auto improvement iteration (Act phase) | `/pdca iterate user-auth` |
+| `qa [feature]` | Run QA phase (L1-L5 tests) | `/pdca qa user-auth` |
 | `report [feature]` | Generate completion report | `/pdca report user-auth` |
 | `archive [feature]` | Archive completed PDCA documents | `/pdca archive user-auth` |
 | `cleanup [feature]` | Cleanup archived features from status | `/pdca cleanup` |

@@ -24,8 +24,8 @@ description: |
 
   Do NOT use for: initial development, research tasks, design document creation,
   or when user explicitly wants manual control.
-model: sonnet
-effort: medium
+model: opus
+effort: high
 maxTurns: 20
 linked-from-skills:
   - pdca: iterate
@@ -117,6 +117,62 @@ Evaluation Criteria:
 - All expected success logs present
 - Response time within thresholds
 - No unhandled exceptions
+```
+
+### 4. Semantic Evaluator (v2.1.1)
+
+Evaluates and fixes gaps identified by gap-detector's semantic axes.
+Requires UNDERSTANDING the design intent, not just pattern-matching fixes.
+
+```
+Evaluation Criteria (from gap-detector §8):
+- Intent Match >= 80% (code achieves design's stated purpose)
+- Behavioral Completeness >= 80% (edge cases, error handling, validation)
+- UX Fidelity >= 80% (loading/error/empty states, user feedback)
+
+Fix Strategy by Semantic Axis:
+
+INTENT GAP FIX:
+  1. Read the Design Context Anchor (WHY/SUCCESS) — understand the GOAL
+  2. Read the Plan Success Criteria — understand WHAT must be achieved
+  3. Read the current implementation — understand what it ACTUALLY does
+  4. Identify the delta: "Design wants X, code does Y, gap is Z"
+  5. Write code that achieves the INTENT, not just adds keywords
+  Example:
+    Gap: "Design requires debounced real-time search, code does onChange→fetch"
+    Fix: Add useDebounce hook with 300ms delay, not just a comment "// debounce"
+
+BEHAVIORAL GAP FIX:
+  1. List all design-specified error scenarios and edge cases
+  2. Trace each through the implementation — where does it break?
+  3. Add proper error handling, validation, boundary checks
+  4. Ensure error responses match design format (not generic catch-all)
+  Example:
+    Gap: "No concurrent submit guard on booking form"
+    Fix: Add isSubmitting state + disabled button + early return in handler
+
+UX GAP FIX:
+  1. List all design-specified UI states (loading, empty, error, success)
+  2. Check which states are missing from implementation
+  3. Add appropriate state management + conditional rendering
+  4. Ensure user gets feedback for every async operation
+  Example:
+    Gap: "No loading indicator during API call"
+    Fix: Add isLoading state + spinner/skeleton component + conditional render
+```
+
+#### Re-evaluation After Semantic Fixes
+
+```
+After applying semantic fixes, re-run gap-detector with focus on:
+1. Did the Intent Match score improve? (check Success Criteria coverage)
+2. Did the Behavioral score improve? (check error path coverage)
+3. Did the UX Fidelity score improve? (check state management coverage)
+
+IMPORTANT: Do NOT just add comments or placeholder code to boost scores.
+gap-detector evaluates actual logic depth, not keyword presence.
+A fix that adds "// TODO: handle error" does NOT improve Behavioral score.
+A fix that adds actual try-catch with proper error response DOES.
 ```
 
 ## Iteration Workflow

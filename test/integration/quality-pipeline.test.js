@@ -98,7 +98,7 @@ assert('QP-005',
 
 // QP-006: checkGate passes with good metrics
 const gate6 = gates.checkGate('check', {
-  metrics: { matchRate: 95, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 },
+  metrics: { matchRate: 100, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 },
   projectLevel: 'Dynamic',
 });
 assert('QP-006',
@@ -113,7 +113,7 @@ const gate7 = gates.checkGate('check', {
 });
 assert('QP-007',
   gate7.verdict === 'retry',
-  'checkGate(check) returns retry when matchRate < 90'
+  'checkGate(check) returns retry when matchRate < 100'
 );
 
 // QP-008: checkGate returns fail with critical blockers
@@ -230,8 +230,8 @@ assert('QP-019',
 // QP-020: getEffectiveThresholds returns level-adjusted thresholds
 const thresholds20 = gates.getEffectiveThresholds('check', 'Enterprise');
 assert('QP-020',
-  thresholds20.matchRate && thresholds20.matchRate.effective === 95,
-  'getEffectiveThresholds(check, Enterprise) returns matchRate threshold 95'
+  thresholds20.matchRate && thresholds20.matchRate.effective === 100,
+  'getEffectiveThresholds(check, Enterprise) returns matchRate threshold 100'
 );
 
 // ============================================================

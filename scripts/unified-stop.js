@@ -104,6 +104,7 @@ const SKILL_HANDLERS = {
   'phase-5-design-system': './phase5-design-stop.js',
   'phase-4-api': './phase4-api-stop.js',
   'zero-script-qa': './qa-stop.js',
+  'qa-phase': './qa-phase-stop.js',  // v2.1.1: QA Phase stop handler
   'development-pipeline': null  // Special case: echo command
 };
 
@@ -123,6 +124,7 @@ const AGENT_HANDLERS = {
   'team-coordinator': './team-stop.js',  // v1.5.1: Team cleanup on stop
   'cto-lead': './cto-stop.js',           // v1.5.1: CTO session cleanup
   'pm-lead': './pdca-skill-stop.js',    // v1.6.0: PM lead uses PDCA stop handler
+  'qa-lead': './qa-phase-stop.js',     // v2.1.1: QA Lead agent stop handler
   // design-validator: PreToolUse only, no Stop handler
 };
 
@@ -375,13 +377,27 @@ if (feature && currentPhase) {
       const phase = currentPhase.toLowerCase();
 
       if (phase === 'check' && gateVerdict) {
-        // Gate verdict drives check→report or check→act
+        // Gate verdict drives check→qa or check→act
         if (gateVerdict === 'pass') {
-          event = 'MATCH_PASS';
+          event = 'MATCH_PASS';  // Now goes to 'qa' instead of 'report'
         } else if (gateVerdict === 'retry') {
           event = 'ITERATE';
         }
         // 'fail' = blocked, no transition
+      } else if (phase === 'qa' && gateVerdict) {
+        // v2.1.1: QA phase gate evaluation
+        if (gateVerdict === 'pass') {
+          event = 'QA_PASS';
+        } else if (gateVerdict === 'retry' || gateVerdict === 'fail') {
+          event = 'QA_FAIL';
+        }
+      } else if (phase === 'qa' && !gateVerdict) {
+        // No gate metrics available — check if QA was skipped
+        const pdcaStatus = getPdcaStatusFull();
+        const featureData = pdcaStatus?.features?.[feature];
+        if (featureData?.chromeAvailable === false && featureData?.qaPassRate == null) {
+          event = 'QA_SKIP';
+        }
       } else if (phase === 'pm') {
         event = 'PM_DONE';
       } else if (phase === 'plan') {

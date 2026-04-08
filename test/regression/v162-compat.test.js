@@ -55,9 +55,9 @@ assert('VC-004', phase.getPhaseNumber('check') === 4,
 assert('VC-005', phase.getPhaseNumber('act') === 5,
   'iterate/act command: phase module recognizes act phase (number=5)');
 
-// VC-006: report command support
-assert('VC-006', phase.getPhaseNumber('report') === 6,
-  'report command: phase module recognizes report phase (number=6)');
+// VC-006: report command support (v2.1.1: order 6→7 due to qa phase insertion)
+assert('VC-006', phase.getPhaseNumber('report') === 7,
+  'report command: phase module recognizes report phase (number=7)');
 
 // VC-007: status function available
 assert('VC-007', typeof status.getPdcaStatusFull === 'function',
@@ -266,8 +266,8 @@ const allCoreAgentsPresent = coreAgents.every(a =>
 assert('VC-027', allCoreAgentsPresent,
   'Core agents (cto-lead, pm-lead, code-analyzer, starter-guide) present');
 
-// VC-028: PDCA phase navigation chain unbroken
-const navChain = ['plan', 'design', 'do', 'check', 'act', 'report'];
+// VC-028: PDCA phase navigation chain unbroken (v2.1.1: qa phase added)
+const navChain = ['plan', 'design', 'do', 'check', 'act', 'qa', 'report'];
 let chainOk = true;
 for (let i = 0; i < navChain.length - 1; i++) {
   if (phase.getNextPdcaPhase(navChain[i]) !== navChain[i + 1]) {
@@ -276,7 +276,7 @@ for (let i = 0; i < navChain.length - 1; i++) {
   }
 }
 assert('VC-028', chainOk,
-  'PDCA phase navigation chain: plan->design->do->check->act->report');
+  'PDCA phase navigation chain: plan->design->do->check->act->qa->report');
 
 // VC-029: bkit.config.json has all required PDCA docPaths
 const requiredDocPaths = ['plan', 'design', 'analysis', 'report'];
