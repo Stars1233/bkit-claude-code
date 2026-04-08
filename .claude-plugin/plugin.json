@@ -16,8 +16,5 @@
     "multilingual", "enterprise", "code-quality", "design-sync",
     "controllable-ai", "audit-logging", "mcp-server"
   ],
-  "engines": {
-    "claude-code": ">=2.1.94"
-  },
   "outputStyles": "./output-styles/"
 }

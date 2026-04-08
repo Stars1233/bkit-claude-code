@@ -1,8 +1,8 @@
 # bkit v2.0.5 Comprehensive Test Report
 
-> Generated: 2026-04-08T06:02:44.253Z
-> Total: 3056 TC, 3028 PASS, 20 FAIL, 13 SKIP
-> Pass Rate: 99.1%
+> Generated: 2026-04-08T06:09:35.445Z
+> Total: 3042 TC, 3011 PASS, 23 FAIL, 13 SKIP
+> Pass Rate: 99.0%
 
 ---
 
@@ -11,27 +11,27 @@
 | Category | Total | Passed | Failed | Skipped | Rate |
 |----------|:-----:|:------:|:------:|:-------:|:----:|
 | Unit Tests | 1234 | 1233 | 1 | 4 | 99.9% FAIL |
-| Integration Tests | 442 | 425 | 17 | 0 | 96.2% FAIL |
-| Security Tests | 217 | 217 | 0 | 0 | 100.0% PASS |
-| Regression Tests | 516 | 508 | 0 | 8 | 98.4% PASS |
+| Integration Tests | 442 | 424 | 18 | 0 | 95.9% FAIL |
+| Security Tests | 217 | 216 | 1 | 0 | 99.5% FAIL |
+| Regression Tests | 502 | 493 | 1 | 8 | 98.2% FAIL |
 | Performance Tests | 106 | 104 | 2 | 1 | 98.1% FAIL |
 | Philosophy Tests | 140 | 140 | 0 | 0 | 100.0% PASS |
 | UX Tests | 160 | 160 | 0 | 0 | 100.0% PASS |
 | E2E Tests (Node) | 61 | 61 | 0 | 0 | 100.0% PASS |
 | Architecture Tests | 100 | 100 | 0 | 0 | 100.0% PASS |
 | Controllable AI Tests | 80 | 80 | 0 | 0 | 100.0% PASS |
-| **Total** | **3056** | **3028** | **20** | **13** | **99.1%** |
+| **Total** | **3042** | **3011** | **23** | **13** | **99.0%** |
 
 ## Version Comparison: v1.6.2 → v2.0.0
 
 | Metric | v1.6.2 | v2.0.0 | Delta |
 |--------|:------:|:------:|:-----:|
 | Categories | 8 | 10 | +2 |
-| Total TC | 1151 | 3056 | +1905 |
+| Total TC | 1151 | 3042 | +1891 |
 | Unit Tests | 450 | 1234 | +784 |
 | Integration Tests | 130 | 442 | +312 |
 | Security Tests | 80 | 217 | +137 |
-| Regression Tests | 200 | 516 | +316 |
+| Regression Tests | 200 | 502 | +302 |
 | Performance Tests | 76 | 106 | +30 |
 | Philosophy Tests | 60 | 140 | +80 |
 | UX Tests | 60 | 160 | +100 |
@@ -55,6 +55,7 @@ Require stack:
 
 ### Integration Tests
 
+- **CS-014**: plugin.json engines.claude-code: undefined
 - **integration/hook-chain.test.js**: Execution error: Command failed: node "/Users/popup-kay/Documents/GitHub/popup/bkit-claude-code/test/integration/hook-chain.test.js"
 node:internal/modules/cjs/loader:1386
   throw err;
@@ -123,6 +124,27 @@ Node.js v22.21.1
 - **CB-014**: lib/task classifyTaskByLines is identical to common.classifyTaskByLines
 - **CB-016**: Re-requiring common.js returns cached module without circular dependency error
 
+### Regression Tests
+
+- **regression/cc-compat.test.js**: Execution error: Command failed: node "/Users/popup-kay/Documents/GitHub/popup/bkit-claude-code/test/regression/cc-compat.test.js"
+/Users/popup-kay/Documents/GitHub/popup/bkit-claude-code/test/regression/cc-compat.test.js:35
+  pluginJson.engines['claude-code'].=== undefined,
+                                    ^^^
+
+SyntaxError: Unexpected token '==='
+    at wrapSafe (node:internal/modules/cjs/loader:1638:18)
+    at Module._compile (node:internal/modules/cjs/loader:1680:20)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.21.1
+
+
 ### Performance Tests
 
 - **performance/core-function-perf.test.js**: Execution error: Command failed: node "/Users/popup-kay/Documents/GitHub/popup/bkit-claude-code/test/performance/core-function-perf.test.js"
@@ -181,4 +203,4 @@ Node.js v22.21.1
 
 ## Verdict
 
-**20 TESTS FAILED** - Issues must be resolved before release.
+**23 TESTS FAILED** - Issues must be resolved before release.

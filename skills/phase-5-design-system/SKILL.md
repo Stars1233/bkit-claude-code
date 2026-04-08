@@ -3,6 +3,7 @@ name: phase-5-design-system
 classification: capability
 classification-reason: Pattern guidance may overlap with model's built-in knowledge as it improves
 deprecation-risk: medium
+effort: medium
 user-invocable: false
 description: |
   Build platform-independent design systems and consistent component libraries.

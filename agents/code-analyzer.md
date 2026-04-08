@@ -29,7 +29,7 @@ skills_preload:
   - phase-2-convention
   - phase-8-review
   - code-review
-permissionMode: plan
+# permissionMode: plan  # CC ignores for plugin agents
 memory: project
 tools:
   - Read

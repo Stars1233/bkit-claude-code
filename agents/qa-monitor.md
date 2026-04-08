@@ -21,7 +21,7 @@ effort: low
 maxTurns: 15
 imports:
   - ${PLUGIN_ROOT}/templates/shared/error-handling-patterns.md
-permissionMode: acceptEdits
+# permissionMode: acceptEdits  # CC ignores for plugin agents
 disallowedTools:
   - Agent
 memory: project

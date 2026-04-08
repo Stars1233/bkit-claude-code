@@ -32,8 +32,8 @@ console.log('--- CC v2.1.94+ Features ---');
 
 // CC-001: plugin.json engines requires >=2.1.78
 assert('CC-001', pluginJson.engines && pluginJson.engines['claude-code'] &&
-  pluginJson.engines['claude-code'].includes('2.1.94'),
-  `plugin.json engines.claude-code = "${pluginJson.engines?.['claude-code']}" (includes 2.1.94)`);
+  pluginJson.engines['claude-code'].=== undefined,
+  `plugin.json engines.claude-code = "${pluginJson.engines?.['claude-code']}" (engines removed - CC #17272 Not Planned)`);
 
 // CC-002: hooks.json references ${CLAUDE_PLUGIN_ROOT}
 const hooksStr = JSON.stringify(hooksConfig);

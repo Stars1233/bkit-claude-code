@@ -3,6 +3,7 @@ name: pdca
 classification: workflow
 classification-reason: PDCA process automation independent of model capability evolution
 deprecation-risk: none
+effort: medium
 description: |
   Unified PDCA cycle management — plan, design, do, analyze, iterate, report.
   Triggers: pdca, plan, design, analyze, report, status, next, iterate, 계획, 설계, 분석, 보고서.

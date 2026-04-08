@@ -10,7 +10,7 @@ description: |
 model: opus
 effort: high
 maxTurns: 30
-permissionMode: acceptEdits
+# permissionMode: acceptEdits  # CC ignores for plugin agents
 memory: project
 disallowedTools:
   - WebSearch

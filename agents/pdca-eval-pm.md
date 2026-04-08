@@ -8,7 +8,7 @@ model: sonnet
 memory: project
 effort: medium
 maxTurns: 20
-permissionMode: plan
+# permissionMode: plan  # CC ignores for plugin agents
 tools:
   - Read
   - Glob

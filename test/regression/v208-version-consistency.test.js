@@ -67,11 +67,11 @@ assert('VC2-008', pluginJson.version === bkitConfig.version,
 // ============================================================
 console.log('\n--- VC2-009~012: CC Compatibility ---');
 
-assert('VC2-009', pluginJson.engines && pluginJson.engines['claude-code'],
-  'plugin.json has engines.claude-code field');
+assert('VC2-009', !pluginJson.engines /* v2.1.0: engines removed per CC #17272 */,
+  'plugin.json engines field removed (CC #17272 Not Planned)');
 
-assert('VC2-010', pluginJson.engines?.['claude-code']?.includes('2.1.94'),
-  `engines.claude-code = "${pluginJson.engines?.['claude-code']}" (requires >= 2.1.94)`);
+assert('VC2-010', !pluginJson.engines /* v2.1.0: engines removed */,
+  `engines.claude-code = "${pluginJson.engines?.['claude-code']}" (engines removed per CC #17272)`);
 
 // VC2-011: 18 hook events in hooks.json
 const hookEvents = Object.keys(hooksJson.hooks || {});

@@ -14,7 +14,7 @@ description: |
 model: sonnet
 effort: medium
 maxTurns: 20
-permissionMode: plan
+# permissionMode: plan  # CC ignores for plugin agents
 memory: project
 tools:
   - Read

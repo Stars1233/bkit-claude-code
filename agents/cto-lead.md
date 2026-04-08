@@ -22,7 +22,7 @@ description: |
 model: opus
 effort: high
 maxTurns: 50
-permissionMode: acceptEdits
+# permissionMode: acceptEdits  # CC ignores for plugin agents
 memory: project
 disallowedTools:
   - "Bash(rm -rf*)"
