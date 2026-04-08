@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * bkit v2.0.9 Comprehensive Test Runner
+ * bkit v2.1.0 Comprehensive Test Runner
  * ~3370+ TC across 10 perspectives
  *
  * Usage:

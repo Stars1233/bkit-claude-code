@@ -1,8 +1,8 @@
 # bkit v2.0.5 Comprehensive Test Report
 
-> Generated: 2026-04-08T06:11:10.202Z
-> Total: 3042 TC, 3011 PASS, 23 FAIL, 13 SKIP
-> Pass Rate: 99.0%
+> Generated: 2026-04-08T06:12:02.888Z
+> Total: 3042 TC, 3010 PASS, 24 FAIL, 13 SKIP
+> Pass Rate: 98.9%
 
 ---
 
@@ -12,7 +12,7 @@
 |----------|:-----:|:------:|:------:|:-------:|:----:|
 | Unit Tests | 1234 | 1233 | 1 | 4 | 99.9% FAIL |
 | Integration Tests | 442 | 424 | 18 | 0 | 95.9% FAIL |
-| Security Tests | 217 | 216 | 1 | 0 | 99.5% FAIL |
+| Security Tests | 217 | 215 | 2 | 0 | 99.1% FAIL |
 | Regression Tests | 502 | 493 | 1 | 8 | 98.2% FAIL |
 | Performance Tests | 106 | 104 | 2 | 1 | 98.1% FAIL |
 | Philosophy Tests | 140 | 140 | 0 | 0 | 100.0% PASS |
@@ -20,7 +20,7 @@
 | E2E Tests (Node) | 61 | 61 | 0 | 0 | 100.0% PASS |
 | Architecture Tests | 100 | 100 | 0 | 0 | 100.0% PASS |
 | Controllable AI Tests | 80 | 80 | 0 | 0 | 100.0% PASS |
-| **Total** | **3042** | **3011** | **23** | **13** | **99.0%** |
+| **Total** | **3042** | **3010** | **24** | **13** | **98.9%** |
 
 ## Version Comparison: v1.6.2 → v2.0.0
 
@@ -203,4 +203,4 @@ Node.js v22.21.1
 
 ## Verdict
 
-**23 TESTS FAILED** - Issues must be resolved before release.
+**24 TESTS FAILED** - Issues must be resolved before release.
