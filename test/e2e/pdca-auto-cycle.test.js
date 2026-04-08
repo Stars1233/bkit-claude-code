@@ -66,11 +66,11 @@ assert('PA-003',
   'Forward chain: plan->design->do->check transitions exist'
 );
 
-// --- PA-004: check -> report via MATCH_PASS event ---
+// --- PA-004: check -> qa via MATCH_PASS event ---
 const t6 = findTransition('check', 'MATCH_PASS');
 assert('PA-004',
-  t6 !== null && t6.to === 'report',
-  'check -> report transition found via MATCH_PASS event'
+  t6 !== null && t6.to === 'qa',
+  'check -> qa transition found via MATCH_PASS event'
 );
 
 // --- PA-005: report -> archived via ARCHIVE event ---
@@ -105,13 +105,13 @@ assert('PA-008',
   'design gate retries/fails with low metrics'
 );
 
-// --- PA-009: check gate requires matchRate >= 90 for pass ---
+// --- PA-009: check gate requires matchRate >= 100 for pass ---
 const checkGatePass = gateManager.checkGate('check', {
-  metrics: { matchRate: 95, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 }
+  metrics: { matchRate: 100, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 }
 });
 assert('PA-009',
   checkGatePass && checkGatePass.verdict === 'pass',
-  'check gate passes with matchRate=95, codeQuality=80, criticalIssue=0, apiCompliance=98'
+  'check gate passes with matchRate=100, codeQuality=80, criticalIssue=0, apiCompliance=98'
 );
 
 // --- PA-010: check gate with matchRate < 90 does not pass ---

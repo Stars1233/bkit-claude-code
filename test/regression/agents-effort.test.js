@@ -33,7 +33,7 @@ const EXPECTED = {
   'pdca-eval-do':         { effort: 'medium', maxTurns: 20 },
   'pdca-eval-plan':       { effort: 'medium', maxTurns: 20 },
   'pdca-eval-pm':         { effort: 'medium', maxTurns: 20 },
-  'pdca-iterator':        { effort: 'medium', maxTurns: 20 },
+  'pdca-iterator':        { effort: 'high',   maxTurns: 20 },
   'pipeline-guide':       { effort: 'medium', maxTurns: 20 },
   'pm-discovery':         { effort: 'medium', maxTurns: 25 },
   'pm-lead':              { effort: 'high',   maxTurns: 30 },

@@ -32,7 +32,7 @@ const sm = require('../../lib/pdca/state-machine');
 // ---------- Constants Validation ----------
 
 test('LC-01', 'STATES includes all expected PDCA states', () => {
-  const expected = ['idle', 'pm', 'plan', 'design', 'do', 'check', 'act', 'report', 'archived', 'error'];
+  const expected = ['idle', 'pm', 'plan', 'design', 'do', 'check', 'act', 'qa', 'report', 'archived', 'error'];
   for (const s of expected) {
     assert.ok(sm.STATES.includes(s), `Missing state: ${s}`);
   }
@@ -42,7 +42,9 @@ test('LC-01', 'STATES includes all expected PDCA states', () => {
 test('LC-02', 'EVENTS includes all expected events', () => {
   const expected = [
     'START', 'SKIP_PM', 'PM_DONE', 'PLAN_DONE', 'DESIGN_DONE', 'DO_COMPLETE',
-    'MATCH_PASS', 'ITERATE', 'ANALYZE_DONE', 'REPORT_DONE', 'ARCHIVE',
+    'MATCH_PASS', 'ITERATE', 'ANALYZE_DONE',
+    'QA_PASS', 'QA_FAIL', 'QA_SKIP', 'QA_RETRY',
+    'REPORT_DONE', 'ARCHIVE',
     'REJECT', 'ERROR', 'RECOVER', 'RESET', 'ROLLBACK', 'TIMEOUT', 'ABANDON'
   ];
   for (const e of expected) {
@@ -50,8 +52,8 @@ test('LC-02', 'EVENTS includes all expected events', () => {
   }
 });
 
-test('LC-03', 'TRANSITIONS table has 20 entries', () => {
-  assert.strictEqual(sm.TRANSITIONS.length, 20, `Expected 20 transitions, got ${sm.TRANSITIONS.length}`);
+test('LC-03', 'TRANSITIONS table has 25 entries', () => {
+  assert.strictEqual(sm.TRANSITIONS.length, 25, `Expected 25 transitions, got ${sm.TRANSITIONS.length}`);
 });
 
 // ---------- findTransition ----------
@@ -142,7 +144,7 @@ test('LC-11', 'transition: check -> report blocked when matchRate < threshold', 
   assert.strictEqual(result.currentState, 'check', 'State should not change');
 });
 
-test('LC-12', 'transition: check -> report succeeds when matchRate >= 90', () => {
+test('LC-12', 'transition: check -> qa succeeds when matchRate >= 90', () => {
   const ctx = {
     feature: 'test-feature-lc12',
     currentState: 'check',
@@ -155,7 +157,7 @@ test('LC-12', 'transition: check -> report succeeds when matchRate >= 90', () =>
   };
   const result = sm.transition('check', 'MATCH_PASS', ctx);
   assert.strictEqual(result.success, true, 'Should succeed with matchRate 95');
-  assert.strictEqual(result.currentState, 'report');
+  assert.strictEqual(result.currentState, 'qa');
 });
 
 // ---------- Iteration loop ----------

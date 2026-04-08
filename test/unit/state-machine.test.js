@@ -30,7 +30,7 @@ const { TRANSITIONS, STATES, EVENTS, GUARDS, findTransition, canTransition, getA
 // --- SM-001~020: 20 transitions each verified (from -> event -> to) ---
 
 // Verify all 20 transition entries exist in the table
-assert('SM-001', TRANSITIONS.length === 20, `TRANSITIONS has 20 entries (got ${TRANSITIONS.length})`);
+assert('SM-001', TRANSITIONS.length === 25, `TRANSITIONS has 25 entries (got ${TRANSITIONS.length})`);
 
 // Normal forward flow transitions
 const t1 = findTransition('idle', 'START');
@@ -52,7 +52,7 @@ const t6 = findTransition('do', 'DO_COMPLETE');
 assert('SM-007', t6 !== null && t6.to === 'check', 'do + DO_COMPLETE -> check');
 
 const t7 = findTransition('check', 'MATCH_PASS');
-assert('SM-008', t7 !== null && t7.to === 'report', 'check + MATCH_PASS -> report');
+assert('SM-008', t7 !== null && t7.to === 'qa', 'check + MATCH_PASS -> qa');
 
 const t8 = findTransition('check', 'ITERATE');
 assert('SM-009', t8 !== null && t8.to === 'act', 'check + ITERATE -> act');
@@ -193,8 +193,8 @@ assert('SM-035', canTransition('do', 'RESET') === true, 'canTransition do+RESET 
 
 // --- SM-039~040: Structural checks ---
 
-assert('SM-041', Array.isArray(STATES) && STATES.length === 10, `STATES has 10 entries (got ${STATES.length})`);
-assert('SM-042', Array.isArray(EVENTS) && EVENTS.length === 18, `EVENTS has 18 entries (got ${EVENTS.length})`);
+assert('SM-041', Array.isArray(STATES) && STATES.length === 11, `STATES has 11 entries (got ${STATES.length})`);
+assert('SM-042', Array.isArray(EVENTS) && EVENTS.length === 22, `EVENTS has 22 entries (got ${EVENTS.length})`);
 
 // Verify STATES includes key phases
 assert('SM-043', STATES.includes('idle') && STATES.includes('pm') && STATES.includes('plan'), 'STATES includes idle, pm, plan');
