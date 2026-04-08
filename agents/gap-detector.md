@@ -39,11 +39,6 @@ skills:
   - bkit-templates
   - phase-2-convention
   - pdca
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/gap-detector-stop.js"
-      timeout: 10000
 ---
 
 # Design-Implementation Gap Detection Agent

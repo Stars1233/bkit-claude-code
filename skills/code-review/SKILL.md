@@ -21,11 +21,6 @@ imports:
 next-skill: null
 pdca-phase: check
 task-template: "[Code-Review] {feature}"
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/code-review-stop.js"
-      timeout: 10000
 ---
 
 # Code Review Skill

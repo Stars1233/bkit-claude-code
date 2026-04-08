@@ -9,11 +9,6 @@ description: |
 context: fork
 agent: bkit:qa-monitor
 user-invocable: true
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/qa-stop.js"
-      timeout: 10000
 ---
 
 # Zero Script QA Expert Knowledge

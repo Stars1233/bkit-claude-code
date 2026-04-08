@@ -35,7 +35,6 @@ tools:
   - Task(gap-detector)
   - Task(code-analyzer)
   - Task(Explore)
-  - TodoWrite
 skills:
   - pdca
   - zero-script-qa

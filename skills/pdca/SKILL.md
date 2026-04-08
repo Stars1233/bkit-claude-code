@@ -37,11 +37,6 @@ imports:
 next-skill: null
 pdca-phase: null
 task-template: "[PDCA] {feature}"
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/pdca-skill-stop.js"
-      timeout: 10000
 ---
 
 # PDCA Skill

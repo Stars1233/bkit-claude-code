@@ -23,12 +23,6 @@ tools:
   - Grep
   - WebSearch
   - WebFetch
-  - TodoWrite
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/pdca-skill-stop.js"
-      timeout: 10000
 ---
 
 ## PM PRD Agent

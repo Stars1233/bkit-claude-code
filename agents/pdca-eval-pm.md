@@ -8,11 +8,13 @@ model: sonnet
 memory: project
 effort: medium
 maxTurns: 20
+permissionMode: plan
 tools:
   - Read
   - Glob
   - Grep
   - Write
+  - Edit
 ---
 
 # PDCA Evaluation Agent: PM Analysis Phase

@@ -46,17 +46,11 @@ tools:
   - Task(gap-detector)
   - Task(report-generator)
   - Task(Explore)
-  - TodoWrite
   - WebSearch
 skills:
   - pdca
   - enterprise
   - bkit-rules
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/cto-stop.js"
-      timeout: 10000
 ---
 
 ## CC v2.1.69+ Architecture Note

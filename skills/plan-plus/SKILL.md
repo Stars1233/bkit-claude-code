@@ -25,11 +25,6 @@ imports:
 next-skill: pdca design
 pdca-phase: plan
 task-template: "[Plan Plus] {feature}"
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/plan-plus-stop.js"
-      timeout: 10000
 ---
 
 # Plan Plus — Brainstorming-Enhanced PDCA Planning

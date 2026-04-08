@@ -8,11 +8,6 @@ description: |
   Triggers: UI integration, frontend-backend, API client, 프론트엔드 통합, UI 구현.
 imports:
   - ${PLUGIN_ROOT}/templates/pipeline/phase-6-ui.template.md
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/phase6-ui-stop.js"
-      timeout: 10000
 agents:
   default: bkit:pipeline-guide
   frontend: bkit:frontend-architect

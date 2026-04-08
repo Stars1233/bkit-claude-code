@@ -33,7 +33,6 @@ tools:
   - Grep
   - WebSearch
   - WebFetch
-  - TodoWrite
 skills:
   - pdca
   - bkit-templates

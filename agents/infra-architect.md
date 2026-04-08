@@ -34,7 +34,7 @@ tools:
   - Glob
   - Grep
   - Bash
-  - Task
+  - Task(Explore)
 skills:
   - enterprise
 ---

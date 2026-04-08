@@ -25,11 +25,6 @@ permissionMode: acceptEdits
 disallowedTools:
   - Agent
 memory: project
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/qa-stop.js"
-      timeout: 10000
 tools:
   - Bash
   - Read

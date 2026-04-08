@@ -35,7 +35,7 @@ when_to_use: |
   Deactivation conditions:
   - When experienced developer says they want to proceed freely
   - Non-development AI work (documents, analysis, etc.)
-tools: [Read, Glob, Grep, TodoWrite]
+tools: [Read, Glob, Grep]
 color: cyan
 skills:
   - development-pipeline

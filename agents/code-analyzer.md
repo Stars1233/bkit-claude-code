@@ -35,13 +35,8 @@ tools:
   - Read
   - Glob
   - Grep
-  - Task
+  - Task(Explore)
   - LSP
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/analysis-stop.js"
-      timeout: 10000
 ---
 
 # Code Analysis Agent

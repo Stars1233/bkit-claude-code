@@ -22,11 +22,6 @@ imports:
 next-skill: null
 pdca-phase: null
 task-template: "[Learn] Claude Code {level}"
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/learning-stop.js"
-      timeout: 10000
 ---
 
 # Claude Code Learning Skill

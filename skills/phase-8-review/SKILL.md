@@ -8,11 +8,6 @@ description: |
   Triggers: code review, architecture check, quality, gap analysis, 코드 리뷰, 품질 검증.
 imports:
   - ${PLUGIN_ROOT}/templates/pipeline/phase-8-review.template.md
-hooks:
-  Stop:
-    - type: command
-      command: "node ${CLAUDE_PLUGIN_ROOT}/scripts/phase8-review-stop.js"
-      timeout: 10000
 agents:
   default: bkit:code-analyzer
   validate: bkit:design-validator

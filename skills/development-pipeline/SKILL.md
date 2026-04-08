@@ -12,7 +12,6 @@ allowed-tools:
   - Write
   - Glob
   - Grep
-  - TodoWrite
 user-invocable: true
 # hooks: Managed by hooks/hooks.json (unified-stop.js handles development-pipeline) - GitHub #9354 workaround
 ---
