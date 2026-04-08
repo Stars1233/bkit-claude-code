@@ -83,11 +83,11 @@ assert('AF-004',
   'State machine has do -> check transition via DO_COMPLETE event'
 );
 
-// --- AF-005: check -> report transition exists (MATCH_PASS event) ---
-const checkToReport = TRANSITIONS.find(t => t.from === 'check' && t.event === 'MATCH_PASS' && t.to === 'report');
+// --- AF-005: check -> qa transition exists (MATCH_PASS event) ---
+const checkToQa = TRANSITIONS.find(t => t.from === 'check' && t.event === 'MATCH_PASS' && t.to === 'qa');
 assert('AF-005',
-  checkToReport !== undefined,
-  'State machine has check -> report transition via MATCH_PASS event'
+  checkToQa !== undefined,
+  'State machine has check -> qa transition via MATCH_PASS event'
 );
 
 // =====================================================================
@@ -173,10 +173,10 @@ assert('AF-015',
 // AF-016~020: Quality gates run automatically (gate-manager has all 7 phases)
 // =====================================================================
 
-// --- AF-016: gate-manager covers all 7 PDCA phases ---
+// --- AF-016: gate-manager covers all 8 PDCA phases ---
 assert('AF-016',
-  gatePhases.length === 7,
-  `Gate manager defines gates for all 7 phases (found: ${gatePhases.length})`
+  gatePhases.length === 8,
+  `Gate manager defines gates for all 8 phases (found: ${gatePhases.length})`
 );
 
 // --- AF-017: check phase gate has matchRate condition ---

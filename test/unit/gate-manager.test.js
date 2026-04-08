@@ -99,12 +99,12 @@ assert('GM-015', starterThresholds.matchRate && starterThresholds.matchRate.effe
   'Starter matchRate threshold is 80');
 
 const enterpriseThresholds = mod.getEffectiveThresholds('check', 'Enterprise');
-assert('GM-016', enterpriseThresholds.matchRate && enterpriseThresholds.matchRate.effective === 95,
-  'Enterprise matchRate threshold is 95');
+assert('GM-016', enterpriseThresholds.matchRate && enterpriseThresholds.matchRate.effective === 100,
+  'Enterprise matchRate threshold is 100');
 
 const dynamicThresholds = mod.getEffectiveThresholds('check', 'Dynamic');
-assert('GM-017', dynamicThresholds.matchRate && dynamicThresholds.matchRate.effective === 90,
-  'Dynamic matchRate uses default threshold 90');
+assert('GM-017', dynamicThresholds.matchRate && dynamicThresholds.matchRate.effective === 100,
+  'Dynamic matchRate uses default threshold 100');
 
 // --- GM-018~021: resolveAction per automation level ---
 

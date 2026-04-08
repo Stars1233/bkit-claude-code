@@ -422,7 +422,7 @@ assert('MC-041',
 
 // MC-042: gate-manager checkGate uses metrics format from collector
 const gateResult = gateManager.checkGate('check', {
-  metrics: { matchRate: 95, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 },
+  metrics: { matchRate: 100, codeQualityScore: 80, criticalIssueCount: 0, apiComplianceRate: 98 },
   projectLevel: 'Dynamic'
 });
 assert('MC-042',

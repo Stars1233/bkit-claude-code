@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-hooks.json",
-  "description": "bkit Vibecoding Kit v2.1.0 - Claude Code",
+  "description": "bkit Vibecoding Kit v2.1.1 - Claude Code",
   "hooks": {
     "SessionStart": [
       {
@@ -255,6 +255,18 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/task-created-handler.js\"",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/file-changed-handler.js\"",
+            "if": "Write|Edit(docs/**/*.md)",
             "timeout": 3000
           }
         ]

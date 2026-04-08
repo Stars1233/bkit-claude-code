@@ -10,7 +10,7 @@
  * @module scripts/plan-plus-stop
  */
 
-const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { readStdinSync, outputAllow } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
 const { getPdcaStatusFull, updatePdcaStatus, extractFeatureFromContext } = require('../lib/pdca/status');
 const { buildNextActionQuestion, formatAskUserQuestion } = require('../lib/pdca/automation');
@@ -65,20 +65,29 @@ const summaryText = formatExecutiveSummary(summary, 'full');
 const questionPayload = buildNextActionQuestion('plan-plus', feature);
 const formatted = formatAskUserQuestion(questionPayload);
 
+// v2.1.1: Build sessionTitle with PDCA context
+const sessionTitle = feature
+  ? `[bkit] PLAN ${feature}`
+  : undefined;
+
+// Claude Code: JSON output conforming to CC hook output schema
 const response = {
   decision: 'allow',
-  hookEventName: 'Skill:plan-plus:Stop',
-  systemMessage: [
-    `## Plan Plus Completed: ${feature}`,
-    '',
-    summaryText,
-    '',
-    `---`,
-    '',
-    `Plan document has been generated.`,
-    `Please select next step.`
-  ].join('\n'),
-  userPrompt: JSON.stringify(formatted)
+  hookSpecificOutput: {
+    hookEventName: 'Skill:plan-plus:Stop',
+    additionalContext: [
+      `## Plan Plus Completed: ${feature}`,
+      '',
+      summaryText,
+      '',
+      `---`,
+      '',
+      `Plan document has been generated.`,
+      `Please select next step.`
+    ].join('\n'),
+    sessionTitle,
+    userPrompt: JSON.stringify(formatted),
+  },
 };
 
 console.log(JSON.stringify(response));

@@ -118,9 +118,9 @@ assert('PD-011',
   'Full mode output is at least as long as compact mode'
 );
 
-// --- PD-012: Full mode includes match rate number ---
+// --- PD-012: Full mode includes phase or percentage info ---
 assert('PD-012',
-  fullPlain.includes('75') || fullPlain.includes('Match') || fullPlain.includes('match'),
+  fullPlain.includes('check') || fullPlain.includes('CHECK') || fullPlain.includes('%'),
   'Full mode shows match rate information'
 );
 

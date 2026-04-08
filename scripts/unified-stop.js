@@ -104,6 +104,7 @@ const SKILL_HANDLERS = {
   'phase-5-design-system': './phase5-design-stop.js',
   'phase-4-api': './phase4-api-stop.js',
   'zero-script-qa': './qa-stop.js',
+  'qa-phase': './qa-phase-stop.js',  // v2.1.1: QA Phase stop handler
   'development-pipeline': null  // Special case: echo command
 };
 
@@ -123,6 +124,7 @@ const AGENT_HANDLERS = {
   'team-coordinator': './team-stop.js',  // v1.5.1: Team cleanup on stop
   'cto-lead': './cto-stop.js',           // v1.5.1: CTO session cleanup
   'pm-lead': './pdca-skill-stop.js',    // v1.6.0: PM lead uses PDCA stop handler
+  'qa-lead': './qa-phase-stop.js',     // v2.1.1: QA Lead agent stop handler
   // design-validator: PreToolUse only, no Stop handler
 };
 
@@ -309,6 +311,11 @@ if (feature && currentPhase && nextPhase) {
     const cp = getCheckpointManager();
     if (cp) {
       cp.createCheckpoint(feature, currentPhase, 'phase_transition', `${currentPhase} → ${nextPhase}`);
+      // v2.1.1 TC-02: Track checkpoint creation in session stats
+      try {
+        const { incrementStat } = require('../lib/control/automation-controller');
+        incrementStat('checkpointsCreated');
+      } catch (_) {}
       debugLog('UnifiedStop', 'v2.0.0 checkpoint created', { feature, currentPhase, nextPhase });
     }
   } catch (_) {}
@@ -370,13 +377,27 @@ if (feature && currentPhase) {
       const phase = currentPhase.toLowerCase();
 
       if (phase === 'check' && gateVerdict) {
-        // Gate verdict drives check→report or check→act
+        // Gate verdict drives check→qa or check→act
         if (gateVerdict === 'pass') {
-          event = 'MATCH_PASS';
+          event = 'MATCH_PASS';  // Now goes to 'qa' instead of 'report'
         } else if (gateVerdict === 'retry') {
           event = 'ITERATE';
         }
         // 'fail' = blocked, no transition
+      } else if (phase === 'qa' && gateVerdict) {
+        // v2.1.1: QA phase gate evaluation
+        if (gateVerdict === 'pass') {
+          event = 'QA_PASS';
+        } else if (gateVerdict === 'retry' || gateVerdict === 'fail') {
+          event = 'QA_FAIL';
+        }
+      } else if (phase === 'qa' && !gateVerdict) {
+        // No gate metrics available — check if QA was skipped
+        const pdcaStatus = getPdcaStatusFull();
+        const featureData = pdcaStatus?.features?.[feature];
+        if (featureData?.chromeAvailable === false && featureData?.qaPassRate == null) {
+          event = 'QA_SKIP';
+        }
       } else if (phase === 'pm') {
         event = 'PM_DONE';
       } else if (phase === 'plan') {
@@ -464,7 +485,89 @@ if (feature && transitionSuccess) {
         const gateEventType = matchRate >= 90 ? 'gate_pass' : 'gate_fail';
         te.recordEvent(gateEventType, { feature, matchRate });
       }
-      debugLog('UnifiedStop', 'v2.0.0 trust engine event recorded', { feature, currentPhase, nextPhase });
+      // v2.1.1 TC-01: Sync trust score to control-state.json
+      te.syncToControlState();
+      debugLog('UnifiedStop', 'v2.1.1 trust synced to control-state', { feature, currentPhase, nextPhase });
+    }
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.1.1 TC-02: Increment session stats on phase completion
+if (feature && transitionSuccess) {
+  try {
+    const { incrementStat } = require('../lib/control/automation-controller');
+    incrementStat('phaseComplete');
+    debugLog('UnifiedStop', 'v2.1.1 session stat incremented', { stat: 'phaseComplete' });
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.1.1 QM-02: Append quality history on every phase transition
+if (feature && currentPhase && transitionSuccess) {
+  try {
+    const metrics = getMetricsCollector();
+    if (metrics) {
+      const snapshot = metrics.readCurrentMetrics(feature);
+      if (snapshot && snapshot.metrics) {
+        const values = {};
+        for (const [mid, entry] of Object.entries(snapshot.metrics)) {
+          if (entry && entry.value != null) values[mid] = entry.value;
+        }
+        metrics.appendHistory({
+          feature,
+          phase: currentPhase,
+          cycle: pdcaStatus?.session?.iteration || 0,
+          timestamp: new Date().toISOString(),
+          values,
+        });
+        debugLog('UnifiedStop', 'v2.1.1 quality history appended', { feature, phase: currentPhase });
+      }
+    }
+  } catch (_) { /* non-critical */ }
+}
+
+// v2.1.1 QM-01: Regression detection during check phase
+if (feature && currentPhase && currentPhase.toLowerCase() === 'check') {
+  try {
+    const regression = require('../lib/quality/regression-guard');
+    const metrics = getMetricsCollector();
+    if (metrics) {
+      const snapshot = metrics.readCurrentMetrics(feature);
+      if (snapshot && snapshot.metrics) {
+        const metricValues = {};
+        for (const [mid, entry] of Object.entries(snapshot.metrics)) {
+          if (entry && entry.value != null) metricValues[mid] = entry.value;
+        }
+        const result = regression.detectRegressions(metricValues, feature);
+        if (result.detected) {
+          const audit = getAuditLogger();
+          if (audit) {
+            audit.writeAuditLog({
+              actor: 'system', actorId: 'unified-stop',
+              action: 'regression_detected', category: 'quality',
+              target: feature, targetType: 'feature',
+              details: { count: result.regressions.length, rules: result.regressions.map(r => r.ruleId) },
+              result: 'warning', destructiveOperation: false,
+            });
+          }
+          debugLog('UnifiedStop', 'v2.1.1 regression detected', { feature, count: result.regressions.length });
+        }
+      }
+
+      // v2.1.1 QM-02: Trend analysis in check phase
+      const trendResult = metrics.analyzeTrend(feature);
+      if (trendResult.alarms.length > 0) {
+        const audit = getAuditLogger();
+        if (audit) {
+          audit.writeAuditLog({
+            actor: 'system', actorId: 'unified-stop',
+            action: 'trend_alarm', category: 'quality',
+            target: feature, targetType: 'feature',
+            details: { alarms: trendResult.alarms.map(a => a.type), trend: trendResult.trend },
+            result: 'warning', destructiveOperation: false,
+          });
+        }
+        debugLog('UnifiedStop', 'v2.1.1 trend alarms', { feature, count: trendResult.alarms.length });
+      }
     }
   } catch (_) { /* non-critical */ }
 }

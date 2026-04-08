@@ -31,13 +31,14 @@ function assert(id, condition, description) {
   }
 }
 
-// Load modules needed for hook chain verification
-const common = require(path.join(PROJECT_ROOT, 'lib/common'));
+// Load modules needed for hook chain verification (v2.1.0: direct submodule imports)
+const common = require(path.join(PROJECT_ROOT, 'lib/core'));
 const coreConfig = require(path.join(PROJECT_ROOT, 'lib/core/config'));
 const ambiguity = require(path.join(PROJECT_ROOT, 'lib/intent/ambiguity'));
 const trigger = require(path.join(PROJECT_ROOT, 'lib/intent/trigger'));
 const pdcaStatus = require(path.join(PROJECT_ROOT, 'lib/pdca/status'));
 const pdcaLevel = require(path.join(PROJECT_ROOT, 'lib/pdca/level'));
+const pdcaAutomation = require(path.join(PROJECT_ROOT, 'lib/pdca/automation'));
 const templateValidator = require(path.join(PROJECT_ROOT, 'lib/pdca/template-validator'));
 const team = require(path.join(PROJECT_ROOT, 'lib/team'));
 
@@ -56,14 +57,14 @@ const team = require(path.join(PROJECT_ROOT, 'lib/team'));
 // 6. Import Resolution
 // Each stage is wrapped in try-catch for independent failure
 
-// TC-HC-01: Stage 1 - detectNewFeatureIntent is callable
+// TC-HC-01: Stage 1 - detectNewFeatureIntent is callable (v2.1.0: via lib/intent/trigger)
 assert('TC-HC-01',
-  typeof common.detectNewFeatureIntent === 'function',
-  'Stage 1: detectNewFeatureIntent is exported from common.js'
+  typeof trigger.detectNewFeatureIntent === 'function',
+  'Stage 1: detectNewFeatureIntent is exported from lib/intent/trigger'
 );
 
 // TC-HC-02: Stage 1 - detectNewFeatureIntent returns expected structure
-const featureResult = common.detectNewFeatureIntent('implement new feature called "auth"');
+const featureResult = trigger.detectNewFeatureIntent('implement new feature called "auth"');
 assert('TC-HC-02',
   featureResult.hasOwnProperty('isNewFeature') &&
   featureResult.hasOwnProperty('featureName') &&
@@ -72,7 +73,7 @@ assert('TC-HC-02',
 );
 
 // TC-HC-03: Stage 1 - null/empty input handled gracefully
-const emptyResult = common.detectNewFeatureIntent('');
+const emptyResult = trigger.detectNewFeatureIntent('');
 assert('TC-HC-03',
   emptyResult.isNewFeature === false && emptyResult.confidence === 0,
   'Stage 1: Empty input returns isNewFeature=false, confidence=0'
@@ -80,18 +81,18 @@ assert('TC-HC-03',
 
 // TC-HC-04: Stage 2 - matchImplicitAgentTrigger is callable
 assert('TC-HC-04',
-  typeof common.matchImplicitAgentTrigger === 'function',
+  typeof trigger.matchImplicitAgentTrigger === 'function',
   'Stage 2: matchImplicitAgentTrigger is exported from common.js'
 );
 
 // TC-HC-05: Stage 2 - null input handled gracefully
 assert('TC-HC-05',
-  common.matchImplicitAgentTrigger(null) === null,
+  trigger.matchImplicitAgentTrigger(null) === null,
   'Stage 2: null input returns null'
 );
 
 // TC-HC-06: Stage 2 - agent trigger returns correct format
-const agentTrig = common.matchImplicitAgentTrigger('help me get started');
+const agentTrig = trigger.matchImplicitAgentTrigger('help me get started');
 assert('TC-HC-06',
   agentTrig === null || (agentTrig.agent && agentTrig.confidence),
   'Stage 2: Returns null or {agent, confidence}'
@@ -99,12 +100,12 @@ assert('TC-HC-06',
 
 // TC-HC-07: Stage 3 - matchImplicitSkillTrigger is callable
 assert('TC-HC-07',
-  typeof common.matchImplicitSkillTrigger === 'function',
+  typeof trigger.matchImplicitSkillTrigger === 'function',
   'Stage 3: matchImplicitSkillTrigger is exported from common.js'
 );
 
 // TC-HC-08: Stage 3 - skill trigger returns correct format
-const skillTrig = common.matchImplicitSkillTrigger('build a login system with fullstack');
+const skillTrig = trigger.matchImplicitSkillTrigger('build a login system with fullstack');
 assert('TC-HC-08',
   skillTrig === null || (skillTrig.skill && skillTrig.level && skillTrig.confidence),
   'Stage 3: Returns null or {skill, level, confidence}'
@@ -112,12 +113,12 @@ assert('TC-HC-08',
 
 // TC-HC-09: Stage 4 - calculateAmbiguityScore is callable
 assert('TC-HC-09',
-  typeof common.calculateAmbiguityScore === 'function',
+  typeof ambiguity.calculateAmbiguityScore === 'function',
   'Stage 4: calculateAmbiguityScore is exported from common.js'
 );
 
 // TC-HC-10: Stage 4 - ambiguity returns shouldClarify
-const ambResult = common.calculateAmbiguityScore('do stuff with things', {});
+const ambResult = ambiguity.calculateAmbiguityScore('do stuff with things', {});
 assert('TC-HC-10',
   ambResult.hasOwnProperty('score') && ambResult.hasOwnProperty('shouldClarify') && ambResult.hasOwnProperty('factors'),
   'Stage 4: calculateAmbiguityScore returns {score, shouldClarify, factors}'
@@ -141,10 +142,10 @@ if (origEnv) process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = origEnv;
 
 // TC-HC-13: Stages produce independent results (no cross-contamination)
 const prompt = 'help me build a new feature';
-const s1 = common.detectNewFeatureIntent(prompt);
-const s2 = common.matchImplicitAgentTrigger(prompt);
-const s3 = common.matchImplicitSkillTrigger(prompt);
-const s4 = common.calculateAmbiguityScore(prompt, {});
+const s1 = trigger.detectNewFeatureIntent(prompt);
+const s2 = trigger.matchImplicitAgentTrigger(prompt);
+const s3 = trigger.matchImplicitSkillTrigger(prompt);
+const s4 = ambiguity.calculateAmbiguityScore(prompt, {});
 assert('TC-HC-13',
   (s1 !== undefined) && (s4.score !== undefined),
   'All stages produce independent results without interfering'
@@ -175,34 +176,34 @@ assert('TC-HC-16',
   'getBkitConfig() includes triggers.confidenceThreshold'
 );
 
-// TC-HC-17: detectLevel is callable and returns valid level
-const level = common.detectLevel();
+// TC-HC-17: detectLevel is callable and returns valid level (v2.1.0: via lib/pdca/level)
+const level = pdcaLevel.detectLevel();
 assert('TC-HC-17',
   ['Starter', 'Dynamic', 'Enterprise'].includes(level),
   `detectLevel() returns valid level: "${level}"`
 );
 
-// TC-HC-18: initPdcaStatusIfNotExists is callable
+// TC-HC-18: initPdcaStatusIfNotExists is callable (v2.1.0: via lib/pdca/status)
 assert('TC-HC-18',
-  typeof common.initPdcaStatusIfNotExists === 'function',
-  'initPdcaStatusIfNotExists is exported for SessionStart'
+  typeof pdcaStatus.initPdcaStatusIfNotExists === 'function',
+  'initPdcaStatusIfNotExists is exported from lib/pdca/status'
 );
 
-// TC-HC-19: getPdcaStatusFull returns status object
-const status = common.getPdcaStatusFull();
+// TC-HC-19: getPdcaStatusFull returns status object (v2.1.0: via lib/pdca/status)
+const status = pdcaStatus.getPdcaStatusFull();
 assert('TC-HC-19',
   status != null && typeof status === 'object',
   'getPdcaStatusFull() returns non-null object'
 );
 
-// TC-HC-20: readBkitMemory is callable
+// TC-HC-20: readBkitMemory is callable (v2.1.0: via lib/pdca/status)
 assert('TC-HC-20',
-  typeof common.readBkitMemory === 'function',
-  'readBkitMemory is exported for SessionStart memory read'
+  typeof pdcaStatus.readBkitMemory === 'function',
+  'readBkitMemory is exported from lib/pdca/status'
 );
 
-// TC-HC-21: emitUserPrompt generates status prompt with correct params
-const prompt2 = common.emitUserPrompt({
+// TC-HC-21: emitUserPrompt generates status prompt (v2.1.0: via lib/pdca/automation)
+const prompt2 = pdcaAutomation.emitUserPrompt({
   message: 'Test question',
   feature: 'test-feature',
   phase: 'plan',
@@ -224,35 +225,35 @@ assert('TC-HC-22',
 // Section 3: PostToolUse → template validation (TC 23-30)
 // ============================================================
 
-// TC-HC-23: REQUIRED_SECTIONS exists
+// TC-HC-23: REQUIRED_SECTIONS exists (v2.1.0: via lib/pdca/template-validator)
 assert('TC-HC-23',
-  common.REQUIRED_SECTIONS != null && typeof common.REQUIRED_SECTIONS === 'object',
-  'REQUIRED_SECTIONS exported from common.js'
+  templateValidator.REQUIRED_SECTIONS != null && typeof templateValidator.REQUIRED_SECTIONS === 'object',
+  'REQUIRED_SECTIONS exported from lib/pdca/template-validator'
 );
 
 // TC-HC-24: detectDocumentType identifies plan document
-const planType = common.detectDocumentType('docs/01-plan/features/my-feat.plan.md');
+const planType = templateValidator.detectDocumentType('docs/01-plan/features/my-feat.plan.md');
 assert('TC-HC-24',
   planType === 'plan',
   'detectDocumentType identifies plan document from path'
 );
 
 // TC-HC-25: detectDocumentType identifies design document
-const designType = common.detectDocumentType('docs/02-design/features/feat.design.md');
+const designType = templateValidator.detectDocumentType('docs/02-design/features/feat.design.md');
 assert('TC-HC-25',
   designType === 'design',
   'detectDocumentType identifies design document from path'
 );
 
 // TC-HC-26: detectDocumentType returns null for analysis (not implemented in current version)
-const analysisType = common.detectDocumentType('docs/03-analysis/feat.analysis.md');
+const analysisType = templateValidator.detectDocumentType('docs/03-analysis/feat.analysis.md');
 assert('TC-HC-26',
   analysisType === null,
   'detectDocumentType returns null for analysis path (not yet implemented)'
 );
 
 // TC-HC-27: detectDocumentType identifies report document
-const reportType = common.detectDocumentType('docs/04-report/features/feat.report.md');
+const reportType = templateValidator.detectDocumentType('docs/04-report/features/feat.report.md');
 assert('TC-HC-27',
   reportType === 'report',
   'detectDocumentType identifies report document from path'
@@ -260,14 +261,14 @@ assert('TC-HC-27',
 
 // TC-HC-28: extractSections parses markdown sections
 const mdContent = '# Title\n\n## Overview\nContent\n\n## Scope\nMore content\n\n## Goals\nGoal list';
-const sections = common.extractSections(mdContent);
+const sections = templateValidator.extractSections(mdContent);
 assert('TC-HC-28',
   Array.isArray(sections) && sections.length >= 3,
   'extractSections parses markdown into section list'
 );
 
 // TC-HC-29: validateDocument returns validation result with {valid, missing, type}
-const validationResult = common.validateDocument('docs/01-plan/features/test.plan.md', mdContent);
+const validationResult = templateValidator.validateDocument('docs/01-plan/features/test.plan.md', mdContent);
 assert('TC-HC-29',
   validationResult.hasOwnProperty('valid') && validationResult.hasOwnProperty('missing') &&
   validationResult.hasOwnProperty('type'),
@@ -276,7 +277,7 @@ assert('TC-HC-29',
 
 // TC-HC-30: formatValidationWarning produces string output for invalid result
 const invalidResult = { valid: false, missing: ['Executive Summary', 'Requirements'], type: 'plan' };
-const warning = common.formatValidationWarning(invalidResult);
+const warning = templateValidator.formatValidationWarning(invalidResult);
 assert('TC-HC-30',
   typeof warning === 'string' && warning.includes('Missing required sections'),
   'formatValidationWarning produces warning string with missing sections'

@@ -46,8 +46,8 @@ const workflowCount = config.skills.workflow.length;
 const capabilityCount = config.skills.capability.length;
 const hybridCount = config.skills.hybrid.length;
 const totalSkills = workflowCount + capabilityCount + hybridCount;
-assert('U-RUN-015', totalSkills === 29, `Total skills = 29 (got ${totalSkills})`);
-assert('U-RUN-016', workflowCount === 10, `Workflow = 10 (got ${workflowCount})`);
+assert('U-RUN-015', totalSkills === 30, `Total skills = 30 (got ${totalSkills})`);
+assert('U-RUN-016', workflowCount === 11, `Workflow = 11 (got ${workflowCount})`);
 assert('U-RUN-017', capabilityCount === 18, `Capability = 18 (got ${capabilityCount})`);
 assert('U-RUN-018', hybridCount === 1, `Hybrid = 1 (got ${hybridCount})`);
 
@@ -196,7 +196,7 @@ assert('U-RUN-051', evalDef3 === null, 'Nonexistent skill returns null');
   assert('U-RUN-068', typeof benchmark.summary.hybrid === 'object', 'Summary has hybrid');
 
   const bmTotal = benchmark.summary.workflow.total + benchmark.summary.capability.total + benchmark.summary.hybrid.total;
-  assert('U-RUN-069', bmTotal === 29, `Benchmark covers 29 skills (got ${bmTotal})`);
+  assert('U-RUN-069', bmTotal === 30, `Benchmark covers 30 skills (got ${bmTotal})`);
 
   // Check high pass rate (28/28 expected, allow minor variance)
   const bmPassed = benchmark.summary.workflow.passed + benchmark.summary.capability.passed + benchmark.summary.hybrid.passed;
@@ -208,7 +208,7 @@ assert('U-RUN-051', evalDef3 === null, 'Nonexistent skill returns null');
     ...config.skills.capability,
     ...config.skills.hybrid
   ];
-  assert('U-RUN-071', skills28.length === 29, `All 29 skills in config (got ${skills28.length})`);
+  assert('U-RUN-071', skills28.length === 30, `All 30 skills in config (got ${skills28.length})`);
 
   // Check that each classification contains expected skills
   assert('U-RUN-072', config.skills.workflow.includes('pdca'), 'pdca in workflow');

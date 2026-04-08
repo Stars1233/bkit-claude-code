@@ -253,8 +253,9 @@ Phase 6 Integration:
 CRITICAL: Check not just file existence, but actual implementation depth.
 Structural Match Rate alone is insufficient — must calculate Functional Match Rate.
 
-Match Rate Formula:
+Legacy Match Rate Formula (v2.1.0, superseded by v2.1.1 §8.4):
   Overall = (Structural × 0.3) + (Functional × 0.7)
+  NOTE: v2.1.1 adds semantic axes. See §8.4 for the current formula.
 
 Functional Depth scoring per file (0-100):
   0   = File exists but empty or only imports
@@ -398,6 +399,183 @@ Convention Score Calculation:
 - Report violations with file:line locations
 ```
 
+### 8. Semantic Evaluation (v2.1.1)
+
+```
+CRITICAL: Beyond structural pattern matching, evaluate whether the implementation
+achieves the INTENT of the design. Read code logic and reason about its behavior,
+not just check for keyword presence.
+
+The LLM must READ and UNDERSTAND the actual code logic — not just grep for patterns.
+Semantic evaluation requires comprehending what the code DOES, not what keywords it CONTAINS.
+```
+
+#### 8.1 Intent Match (Design Purpose Fulfillment)
+
+```
+Evaluate whether the implementation achieves the same GOAL as the design document.
+Read the Design's Context Anchor (WHY/SUCCESS) and Plan's Success Criteria,
+then assess if the code actually delivers on those promises.
+
+Scoring Rubric:
+  100: All design intentions fully achieved. Core value proposition reflected in code.
+       Every Success Criteria from the Plan is addressed by working implementation.
+   80: Core intent achieved but secondary goals partially unmet.
+       Example: search works but advanced filters missing from Plan requirements.
+   60: Direction is correct but core functionality incomplete.
+       Example: auth flow exists but password recovery (a Plan requirement) missing.
+   40: Only structure exists. Design intent and implementation purpose diverge.
+       Example: API routes created but business logic is placeholder/hardcoded.
+   20: Implementation serves a different purpose than design specifies.
+    0: No implementation exists.
+
+Evaluation Method:
+  1. Read Design Context Anchor (WHY/SUCCESS sections)
+  2. Extract Plan Success Criteria list
+  3. Read implementation code — understand the actual logic (not just file names)
+  4. For each Success Criteria: "Does the code achieve this?" (Yes/Partial/No)
+  5. Calculate: (fully_met × 1.0 + partially_met × 0.5) / total_criteria × 100
+
+Example:
+  Design WHY: "Enable real-time property search with filters"
+  Success Criteria: [filter by type, filter by price, debounced search, saved searches]
+  Implementation: filter by type ✅, filter by price ✅, no debounce ❌, no saved searches ❌
+  Intent Score: (2 × 1.0 + 0 × 0.5) / 4 × 100 = 50%
+```
+
+#### 8.2 Behavioral Completeness (Edge Case & Error Coverage)
+
+```
+Evaluate whether the implementation handles ALL behaviors specified in design:
+normal paths, edge cases, error scenarios, boundary conditions, validation rules.
+
+Scoring Rubric:
+  100: All edge cases, error handling, and boundary conditions implemented.
+       Validation matches design spec. Error responses follow design format.
+   80: Major edge cases handled. Minor scenarios missing (e.g., empty state UI).
+   60: Happy path + basic error handling. No edge case coverage.
+       Example: form submits on valid input, shows generic error on failure,
+       but no field-level validation, no rate limiting, no concurrent submit guard.
+   40: Happy path only. Errors cause crash or silent failure.
+   20: Some paths work. Core scenarios incomplete.
+    0: No implementation exists.
+
+Evaluation Method:
+  1. Extract from Design: error handling spec, API error responses, validation rules,
+     boundary conditions, edge cases, empty states, loading states
+  2. Read implementation code — trace error paths through the actual logic
+  3. For each design-specified behavior:
+     - Does the code handle this case? (Read the actual try-catch, if-checks, validation)
+     - Is the error response format correct?
+     - Are boundary conditions checked (null, empty, overflow, concurrent)?
+  4. Count: handled_behaviors / total_specified_behaviors × 100
+
+Example:
+  Design specifies: [input validation, auth check, 404 handling, rate limit, 
+                      concurrent submit guard, empty results display]
+  Implementation:    [input validation ✅, auth check ✅, 404 ✅, 
+                      rate limit ❌, concurrent guard ❌, empty results ❌]
+  Behavioral Score: 3/6 × 100 = 50%
+```
+
+#### 8.3 UX Fidelity (User Experience Flow Match)
+
+```
+Evaluate whether user-facing behavior matches the design's UX specifications:
+loading states, empty states, error feedback, transitions, accessibility, responsiveness.
+
+NOTE: For non-frontend projects (CLI tools, libraries, backend-only services),
+this axis is automatically disabled. Redistribute its weight to Intent Match.
+
+Scoring Rubric:
+  100: All UX states (loading, empty, error, success) match design. Transitions smooth.
+       User feedback present for every async operation. Accessibility basics covered.
+   80: Major UX states implemented. Minor feedback/transition gaps.
+       Example: loading spinner exists but no skeleton UI as designed.
+   60: Basic UI exists but state management incomplete.
+       Example: data renders on success, but no loading indicator, no error message.
+   40: Static UI only. No user feedback for interactions.
+   20: Layout exists. No functional UI elements.
+    0: No UI implementation.
+
+Evaluation Method:
+  1. Extract from Design: UI state specifications (loading, error, empty, success),
+     interaction patterns, transition requirements, accessibility requirements
+  2. Read implementation code — check for state management logic:
+     - useState/useReducer for loading/error states
+     - Conditional rendering for each state
+     - User feedback elements (toasts, alerts, inline errors)
+     - Async operation indicators (spinners, progress bars, skeletons)
+  3. For each design-specified UX element: present or missing?
+  4. Calculate: implemented_ux_elements / total_specified × 100
+
+Auto-disable detection:
+  If project has NO frontend files (no .tsx/.jsx/.vue/.svelte files):
+    UX Fidelity score = N/A
+    Redistribute weight to Intent Match
+```
+
+#### 8.4 Updated Match Rate Formula (v2.1.1)
+
+```
+IMPORTANT: This replaces the v2.2.0/v2.1.0 formulas.
+
+With Runtime verification (QA phase executed):
+  Overall = (Structural × 0.10) + (Functional × 0.15)
+          + (Contract × 0.15) + (Intent × 0.20)
+          + (Behavioral × 0.15) + (UX × 0.10)
+          + (Runtime × 0.15)
+
+Without Runtime (static analysis only):
+  Overall = (Structural × 0.10) + (Functional × 0.20)
+          + (Contract × 0.20) + (Intent × 0.25)
+          + (Behavioral × 0.15) + (UX × 0.10)
+
+Non-frontend projects (UX axis disabled, weight redistributed to Intent):
+  Overall = (Structural × 0.10) + (Functional × 0.20)
+          + (Contract × 0.20) + (Intent × 0.35)
+          + (Behavioral × 0.15)
+
+Weight validation: all weights MUST sum to 1.00.
+
+CRITICAL: The "Overall" line in your report output MUST use this formula.
+The gap-detector-stop.js parses "Overall" or "Match Rate" followed by a percentage.
+```
+
+#### 8.5 Semantic Evaluation Procedure
+
+```
+MANDATORY PROCEDURE for semantic evaluation:
+
+Step 1 — Design Intent Extraction (before any code reading):
+  Read the FULL Design document. Extract:
+  - Context Anchor (WHY/WHO/RISK/SUCCESS/SCOPE)
+  - Success Criteria from Plan (if referenced)
+  - Error handling specifications
+  - UX state specifications (if frontend)
+  Write down a checklist of "what the design promises" BEFORE looking at code.
+
+Step 2 — Deep Code Reading (not grep):
+  For EACH key implementation file:
+  - Read the FULL file content (not just imports/exports)
+  - Trace the logic flow: entry point → processing → output
+  - Understand what the code ACTUALLY DOES
+  - Note: what edge cases are handled? what states are managed?
+
+Step 3 — Rubric-Based Scoring:
+  For each semantic axis (Intent, Behavioral, UX):
+  - Compare Step 1 checklist against Step 2 understanding
+  - Assign score using the 0-20-40-60-80-100 rubric
+  - Provide EVIDENCE for each score (specific file:function references)
+  - Never assign 100 without verifying EVERY checklist item
+
+Step 4 — Combined Score:
+  - Calculate structural/functional/contract scores (existing method)
+  - Calculate semantic scores (Intent + Behavioral + UX)
+  - Apply v2.1.1 formula weights
+  - Report all scores individually AND the weighted Overall
+```
+
 ## Detection Result Format
 
 ```markdown
@@ -411,12 +589,24 @@ Convention Score Calculation:
 
 ## Overall Scores
 
+### Structural & Contract Scores
 | Category | Score | Status |
 |----------|:-----:|:------:|
-| Design Match | {percent}% | ✅/⚠️/❌ |
+| Structural Match | {percent}% | ✅/⚠️/❌ |
+| Functional Depth | {percent}% | ✅/⚠️/❌ |
+| API Contract | {percent}% | ✅/⚠️/❌ |
 | Architecture Compliance | {percent}% | ✅/⚠️/❌ |
 | Convention Compliance | {percent}% | ✅/⚠️/❌ |
-| **Overall** | **{percent}%** | ✅/⚠️/❌ |
+
+### Semantic Scores (v2.1.1)
+| Category | Score | Evidence | Status |
+|----------|:-----:|----------|:------:|
+| Intent Match | {percent}% | {N}/{M} Success Criteria met | ✅/⚠️/❌ |
+| Behavioral Completeness | {percent}% | {N}/{M} behaviors covered | ✅/⚠️/❌ |
+| UX Fidelity | {percent}% | {N}/{M} UX states implemented | ✅/⚠️/❌ |
+
+### Weighted Overall (v2.1.1 formula)
+| **Overall Match Rate** | **{percent}%** | ✅/⚠️/❌ |
 
 ## Differences Found
 
@@ -515,13 +705,19 @@ Include the test code inline if possible, or reference the template:
 ### Runtime Score Weight
 
 ```
-If runtime verification is executed:
-  Overall = (Structural × 0.15) + (Functional × 0.25)
-          + (Contract × 0.25) + (Runtime × 0.35)
+NOTE: These legacy formulas are superseded by v2.1.1 §8.4 which includes
+semantic evaluation axes (Intent Match, Behavioral Completeness, UX Fidelity).
+See §8.4 for the current formula. Kept here for reference only.
 
-If runtime verification is NOT executed (no server running):
-  Overall = (Structural × 0.2) + (Functional × 0.4) + (Contract × 0.4)
-  (v2.2.0 fallback — static only)
+Legacy (v2.2.0):
+  With runtime:    Structural×0.15 + Functional×0.25 + Contract×0.25 + Runtime×0.35
+  Without runtime: Structural×0.2  + Functional×0.4  + Contract×0.4
+
+Current (v2.1.1 §8.4):
+  With runtime:    Structural×0.10 + Functional×0.15 + Contract×0.15 + Intent×0.20
+                 + Behavioral×0.15 + UX×0.10 + Runtime×0.15
+  Without runtime: Structural×0.10 + Functional×0.20 + Contract×0.20 + Intent×0.25
+                 + Behavioral×0.15 + UX×0.10
 ```
 
 ---

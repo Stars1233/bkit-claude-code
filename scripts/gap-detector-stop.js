@@ -14,7 +14,7 @@
  * Converted from: scripts/gap-detector-stop.sh
  */
 
-const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { readStdinSync } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
 const { getBkitConfig } = require('../lib/core/config');
 const {
@@ -22,25 +22,16 @@ const {
   extractFeatureFromContext,
   getPdcaStatusFull,
 } = require('../lib/pdca/status');
-// v1.4.0 Automation Functions
 const {
   emitUserPrompt,
   autoAdvancePdcaPhase,
-  // v1.4.7 Full-Auto Mode
-  isFullAutoMode,
-  shouldAutoAdvance,
-  getAutomationLevel,
 } = require('../lib/pdca/automation');
-// v1.4.0 P2: Requirement Fulfillment Integration (stubs - not yet implemented)
-const extractRequirementsFromPlan = () => null;
+// v1.4.0 P2: Requirement Fulfillment Integration (stub - not yet implemented)
 const calculateRequirementFulfillment = () => null;
 const { generateTaskGuidance } = require('../lib/task/creator');
-// v1.4.4 FR-07: Task Status Update
-// v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
 const {
   updatePdcaTaskStatus,
   triggerNextPdcaAction,
-  savePdcaTaskId,
 } = require('../lib/task/tracker');
 
 // Log execution start
@@ -502,10 +493,26 @@ debugLog('Agent:gap-detector:Stop', 'Hook completed', {
   phaseAdvance: phaseAdvance?.nextPhase
 });
 
-// Claude Code: JSON output with AskUserQuestion prompt
+// v2.1.1: Build sessionTitle with PDCA context
+const sessionTitle = feature
+  ? `[bkit] CHECK ${feature}`
+  : undefined;
+
+// Claude Code: JSON output conforming to CC hook output schema
 const response = {
   decision: 'allow',
-  hookEventName: 'Agent:gap-detector:Stop',
+  hookSpecificOutput: {
+    hookEventName: 'Agent:gap-detector:Stop',
+    additionalContext: [
+      `Gap Analysis complete. Match rate: ${matchRate}%`,
+      '',
+      guidance,
+      '',
+      taskGuidance || '',
+    ].filter(Boolean).join('\n'),
+    sessionTitle,
+    userPrompt: userPrompt,
+  },
   analysisResult: {
     matchRate,
     feature: feature || 'unknown',
@@ -514,24 +521,9 @@ const response = {
     threshold,
     nextStep,
     phaseAdvance: phaseAdvance,
-    // v1.4.4 FR-06: Auto-created tasks
     autoCreatedTasks: autoCreatedTasks.map(t => t.taskId)
   },
-  guidance: guidance,
-  taskGuidance: taskGuidance,
-  // v1.4.0: Include user prompt for AskUserQuestion
-  userPrompt: userPrompt,
-  // v1.4.7 FR-04, FR-05, FR-06: Auto-trigger for Check↔Act iteration
   autoTrigger: autoTrigger,
-  // v1.4.0: Stop hooks use systemMessage instead of additionalContext (not supported)
-  systemMessage: `Gap Analysis complete. Match rate: ${matchRate}%\n\n` +
-    `## 🚨 MANDATORY: Call AskUserQuestion\n\n` +
-    `Ask the user about next steps using the AskUserQuestion parameters below:\n\n` +
-    `${userPrompt}\n\n` +
-    `### Actions by selection:\n` +
-    (matchRate >= threshold
-      ? `- **Generate report** → Run /pdca-report ${feature || ''}\n- **/simplify code cleanup** → Run /simplify then generate report\n- **Continue improving** → Run /pdca-iterate ${feature || ''}\n- **Later** → Keep current state`
-      : `- **Auto-improve** → Run /pdca-iterate ${feature || ''}\n- **Manual fix** → Provide guidance\n- **Complete as-is** → Run /pdca-report with warning`)
 };
 
 // v2.0.0: State machine integration

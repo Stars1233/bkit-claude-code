@@ -28,7 +28,6 @@ function buildOnboardingContext(onboardingData) {
       ctx += `- **Match Rate**: ${onboardingData.matchRate}%\n`;
     }
     ctx += `\n### 🚨 MANDATORY: Call AskUserQuestion on user's first message\n\n`;
-    ctx += `${onboardingData.prompt}\n\n`;
     ctx += `### Actions by selection:\n`;
     ctx += `- **Continue ${onboardingData.primaryFeature}** → Run /pdca status then guide to next phase\n`;
     ctx += `- **Start new task** → Ask for new feature name then run /pdca plan\n`;
@@ -36,7 +35,6 @@ function buildOnboardingContext(onboardingData) {
   } else {
     ctx += `## 🚨 MANDATORY: Session Start Action\n\n`;
     ctx += `**AskUserQuestion tool** call required on user's first message.\n\n`;
-    ctx += `${onboardingData.prompt}\n\n`;
     ctx += `### Actions by selection:\n`;
     ctx += `- **Learn bkit** → Run /development-pipeline\n`;
     ctx += `- **Learn Claude Code** → Run /claude-code-learning\n`;
@@ -210,17 +208,14 @@ function buildPdcaCoreRules() {
  * @param {string} triggerTable - Trigger keyword table from onboarding module
  * @returns {string} Context string
  */
-function buildAutomationContext(triggerTable) {
+function buildAutomationContext(_triggerTable) {
+  // v2.1.1: Trigger table removed from context (available in skill definitions)
+  // Saves ~800 tokens per session
   let ctx = '';
-
-  ctx += triggerTable;
-  ctx += `\n\n## v1.4.0 Automation Features\n`;
-  ctx += `- 🎯 8-language auto-detection: EN, KO, JA, ZH, ES, FR, DE, IT\n`;
-  ctx += `- 🤖 Implicit Agent/Skill triggers\n`;
-  ctx += `- 📊 Ambiguity detection and clarifying question generation\n`;
-  ctx += `- 🔄 Automatic PDCA phase progression\n\n`;
-  ctx += `💡 Important: AI Agent is not perfect. Always verify important decisions.\n`;
-
+  ctx += `## Automation\n`;
+  ctx += `- 8-language auto-detection (EN, KO, JA, ZH, ES, FR, DE, IT)\n`;
+  ctx += `- Implicit Agent/Skill triggers + ambiguity detection\n`;
+  ctx += `- Automatic PDCA phase progression\n\n`;
   return ctx;
 }
 
@@ -232,51 +227,14 @@ function buildAutomationContext(triggerTable) {
 function buildVersionEnhancementsContext(detectedLevel) {
   let ctx = '';
 
-  // v1.5.9: Studio Support
-  ctx += `\n## v1.5.9 Enhancements (Studio Support)\n`;
-  ctx += `- Path Registry: centralized state file path management (lib/core/paths.js)\n`;
-  ctx += `- State files migrated to \`.bkit/{state,runtime,snapshots}/\` structured directory\n`;
-  ctx += `- Auto-migration from v1.5.7 legacy paths on SessionStart\n`;
-  ctx += `- bkit memory path: \`.bkit/state/memory.json\` (was \`docs/.bkit-memory.json\`)\n`;
-  ctx += `\n`;
-
-  // v1.6.0: Skills 2.0
-  ctx += `## v1.6.0 Enhancements (Skills 2.0 Integration)\n`;
-  ctx += `- CC recommended version: v2.1.71 (stdin freeze fix, background agent recovery)\n`;
-  ctx += `- Skills 2.0: context:fork native, frontmatter hooks, Skill Evals, Skill Classification\n`;
-  ctx += `- 28 skills classified: 9 Workflow / 18 Capability / 1 Hybrid\n`;
-  ctx += `- PDCA document template validation (PostToolUse hook, ENH-103)\n`;
-  ctx += `- Skill Creator + A/B Testing framework (evals/ directory)\n`;
-  ctx += `- /loop + Cron PDCA auto-monitoring (CC v2.1.71+)\n`;
-  ctx += `- Hot reload: SKILL.md changes reflect without session restart\n`;
-  ctx += `- Wildcard permissions: \`Bash(npm *)\`, \`Bash(git log*)\` patterns\n`;
-  ctx += `- Background agent recovery: CTO Team bg agents reliable (CC v2.1.71+)\n`;
-  ctx += `- PM Agent Team: /pdca pm {feature} for pre-Plan product discovery (5 PM agents)\n`;
-  ctx += `- 37 consecutive CC compatible releases (v2.1.34~v2.1.71)\n`;
-  ctx += `\n`;
-
-  // v2.0.0: Full PDCA automation
-  ctx += `## v2.0.0 Enhancements (AI Native Development OS)\n`;
-  ctx += `- Declarative PDCA state machine (20 transitions, 9 guards)\n`;
-  ctx += `- YAML workflow DSL (3 presets: default, hotfix, enterprise)\n`;
-  ctx += `- L0-L4 controllable AI automation levels\n`;
-  ctx += `- CLI dashboard: progress-bar, workflow-map, control-panel, agent-panel, impact-view\n`;
-  ctx += `- Audit logging + decision tracing for full AI transparency\n`;
-  ctx += `- Quality gates (7 stages) + metrics collector (M1-M10)\n`;
-  ctx += `- Checkpoint/rollback per phase transition\n`;
-  ctx += `- Destructive operation detector (8 rules) + blast radius analysis\n`;
-  ctx += `- MCP servers: bkit-pdca (10 tools) + bkit-analysis (6 tools)\n`;
-  ctx += `- Hook events: 18 in hooks.json (+6 new)\n`;
-  ctx += `- 45 consecutive CC compatible releases (v2.1.34~v2.1.79)\n`;
-  ctx += `\n`;
-
-  // v1.5.7
-  ctx += `## v1.5.7 Enhancements\n`;
-  ctx += `- CC v2.1.63 HTTP hooks support: \`type: "http"\` in hooks config\n`;
-  ctx += `- 13 memory leak fixes for stable long CTO Team sessions\n`;
-  ctx += `- /simplify integration in PDCA Check→Report flow\n`;
+  // v2.1.1: Consolidated version summary (reduced from 4 blocks to 1)
+  ctx += `\n## bkit v2.1.1 (Current)\n`;
+  ctx += `- CC recommended: v2.1.96+ | 62 consecutive compatible releases\n`;
+  ctx += `- Architecture: 37 Skills, 32 Agents, 19 Hook Events, 2 MCP Servers\n`;
+  ctx += `- PDCA: state machine (20 transitions), L0-L4 automation, quality gates (M1-M10)\n`;
+  ctx += `- Dashboard: progress-bar, workflow-map, impact-view, agent-panel, control-panel\n`;
   if (detectedLevel === 'Enterprise') {
-    ctx += `- /batch multi-feature PDCA for Enterprise workflows\n`;
+    ctx += `- Enterprise: /batch multi-feature, CTO Team (5 teammates), /pdca team\n`;
   }
   ctx += `\n`;
 
@@ -399,8 +357,8 @@ function build(_input, context) {
   additionalContext += buildPdcaCoreRules();
   additionalContext += buildAutomationContext(triggerTable);
   additionalContext += buildVersionEnhancementsContext(detectedLevel);
-  additionalContext += buildExecutiveSummaryRule();
-  additionalContext += buildFeatureUsageRule();
+  // v2.1.1: Executive Summary and Feature Usage rules moved to output styles
+  // Saves ~900 tokens per session
 
   return additionalContext;
 }

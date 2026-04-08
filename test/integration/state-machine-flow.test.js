@@ -132,8 +132,8 @@ const ctx11 = sm.createContext('test-complete-1', {
 });
 const r11 = sm.transition('check', 'MATCH_PASS', ctx11);
 assert('SF-011',
-  r11.success === true && r11.currentState === 'report',
-  'check -> report via MATCH_PASS when matchRate >= threshold'
+  r11.success === true && r11.currentState === 'qa',
+  'check -> qa via MATCH_PASS when matchRate >= threshold'
 );
 
 // SF-012: MATCH_PASS blocked with low matchRate
@@ -155,12 +155,12 @@ assert('SF-013',
   'report -> archived via ARCHIVE succeeds'
 );
 
-// SF-014: report -> report via REPORT_DONE (self-loop)
+// SF-014: report -> archived via REPORT_DONE (v2.1.1: SM-01 fixed self-loop to archived)
 const ctx14 = sm.createContext('test-complete-4', { currentState: 'report' });
 const r14 = sm.transition('report', 'REPORT_DONE', ctx14);
 assert('SF-014',
-  r14.success === true && r14.currentState === 'report',
-  'report -> report via REPORT_DONE (self-loop) succeeds'
+  r14.success === true && r14.currentState === 'archived',
+  'report -> archived via REPORT_DONE succeeds'
 );
 
 // SF-015: check -> report via REPORT_DONE when max iterations reached

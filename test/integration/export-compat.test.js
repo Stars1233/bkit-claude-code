@@ -32,7 +32,7 @@ function assert(id, condition, description) {
 }
 
 // Load all modules
-const common = require(path.join(PROJECT_ROOT, 'lib/common'));
+const common = require(path.join(PROJECT_ROOT, 'lib/core'));
 const core = require(path.join(PROJECT_ROOT, 'lib/core'));
 const pdca = require(path.join(PROJECT_ROOT, 'lib/pdca'));
 const intent = require(path.join(PROJECT_ROOT, 'lib/intent'));
@@ -47,11 +47,10 @@ const coordinator = require(path.join(PROJECT_ROOT, 'lib/team/coordinator'));
 const commonExports = Object.keys(common);
 const commonExportCount = commonExports.length;
 
-// TC-EC-01: common.js has expected export count
-// Design says 241. Count actual.
+// TC-EC-01: core/index.js has expected export count (v2.1.0: common.js removed, core is the facade)
 assert('TC-EC-01',
-  commonExportCount >= 199 && commonExportCount <= 260,
-  `common.js has ${commonExportCount} exports (expected 199-260 range)`
+  commonExportCount >= 40 && commonExportCount <= 120,
+  `core/index.js has ${commonExportCount} exports (expected 40-120 range)`
 );
 
 // TC-EC-02: All common.js exports are functions or defined values
@@ -211,96 +210,96 @@ assert('TC-EC-19',
 // Section 4: pdca/index.js re-exports verification (TC 20-24)
 // ============================================================
 
-// TC-EC-20: PDCA Phase exports match common.js
+// TC-EC-20: PDCA Phase exports exist in pdca/index.js (v2.1.0: common.js removed)
 assert('TC-EC-20',
-  common.PDCA_PHASES === pdca.PDCA_PHASES &&
-  common.getPhaseNumber === pdca.getPhaseNumber &&
-  common.getNextPdcaPhase === pdca.getNextPdcaPhase,
-  'PDCA Phase exports match common.js'
+  typeof pdca.PDCA_PHASES !== 'undefined' &&
+  typeof pdca.getPhaseNumber === 'function' &&
+  typeof pdca.getNextPdcaPhase === 'function',
+  'PDCA Phase exports (PDCA_PHASES, getPhaseNumber, getNextPdcaPhase) exist in pdca/index.js'
 );
 
-// TC-EC-21: PDCA Status exports match common.js
+// TC-EC-21: PDCA Status exports exist in pdca/index.js
 assert('TC-EC-21',
-  common.getPdcaStatusFull === pdca.getPdcaStatusFull &&
-  common.updatePdcaStatus === pdca.updatePdcaStatus &&
-  common.readBkitMemory === pdca.readBkitMemory,
-  'PDCA Status exports match common.js'
+  typeof pdca.getPdcaStatusFull === 'function' &&
+  typeof pdca.updatePdcaStatus === 'function' &&
+  typeof pdca.readBkitMemory === 'function',
+  'PDCA Status exports (getPdcaStatusFull, updatePdcaStatus, readBkitMemory) exist in pdca/index.js'
 );
 
-// TC-EC-22: PDCA Automation exports match common.js
+// TC-EC-22: PDCA Automation exports exist in pdca/index.js
 assert('TC-EC-22',
-  common.shouldAutoAdvance === pdca.shouldAutoAdvance &&
-  common.emitUserPrompt === pdca.emitUserPrompt &&
-  common.detectPdcaFromTaskSubject === pdca.detectPdcaFromTaskSubject,
-  'PDCA Automation exports match common.js'
+  typeof pdca.shouldAutoAdvance === 'function' &&
+  typeof pdca.emitUserPrompt === 'function' &&
+  typeof pdca.detectPdcaFromTaskSubject === 'function',
+  'PDCA Automation exports (shouldAutoAdvance, emitUserPrompt, detectPdcaFromTaskSubject) exist in pdca/index.js'
 );
 
-// TC-EC-23: PDCA Executive Summary exports match common.js
+// TC-EC-23: PDCA Executive Summary exports exist in pdca/index.js
 assert('TC-EC-23',
-  common.generateExecutiveSummary === pdca.generateExecutiveSummary &&
-  common.formatExecutiveSummary === pdca.formatExecutiveSummary,
-  'PDCA Executive Summary exports match common.js'
+  typeof pdca.generateExecutiveSummary === 'function' &&
+  typeof pdca.formatExecutiveSummary === 'function',
+  'PDCA Executive Summary exports exist in pdca/index.js'
 );
 
-// TC-EC-24: PDCA Template Validator exports match common.js (v1.6.0 ENH-103)
+// TC-EC-24: PDCA Template Validator exports exist in pdca/index.js (v1.6.0 ENH-103)
 assert('TC-EC-24',
-  common.REQUIRED_SECTIONS === pdca.REQUIRED_SECTIONS &&
-  common.validateDocument === pdca.validateDocument &&
-  common.formatValidationWarning === pdca.formatValidationWarning &&
-  common.isPlanPlus === pdca.isPlanPlus,
-  'PDCA Template Validator exports match common.js'
+  typeof pdca.REQUIRED_SECTIONS !== 'undefined' &&
+  typeof pdca.validateDocument === 'function' &&
+  typeof pdca.formatValidationWarning === 'function' &&
+  typeof pdca.isPlanPlus === 'function',
+  'PDCA Template Validator exports exist in pdca/index.js'
 );
 
 // ============================================================
 // Section 5: team/index.js re-exports verification (TC 25-30)
 // ============================================================
 
-// TC-EC-25: Team Coordinator exports match common.js
+// TC-EC-25: Team Coordinator exports exist in team/index.js (v2.1.0: common.js removed)
 assert('TC-EC-25',
-  common.isTeamModeAvailable === team.isTeamModeAvailable &&
-  common.getTeamConfig === team.getTeamConfig &&
-  common.suggestTeamMode === team.suggestTeamMode,
-  'Team Coordinator exports match common.js'
+  typeof team.isTeamModeAvailable === 'function' &&
+  typeof team.getTeamConfig === 'function' &&
+  typeof team.suggestTeamMode === 'function',
+  'Team Coordinator exports (isTeamModeAvailable, getTeamConfig, suggestTeamMode) exist in team/index.js'
 );
 
-// TC-EC-26: Team Strategy exports match common.js
+// TC-EC-26: Team Strategy exports exist in team/index.js
 assert('TC-EC-26',
-  common.TEAM_STRATEGIES === team.TEAM_STRATEGIES &&
-  common.getTeammateRoles === team.getTeammateRoles,
-  'Team Strategy exports match common.js'
+  typeof team.TEAM_STRATEGIES !== 'undefined' &&
+  typeof team.getTeammateRoles === 'function',
+  'Team Strategy exports (TEAM_STRATEGIES, getTeammateRoles) exist in team/index.js'
 );
 
-// TC-EC-27: Team Orchestrator exports match common.js
+// TC-EC-27: Team Orchestrator exports exist in team/index.js
 assert('TC-EC-27',
-  common.selectOrchestrationPattern === team.selectOrchestrationPattern &&
-  common.composeTeamForPhase === team.composeTeamForPhase &&
-  common.PHASE_PATTERN_MAP === team.PHASE_PATTERN_MAP,
-  'Team Orchestrator exports match common.js'
+  typeof team.selectOrchestrationPattern === 'function' &&
+  typeof team.composeTeamForPhase === 'function' &&
+  typeof team.PHASE_PATTERN_MAP !== 'undefined',
+  'Team Orchestrator exports exist in team/index.js'
 );
 
-// TC-EC-28: Team Communication exports match common.js
+// TC-EC-28: Team Communication exports exist in team/index.js
 assert('TC-EC-28',
-  common.MESSAGE_TYPES === team.MESSAGE_TYPES &&
-  common.createMessage === team.createMessage &&
-  common.createBroadcast === team.createBroadcast,
-  'Team Communication exports match common.js'
+  typeof team.MESSAGE_TYPES !== 'undefined' &&
+  typeof team.createMessage === 'function' &&
+  typeof team.createBroadcast === 'function',
+  'Team Communication exports exist in team/index.js'
 );
 
-// TC-EC-29: Team CTO Logic exports match common.js
+// TC-EC-29: Team CTO Logic exports exist in team/index.js
 assert('TC-EC-29',
-  common.evaluateCheckResults === team.evaluateCheckResults &&
-  common.decidePdcaPhase === team.decidePdcaPhase &&
-  common.recommendTeamComposition === team.recommendTeamComposition,
-  'Team CTO Logic exports match common.js'
+  typeof team.evaluateCheckResults === 'function' &&
+  typeof team.decidePdcaPhase === 'function' &&
+  typeof team.recommendTeamComposition === 'function',
+  'Team CTO Logic exports exist in team/index.js'
 );
 
-// TC-EC-30: Team State Writer exports match common.js
+// TC-EC-30: Team State Writer exports exist in team/index.js
 assert('TC-EC-30',
-  common.initAgentState === team.initAgentState &&
-  common.updateTeammateStatus === team.updateTeammateStatus &&
-  common.readAgentState === team.readAgentState &&
-  common.cleanupAgentState === team.cleanupAgentState,
-  'Team State Writer exports match common.js'
+  typeof team.initAgentState === 'function' &&
+  typeof team.updateTeammateStatus === 'function' &&
+  typeof team.readAgentState === 'function' &&
+  typeof team.cleanupAgentState === 'function',
+  'Team State Writer exports exist in team/index.js'
 );
 
 // ============================================================
@@ -319,16 +318,16 @@ assert('TC-EC-32',
   'restoreFromPluginData is a function in core/index.js'
 );
 
-// TC-EC-33: backupToPluginData bridge check
+// TC-EC-33: backupToPluginData exists in core (v2.1.0: common.js removed, core is the canonical source)
 assert('TC-EC-33',
-  common.backupToPluginData === core.backupToPluginData,
-  'common.backupToPluginData === core.backupToPluginData (bridge check)'
+  typeof core.backupToPluginData === 'function',
+  'backupToPluginData exists in core/index.js'
 );
 
-// TC-EC-34: restoreFromPluginData bridge check
+// TC-EC-34: restoreFromPluginData exists in core
 assert('TC-EC-34',
-  common.restoreFromPluginData === core.restoreFromPluginData,
-  'common.restoreFromPluginData === core.restoreFromPluginData (bridge check)'
+  typeof core.restoreFromPluginData === 'function',
+  'restoreFromPluginData exists in core/index.js'
 );
 
 // ============================================================

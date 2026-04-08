@@ -14,7 +14,7 @@
  * Converted from: scripts/iterator-stop.sh
  */
 
-const { readStdinSync, outputAllow } = require('../lib/core/hook-io');
+const { readStdinSync } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
 const { getBkitConfig } = require('../lib/core/config');
 const {
@@ -24,22 +24,14 @@ const {
   getFeatureStatus,
   completePdcaFeature,
 } = require('../lib/pdca/status');
-// v1.4.0 Automation Functions
 const {
   emitUserPrompt,
   autoAdvancePdcaPhase,
-  // v1.4.7 Full-Auto Mode
-  isFullAutoMode,
-  shouldAutoAdvance,
-  getAutomationLevel,
 } = require('../lib/pdca/automation');
 const { generateTaskGuidance } = require('../lib/task/creator');
-// v1.4.4 FR-07: Task Status Update
-// v1.4.7 FR-04, FR-05, FR-06: Check↔Act Iteration
 const {
   updatePdcaTaskStatus,
   triggerNextPdcaAction,
-  savePdcaTaskId,
 } = require('../lib/task/tracker');
 
 // Log execution start
@@ -329,10 +321,26 @@ debugLog('Agent:pdca-iterator:Stop', 'Hook completed', {
   phaseAdvance: phaseAdvance?.nextPhase
 });
 
-// Claude Code: JSON output with AskUserQuestion prompt
+// v2.1.1: Build sessionTitle with PDCA context
+const sessionTitle = feature
+  ? `[bkit] ACT ${feature}`
+  : undefined;
+
+// Claude Code: JSON output conforming to CC hook output schema
 const response = {
   decision: 'allow',
-  hookEventName: 'Agent:pdca-iterator:Stop',
+  hookSpecificOutput: {
+    hookEventName: 'Agent:pdca-iterator:Stop',
+    additionalContext: [
+      `Iterator complete. Iterations: ${currentIteration}/${maxIterations}, Match rate: ${matchRate}%`,
+      '',
+      guidance,
+      '',
+      taskGuidance || '',
+    ].filter(Boolean).join('\n'),
+    sessionTitle,
+    userPrompt: userPrompt,
+  },
   iterationResult: {
     feature: feature || 'unknown',
     iteration: currentIteration,
@@ -342,25 +350,9 @@ const response = {
     status,
     changedFiles,
     phaseAdvance: phaseAdvance,
-    // v1.4.4 FR-06: Auto-trigger flags
     autoCreatedTasks: autoCreatedTasks.map(t => t.taskId),
     autoTrigger
   },
-  guidance: guidance,
-  taskGuidance: taskGuidance,
-  // v1.4.0: Include user prompt for AskUserQuestion
-  userPrompt: userPrompt,
-  // v1.4.0: Stop hooks use systemMessage instead of additionalContext (not supported)
-  systemMessage: `Iterator complete. Iterations: ${currentIteration}/${maxIterations}, Match rate: ${matchRate}%\n\n` +
-    `## 🚨 MANDATORY: Call AskUserQuestion\n\n` +
-    `Ask the user about next steps using the AskUserQuestion parameters below:\n\n` +
-    `${userPrompt}\n\n` +
-    `### Actions by selection:\n` +
-    (status === 'completed'
-      ? `- **Generate report** → Run /pdca-report ${feature || ''}\n- **/simplify code cleanup** → Run /simplify then generate report\n- **Additional review** → Code review\n- **Archive** → Run /archive`
-      : status === 'improved'
-        ? `- **Re-analyze** → Run /pdca-analyze ${feature || ''}\n- **Continue fixing** → Provide guidance\n- **Complete** → Run /pdca-report`
-        : `- **Re-analyze** → Run /pdca-analyze ${feature || ''}\n- **Continue iterating** → Run /pdca-iterate ${feature || ''}\n- **Complete** → Run /pdca-report`)
 };
 
 // v2.0.0: State machine integration
