@@ -117,6 +117,31 @@ if (isSourceFile(filePath)) {
 }
 
 // ============================================================
+// 2.5 PDCA Skill Bypass Detection (v2.1.5 - #75)
+// ============================================================
+const PDCA_DOC_PATTERNS = [
+  /docs\/01-plan\/.*\.plan\.md$/,
+  /docs\/02-design\/.*\.design\.md$/,
+  /docs\/03-analysis\/.*\.analysis\.md$/,
+  /docs\/04-report\/.*\.report\.md$/,
+  /docs\/05-qa\/.*\.qa-report\.md$/,
+  /docs\/00-pm\/.*\.prd\.md$/,
+];
+
+const isPdcaDoc = PDCA_DOC_PATTERNS.some(pattern => pattern.test(filePath));
+if (isPdcaDoc) {
+  const isSkillContext = !!process.env.CLAUDE_SKILL_NAME;
+  if (!isSkillContext) {
+    contextParts.push(
+      `[PDCA COMPLIANCE] This file is a PDCA document. ` +
+      `Use /pdca command instead of direct Write/Edit. ` +
+      `Direct writes bypass template injection, state tracking, and quality gates.`
+    );
+    debugLog('PreToolUse', 'PDCA skill bypass detected', { filePath });
+  }
+}
+
+// ============================================================
 // 3. Generate PDCA Guidance (v1.3.0 - No blocking, guide only)
 // ============================================================
 switch (pdcaLevel) {

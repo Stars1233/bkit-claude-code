@@ -95,20 +95,21 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 
 ### plan (Plan Phase)
 
-0. **PRD Auto-Reference**: Check if `docs/00-pm/{feature}.prd.md` exists
+0. **Template Loading**: Read `templates/plan.template.md` to understand the required Plan document structure and sections. Use this template's sections as your document outline. This is MANDATORY — do not generate Plan documents from memory or assumptions.
+1. **PRD Auto-Reference**: Check if `docs/00-pm/{feature}.prd.md` exists
    - If found: Read PRD and use as context for Plan document (improves quality significantly)
    - If not found: Proceed normally (tip: run `/pdca pm {feature}` first for better results)
-1. Check if `docs/01-plan/features/{feature}.plan.md` exists
-2. If not, create based on `plan.template.md`
-3. If exists, display content and suggest modifications
-4. **Checkpoint 1 — Requirements Confirmation**: Present understanding of the feature (problem, scope, constraints) and use AskUserQuestion: "요구사항 이해가 맞나요? 빠진 건 없나요?" Wait for user confirmation before proceeding.
-5. **Checkpoint 2 — Clarifying Questions**: Identify underspecified elements (edge cases, error handling, integration points, compatibility). Present organized question list. Wait for answers before generating the document.
-6. Generate Plan document with user-confirmed requirements
-7. Create Task: `[Plan] {feature}`
-8. Update .bkit-memory.json: phase = "plan"
-9. Write `## Executive Summary` at document top with 4-perspective table (Problem/Solution/Function UX Effect/Core Value), each 1-2 sentences
-10. **Context Anchor Generation**: After generating Plan document, extract Context Anchor (WHY/WHO/RISK/SUCCESS/SCOPE) from Executive Summary, Requirements, and Risk sections. Write as `## Context Anchor` table between Executive Summary and Section 1. This anchor propagates to Design/Do documents for cross-session context continuity.
-11. **MANDATORY**: After completing the document, also output the Executive Summary table in your response so the user sees it immediately without opening the file
+2. Check if `docs/01-plan/features/{feature}.plan.md` exists
+3. If not, create based on `plan.template.md`
+4. If exists, display content and suggest modifications
+5. **Checkpoint 1 — Requirements Confirmation**: Present understanding of the feature (problem, scope, constraints) and use AskUserQuestion: "요구사항 이해가 맞나요? 빠진 건 없나요?" Wait for user confirmation before proceeding.
+6. **Checkpoint 2 — Clarifying Questions**: Identify underspecified elements (edge cases, error handling, integration points, compatibility). Present organized question list. Wait for answers before generating the document.
+7. Generate Plan document with user-confirmed requirements
+8. Create Task: `[Plan] {feature}`
+9. Update .bkit-memory.json: phase = "plan"
+10. Write `## Executive Summary` at document top with 4-perspective table (Problem/Solution/Function UX Effect/Core Value), each 1-2 sentences
+11. **Context Anchor Generation**: After generating Plan document, extract Context Anchor (WHY/WHO/RISK/SUCCESS/SCOPE) from Executive Summary, Requirements, and Risk sections. Write as `## Context Anchor` table between Executive Summary and Section 1. This anchor propagates to Design/Do documents for cross-session context continuity.
+12. **MANDATORY**: After completing the document, also output the Executive Summary table in your response so the user sees it immediately without opening the file
 
 **Output Path**: `docs/01-plan/features/{feature}.plan.md`
 
@@ -118,6 +119,7 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 
 ### design (Design Phase)
 
+0. **Template Loading**: Read `templates/design.template.md` to understand the required Design document structure. Use this template's sections as your document outline. This is MANDATORY — do not generate Design documents from memory or assumptions.
 1. Verify Plan document exists (required - suggest running plan first if missing)
 2. Read Plan document to understand requirements and scope
 3. **PRD Context Loading**: Check if `docs/00-pm/{feature}.prd.md` exists. If found, read the Executive Summary and Beachhead/GTM sections to inform architecture decisions with market context. This prevents strategic context loss at the Plan→Design handoff.
@@ -301,6 +303,7 @@ Run PM Agent Team for product discovery and strategy analysis before Plan phase.
 
 ### report (Completion Report)
 
+0. **Template Loading**: Read `templates/report.template.md` to understand the required Report document structure. Use this template's sections as your document outline. This is MANDATORY — do not generate Report documents from memory or assumptions.
 1. Verify Check >= 90% (warn if below)
 2. **Full Upstream Context Loading (Phase 2+3)**: Load ALL upstream documents for comprehensive reporting:
    - Read PRD — compare original value proposition vs delivered value
