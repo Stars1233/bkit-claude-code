@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.5] - 2026-04-13
+
+### Added
+- **Module Entry Points** — `lib/audit/index.js`, `lib/control/index.js`, `lib/quality/index.js` enable `require('./lib/audit')` etc. for 3 core modules (13 files, ~112 combined exports).
+- **Wiring Scanner** (`lib/qa/scanners/wiring.js`) — Detects "Built But Not Wired" patterns (exported but never called functions). 250 findings on baseline (33 WARNING, 217 INFO). Scanners: 4 → 5.
+- **bkit Help Skill** (`skills/bkit/SKILL.md`) — `/bkit` command shows all 38 skills, 2 MCP servers, 4 output styles, agent teams. 8-language trigger support.
+- **PDCA Skill Bypass Guard** (`scripts/pre-write.js`) — Warns when PDCA docs are written directly via Write/Edit without going through the PDCA skill (#75).
+
+### Fixed
+- **#73 — Template imports not injected** — `scripts/user-prompt-handler.js` now pushes `resolveImports()` result to `contextParts[]`, enabling template-based PDCA document generation.
+- **#74 — Auto-transition broken** — Triple failure fix: `lib/pdca/automation.js` gains `shouldAutoAdvance()` for plan/design phases, `scripts/pdca-skill-stop.js` uses imperative directives instead of soft hints, `skills/pdca/SKILL.md` adds `{{TEMPLATE_DIRECTIVE}}` for phase-specific instructions.
+- **#75 — Skill bypass undetected** — Pre-write hook detects PDCA document writes outside skill context.
+- **DRY consolidation** — ~85 lines of duplicated auto-transition logic in `pdca-skill-stop.js` replaced by centralized `automation.js` functions.
+- **Level mapping** — `automation.js` gains `levelFromName()` reverse mapping and `LEGACY_LEVEL_MAP` for backward compatibility.
+
+### Changed
+- **Version Sync** — `bkit.config.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `hooks/hooks.json`, `hooks/session-start.js` bumped to 2.1.5.
+- **PDCA Status Cleanup** — Removed 25 test/debug artifact features from `.bkit/state/pdca-status.json`. Retained 2 real features.
+- **Dead Directory Removed** — `lib/adapters/` (empty subdirectories `claude/`, `local/`, 0 files) deleted.
+- **Lib Modules** — 93 → 96 modules (3 new index.js entry points).
+- **QA Scanners** — 4 → 5 (wiring scanner added).
+- **Skills** — 37 → 38 (bkit help skill added).
+
+### Documentation
+- Full PDCA artifacts for 3 sub-features: `bkit-v215-issue-73-74-fix`, `bkit-v215-quality-hardening-p2`, `bkit-v215-comprehensive-improvement`.
+
 ## [2.1.4] - 2026-04-13
 
 ### Added

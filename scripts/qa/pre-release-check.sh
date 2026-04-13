@@ -1,6 +1,6 @@
 #!/bin/bash
 # scripts/qa/pre-release-check.sh
-# bkit pre-release quality scanner — run 4 pattern scanners
+# bkit pre-release quality scanner — run 5 pattern scanners
 # Usage: bash scripts/qa/pre-release-check.sh [--json] [--scanner NAME]
 #
 # Exit codes:
@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Options:"
       echo "  --json           Output results as JSON"
-      echo "  --scanner NAME   Run a specific scanner (dead-code, config-audit, completeness, shell-escape)"
+      echo "  --scanner NAME   Run a specific scanner (dead-code, config-audit, completeness, shell-escape, wiring)"
       echo "  --help           Show this help"
       echo ""
       echo "Scanners:"
@@ -33,6 +33,7 @@ while [[ $# -gt 0 ]]; do
       echo "  config-audit  — Detect config/code inconsistencies"
       echo "  completeness  — Detect skill/agent declaration gaps"
       echo "  shell-escape  — Detect \$N substitution conflicts in shell blocks"
+      echo "  wiring        — Detect exported-but-never-called functions"
       exit 0
       ;;
     *) echo "Unknown option: $1"; exit 1 ;;

@@ -383,7 +383,7 @@ bkit v1.6.0 integrates CC 2.1.0 Skills 2.0 features:
 - `pm-research` — Competitive analysis and data gathering
 - `pm-prd` — PRD document generation
 
-### Component Counts (v2.1.4)
+### Component Counts (v2.1.5)
 
 | Component | Count |
 |-----------|-------|

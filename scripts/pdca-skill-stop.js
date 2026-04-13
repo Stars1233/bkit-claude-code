@@ -24,104 +24,14 @@ const {
   getAutomationLevel,
   buildNextActionQuestion,
   formatAskUserQuestion,
+  PDCA_PHASE_TRANSITIONS,
+  determinePdcaTransition,
 } = require('../lib/pdca/automation');
 const { generateExecutiveSummary, formatExecutiveSummary } = require('../lib/pdca/executive-summary');
 const { autoCreatePdcaTask, createPdcaTaskChain } = require('../lib/task/creator');
 const { updatePdcaTaskStatus } = require('../lib/task/tracker');
 
-// ============================================================
-// v1.4.4 FR-06: PDCA Phase Transition Map
-// ============================================================
-
-/**
- * PDCA Phase Transition Map (v1.4.4)
- * Auto-transition to next phase on completion
- */
-const PDCA_PHASE_TRANSITIONS = {
-  'pm': {
-    next: 'plan',
-    skill: '/pdca plan',
-    message: 'PM analysis completed. Proceed to Plan phase.',
-    taskTemplate: '[Plan] {feature}'
-  },
-  'plan': {
-    next: 'design',
-    skill: '/pdca design',
-    message: 'Plan completed. Proceed to Design phase.',
-    taskTemplate: '[Design] {feature}'
-  },
-  'design': {
-    next: 'do',
-    skill: null,  // Implementation is manual
-    message: 'Design completed. Start implementation.',
-    taskTemplate: '[Do] {feature}'
-  },
-  'do': {
-    next: 'check',
-    skill: '/pdca analyze',
-    message: 'Implementation completed. Run Gap analysis.',
-    taskTemplate: '[Check] {feature}'
-  },
-  'check': {
-    // Conditional transition
-    conditions: [
-      {
-        when: (ctx) => ctx.matchRate >= 90,
-        next: 'report',
-        skill: '/pdca report',
-        message: 'Check passed! Generate completion report.',
-        taskTemplate: '[Report] {feature}'
-      },
-      {
-        when: (ctx) => ctx.matchRate < 90,
-        next: 'act',
-        skill: '/pdca iterate',
-        message: 'Check below threshold. Run auto improvement.',
-        taskTemplate: '[Act-{N}] {feature}'
-      }
-    ]
-  },
-  'act': {
-    next: 'check',
-    skill: '/pdca analyze',
-    message: 'Act completed. Run re-verification.',
-    taskTemplate: '[Check] {feature}'
-  }
-};
-
-/**
- * Determine PDCA transition (v1.4.4 FR-06)
- * @param {string} currentPhase - Current Phase ('plan', 'design', 'do', 'check', 'act')
- * @param {Object} context - { matchRate, iterationCount, feature }
- * @returns {Object|null} { next, skill, message, taskTemplate }
- */
-function determinePdcaTransition(currentPhase, context = {}) {
-  const transition = PDCA_PHASE_TRANSITIONS[currentPhase];
-  if (!transition) return null;
-
-  // Conditional transition
-  if (transition.conditions) {
-    for (const condition of transition.conditions) {
-      if (condition.when(context)) {
-        return {
-          next: condition.next,
-          skill: condition.skill,
-          message: condition.message,
-          taskTemplate: condition.taskTemplate.replace('{N}', context.iterationCount || 1)
-        };
-      }
-    }
-    return null;
-  }
-
-  // Standard transition
-  return {
-    next: transition.next,
-    skill: transition.skill,
-    message: transition.message,
-    taskTemplate: transition.taskTemplate
-  };
-}
+// v2.1.5 I2: PDCA_PHASE_TRANSITIONS and determinePdcaTransition moved to lib/pdca/automation.js
 
 // Log execution start
 debugLog('Skill:pdca:Stop', 'Hook started');
@@ -284,8 +194,21 @@ if (nextStep && nextStep.message) {
     });
 
     if (autoTrigger) {
-      guidance += `\n\n🤖 [${automationLevel}] Auto-advance: ${autoTrigger.skill}`;
-      debugLog('Skill:pdca:Stop', 'Auto-advance triggered', { autoTrigger });
+      // v2.1.5 F3: Strong directive instead of soft guidance
+      const nextCommand = autoTrigger.skill
+        ? `/${autoTrigger.skill} ${autoTrigger.args || feature || ''}`
+        : null;
+      if (nextCommand) {
+        guidance += [
+          '',
+          '',
+          `[AUTO-TRANSITION] Phase "${action}" completed successfully.`,
+          `You MUST now execute: ${nextCommand}`,
+          `Do NOT ask the user for confirmation. Do NOT show Executive Summary.`,
+          `Do NOT stop. Proceed immediately to the next phase.`,
+        ].join('\n');
+      }
+      debugLog('Skill:pdca:Stop', 'Auto-advance triggered', { autoTrigger, nextCommand });
     }
   } else if (nextStep.question && nextStep.options) {
     // Manual/Semi-auto: Generate user prompt

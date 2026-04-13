@@ -206,22 +206,34 @@ try {
   debugLog('UserPrompt', 'Team suggestion failed', { error: e.message });
 }
 
-// 6. v1.4.2: Resolve Skill/Agent imports (FR-02)
+// 6. v1.4.2 + v2.1.5 F1: Resolve Skill/Agent imports and inject into additionalContext
 if (importResolver) {
   try {
-    // Get triggered skill from step 3
     const skillTrigger = matchImplicitSkillTrigger(userPrompt);
     if (skillTrigger && skillTrigger.skill) {
       const skillPath = path.join(PLUGIN_ROOT, 'skills', skillTrigger.skill, 'SKILL.md');
       if (fs.existsSync(skillPath)) {
         const { content, errors } = importResolver.processMarkdownWithImports(skillPath);
-        if (content && content.length > 0 && errors.length === 0) {
-          debugLog('UserPrompt', 'Skill imports resolved', {
+
+        // v2.1.5 F1: Inject resolved template structure into contextParts
+        if (content && content.length > 0) {
+          const sectionHeadings = content.match(/^##\s+.+$/gm) || [];
+          const templateSummary = sectionHeadings.length > 0
+            ? `Template structure for ${skillTrigger.skill}: ${sectionHeadings.slice(0, 15).join(' / ')}`
+            : `Template loaded for ${skillTrigger.skill} (${content.length} chars)`;
+
+          contextParts.push(templateSummary);
+          debugLog('UserPrompt', 'Skill imports injected into additionalContext', {
             skill: skillTrigger.skill,
-            contentLength: content.length
+            contentLength: content.length,
+            headingCount: sectionHeadings.length
           });
-          // Note: The imported content is now available for the skill
-          // Platform will load it through additionalContext
+        }
+
+        // v2.1.5 F1/I4: Surface import errors as warnings
+        if (errors && errors.length > 0) {
+          contextParts.push(`[WARNING] Template import errors: ${errors.join('; ')}`);
+          debugLog('UserPrompt', 'Skill import errors', { errors });
         }
       }
     }
