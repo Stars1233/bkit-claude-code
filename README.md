@@ -1,8 +1,8 @@
 # bkit - Vibecoding Kit
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.108+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.1.6-green.svg)](CHANGELOG.md)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.110+-purple.svg)](https://code.claude.com)
+[![Version](https://img.shields.io/badge/Version-2.1.7-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 > **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
@@ -61,6 +61,7 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 
 ![bkit Features](images/bkit-features.png)
 
+- **Issue #79 Hotfix + PDCA Workflow Stabilization (v2.1.7)** - P0 `updatePdcaStatus` argument order fix (`skill-post.js:229`), P0 full-auto chain completion (`generateAutoTrigger` report/completed phase added to `automation.js`), P1 phantom feature prevention (`pre-write.js` active feature guard), P2 gap-detector analysis document auto-generation (`gap-detector-stop.js`), `pdca-skill-stop.js` `[PDCA-COMPLETE]` directive for report phase, CC v2.1.110+ recommended (71 consecutive compatible releases), 5 files ~54 LOC changed
 - **Issue #77 Hotfix + v2.1.6 Maintenance Release (v2.1.6)** - P0 GitHub Issue #77 hotfix: Claude Code auto-session-title preservation through single-source `lib/pdca/session-title.js`, phase-change-only emission (6→1 per message, ≈83% reduction), 3-way UI opt-out (`ui.{sessionTitle,dashboard,contextInjection}.enabled` in bkit.config.json), stale feature TTL (24h default) auto-cleanup; PreCompact `decision:block` on PDCA `do/check/act` phases; output-styles audit script (CC v2.1.107 regression #47482 defense); BKIT_VERSION dynamic lookup (Docs=Code); **3268/3268 tests PASS (99.6%, 0 FAIL)**, 69 consecutive compatible releases (v2.1.34~v2.1.108)
 - **Comprehensive Test Strategy + CC v2.1.96 Compatibility (v2.1.0)** - 12-perspective test framework (unit/integration/e2e/behavioral/functional/API/security/UX/performance/contract + 2 new categories), 53 new test files (+658 TC, total ~4,028 TC), 100% export coverage (607/607), 4 critical security fixes (path traversal, symlink, null byte, checkpoint integrity), trust-engine/audit-logger bug fixes, 3 test helpers (hook-runner, mcp-client, temp-dir), ENH-188 frontmatter hooks dual-fire prevention (24 components), CC v2.1.96+ recommended, 61 consecutive compatible releases (v2.1.34~v2.1.96)
 - **CC v2.1.86 Compatibility + Skills Discoverability (v2.0.8)** - 34 skills description optimized for 250-char cap (/skills listing), Hook `if` conditional field documentation (CC v2.1.85+), Enterprise org policy documentation, CC v2.1.86+ recommended, 52 consecutive compatible releases (v2.1.34~v2.1.86)
@@ -200,7 +201,7 @@ Skill Evals connect directly to bkit's PDCA workflow:
 
 | Requirement | Minimum Version | Notes |
 |-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.6 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.108+. |
+| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.7 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.110+. |
 | Node.js | v18+ | For hook script execution |
 | Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
 

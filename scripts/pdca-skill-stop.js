@@ -194,21 +194,34 @@ if (nextStep && nextStep.message) {
     });
 
     if (autoTrigger) {
-      // v2.1.5 F3: Strong directive instead of soft guidance
-      const nextCommand = autoTrigger.skill
-        ? `/${autoTrigger.skill} ${autoTrigger.args || feature || ''}`
-        : null;
-      if (nextCommand) {
+      if (autoTrigger.complete) {
+        // v2.1.7: PDCA cycle completion (Issue #79 P5 fix)
         guidance += [
           '',
           '',
-          `[AUTO-TRANSITION] Phase "${action}" completed successfully.`,
-          `You MUST now execute: ${nextCommand}`,
-          `Do NOT ask the user for confirmation. Do NOT show Executive Summary.`,
-          `Do NOT stop. Proceed immediately to the next phase.`,
+          `[PDCA-COMPLETE] Feature "${feature}" PDCA cycle finished successfully.`,
+          `All phases (plan > design > do > check > qa > report) completed.`,
+          `Generate the completion summary and proceed to the next task.`,
+          `Do NOT ask what to do next. The cycle is done.`,
         ].join('\n');
+        debugLog('Skill:pdca:Stop', 'PDCA cycle completed', { feature, action });
+      } else {
+        // v2.1.5 F3: Strong directive instead of soft guidance
+        const nextCommand = autoTrigger.skill
+          ? `/${autoTrigger.skill} ${autoTrigger.args || feature || ''}`
+          : null;
+        if (nextCommand) {
+          guidance += [
+            '',
+            '',
+            `[AUTO-TRANSITION] Phase "${action}" completed successfully.`,
+            `You MUST now execute: ${nextCommand}`,
+            `Do NOT ask the user for confirmation. Do NOT show Executive Summary.`,
+            `Do NOT stop. Proceed immediately to the next phase.`,
+          ].join('\n');
+        }
       }
-      debugLog('Skill:pdca:Stop', 'Auto-advance triggered', { autoTrigger, nextCommand });
+      debugLog('Skill:pdca:Stop', 'Auto-advance triggered', { autoTrigger });
     }
   } else if (nextStep.question && nextStep.options) {
     // Manual/Semi-auto: Generate user prompt

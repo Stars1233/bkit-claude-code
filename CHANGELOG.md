@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.7] - 2026-04-16
+
+### 🚨 Hotfix — GitHub Issue #79 (Opus Drift PDCA Workflow Fixes)
+
+Community user [@rohwonseok-ops](https://github.com/popup-studio-ai/bkit-claude-code/issues/79) reported 7 local patches for full-auto (L3-L4) PDCA workflow issues. Code-level investigation confirmed 2 P0 bugs, 1 P1 design issue, and 1 P2 enhancement.
+
+### Fixed
+- **P0 `updatePdcaStatus` argument order** — `scripts/skill-post.js:229` called `updatePdcaStatus(phase, feature)` with reversed arguments, corrupting `pdca-status.json`. All 8 call sites audited; only this one was affected. (Issue #79 P7)
+- **P0 Full-auto chain break at report phase** — `lib/pdca/automation.js` `generateAutoTrigger()` phaseMap lacked `report`/`completed` keys, returning `null` and breaking the qa→report→completion chain. Added both keys with `{ complete: true }` flag. Also added `report`/`completed` to `semiAutoPhases`. (Issue #79 P5)
+- **P1 Phantom feature auto-registration** — `scripts/pre-write.js` unconditionally registered any file write as a PDCA "do" phase feature via `extractFeature()`, causing badge spam. Now checks `activeFeature === feature` before updating. (Issue #79 P4)
+
+### Added
+- **Report phase completion directive** — `scripts/pdca-skill-stop.js` now generates `[PDCA-COMPLETE]` guidance when `autoTrigger.complete === true`, preventing model confusion at cycle end. (Issue #79 P5 companion)
+- **Gap-detector analysis document auto-generation** — `scripts/gap-detector-stop.js` now creates `docs/03-analysis/features/{feature}.analysis.md` with match rate, guidance, and next step. gap-detector agent remains Read-only by design; the stop hook handles file creation. (Issue #79 P6)
+
+### Changed
+- **Version** — 2.1.6 → 2.1.7.
+- **CC recommended version** — v2.1.108+ → v2.1.110+ (71 consecutive compatible releases, MCP/PreToolUse stability improvements).
+- **Documentation sync** — `README.md`, `CUSTOMIZATION-GUIDE.md`, `bkit.config.json`, `hooks/hooks.json` version references bumped to v2.1.7.
+
+### Migration
+- If your `.bkit/state/pdca-status.json` was corrupted by the argument-order bug (feature names stored as phase values), delete the file and let bkit recreate it: `rm .bkit/state/pdca-status.json`
+
+### Not Included (Deferred)
+- **Issue #79 P1** (Stop hook `decision:'block'` for Opus drift) — Deferred to v2.1.8. P5 fix restores full-auto chain; re-evaluate after observing drift frequency.
+- **Issue #79 P2** (`ff-override` file cleanup) — No matching code found in v2.1.6 codebase. Awaiting reproduction steps from reporter.
+
+### Stats
+- Files changed: 9 (5 code + 2 config + 2 docs meta)
+- Lines: +100 / -26
+- CC compatible releases: 71 (v2.1.34 ~ v2.1.110)
+
+---
+
 ## [2.1.6] - 2026-04-15
 
 ### 🚨 Critical Hotfix — GitHub Issue #77

@@ -226,8 +226,8 @@ async function main() {
       const feature = args.feature || getPdcaStatusFull()?.currentFeature;
 
       if (feature) {
-        updatePdcaStatus(phase, feature);
-        debugLog('SkillPost', 'PDCA status updated', { phase, feature });
+        updatePdcaStatus(feature, phase);
+        debugLog('SkillPost', 'PDCA status updated', { feature, phase });
       }
     }
 

@@ -27,7 +27,7 @@ const { readStdinSync, parseHookInput, outputAllow, outputBlock, outputEmpty } =
 const { debugLog } = require('../lib/core/debug');
 const { isSourceFile, isCodeFile, isEnvFile, extractFeature } = require('../lib/core/file');
 const { findDesignDoc, findPlanDoc } = require('../lib/pdca/phase');
-const { updatePdcaStatus } = require('../lib/pdca/status');
+const { updatePdcaStatus, getPdcaStatusFull } = require('../lib/pdca/status');
 const { classifyTaskByLines, getPdcaLevel } = require('../lib/task/classification');
 const { generateTaskGuidance } = require('../lib/task/creator');
 
@@ -103,16 +103,26 @@ if (isSourceFile(filePath)) {
     designDoc = findDesignDoc(feature);
     planDoc = findPlanDoc(feature);
 
-    // Update PDCA status to "do" phase when source file is being written
-    updatePdcaStatus(feature, 'do', {
-      lastFile: filePath
-    });
+    // v2.1.7: Only update PDCA status if feature matches active PDCA feature
+    // Prevents phantom feature registration (Issue #79 P4)
+    const currentStatus = getPdcaStatusFull();
+    const activeFeature = currentStatus?.currentFeature;
 
-    debugLog('PreToolUse', 'PDCA status updated', {
-      feature,
-      phase: 'do',
-      hasDesignDoc: !!designDoc
-    });
+    if (activeFeature && activeFeature === feature) {
+      updatePdcaStatus(feature, 'do', {
+        lastFile: filePath
+      });
+      debugLog('PreToolUse', 'PDCA status updated', {
+        feature,
+        phase: 'do',
+        hasDesignDoc: !!designDoc
+      });
+    } else {
+      debugLog('PreToolUse', 'Skipped phantom feature registration', {
+        extracted: feature,
+        active: activeFeature || 'none'
+      });
+    }
   }
 }
 
