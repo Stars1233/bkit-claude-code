@@ -347,7 +347,7 @@ function build(_input, context) {
   const { onboardingData, triggerTable } = context;
   const detectedLevel = detectLevel();
 
-  let additionalContext = `# bkit Vibecoding Kit v2.1.1 - Session Startup\n\n`;
+  let additionalContext = `# bkit Vibecoding Kit v2.1.7 - Session Startup\n\n`;
 
   additionalContext += buildOnboardingContext(onboardingData);
   additionalContext += buildAgentTeamsContext(detectedLevel);

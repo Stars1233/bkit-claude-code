@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.6)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.7)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -223,7 +223,7 @@ const sessionTitle = generateSessionTitle({
 });
 
 const response = {
-  systemMessage: `bkit Vibecoding Kit v2.1.6 activated (Claude Code)`,
+  systemMessage: `bkit Vibecoding Kit v2.1.7 activated (Claude Code)`,
   hookSpecificOutput: {
     hookEventName: "SessionStart",
     onboardingType: onboardingContext.onboardingData.type,

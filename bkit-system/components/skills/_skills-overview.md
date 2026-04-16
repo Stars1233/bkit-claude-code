@@ -1,6 +1,6 @@
 # Skills Overview
 
-> 38 Skills defined in bkit (v2.1.6)
+> 38 Skills defined in bkit (v2.1.7)
 >
 > **v1.4.1**: Added Context Engineering perspective - Domain Knowledge Layer
 > **v1.5.0**: Claude Code Exclusive
