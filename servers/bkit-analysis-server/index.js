@@ -388,8 +388,9 @@ function handleMessage(msg) {
   const { id, method, params } = msg;
 
   // Notifications (no id) — ignore
-  if (id === undefined && method === 'notifications/initialized') return null;
-  if (id === undefined) return null;
+  // v2.1.9 fix B5: use "id" in msg to correctly handle explicit null id per JSON-RPC 2.0
+  if (!('id' in msg) && method === 'notifications/initialized') return null;
+  if (!('id' in msg)) return null;
 
   switch (method) {
     case 'initialize':
