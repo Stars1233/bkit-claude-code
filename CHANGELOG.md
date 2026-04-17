@@ -60,6 +60,45 @@ Investigation confirmed **3 root causes** (RC-1 size, RC-2 compaction dedup, RC-
 - New LOC: `lib/core/context-budget.js` (95) + `lib/core/session-ctx-fp.js` (115) + `docs/context-engineering.md` (90).
 - CC compatible releases: **72** (v2.1.34 ~ v2.1.112, 0 breaking changes).
 
+### Additional Bug Fixes (16 bugs from 10-agent QA Discovery)
+
+During v2.1.8 QA verification, 10 parallel `code-analyzer` agents analyzing 15 lib modules + 43 scripts + 2 MCP servers + 36 agents + 39 skills caught **11 real bugs** (confidence ≥80%) while producing 616 TC specs. A subsequent 10-agent cross-verification review (Q10 integration) caught **1 incomplete fix** (B1 dead-write) and identified **5 additional minor issues** (B12~B16). All 16 are consolidated into this v2.1.8 release.
+
+#### Fixed (from 10-agent QA discovery)
+
+- **B1** [P1] `lib/control/loop-breaker.js:234` — `setThreshold` uses `LOOP_RULES[ruleId]` object access and writes to `rule.maxCount` (was dead-writing `rule.threshold`; caught by Q1 cross-verification, reworked)
+- **B2** [P2] `lib/audit/audit-logger.js:52` — `CATEGORIES` extended to 10 (+permission/checkpoint/trust/system); convenience loggers no longer coerced to `'control'`
+- **B3** [P1] `lib/control/checkpoint-manager.js:103,120` — `STATE_PATHS.pdcaStatus()` replaces `process.cwd()` (multi-project / worktree safety)
+- **B4** [P2] `lib/control/trust-engine.js:402-419` — `resetScore` pushes unified `{timestamp,from,to,trigger,reason}` schema to `levelHistory`
+- **B5** [P0] both MCP servers — JSON-RPC 2.0 `'id' in msg` handling (was `id === undefined`, dropping explicit-null-id requests)
+- **B6** [P1] `evals/runner.js` — `stripMatchingQuotes()` preserves internal colons in quoted YAML values
+- **B7** [P1] `evals/runner.js` — `!inCriteria` guard disambiguates indent-2 criteria items from new eval entries
+- **B8** [P0] `evals/runner.js:246` — `pass = failedCriteria.length === 0` (removed redundant `score >= 0.8`)
+- **B9** [P0] `lib/context/scenario-runner.js:42` — `allPassed` requires `passed > 0` (was accepting all-skipped as pass)
+- **B10** [P1] `lib/context/invariant-checker.js:77` — explicit parens document operator precedence (no behavior change)
+- **B11** [P1] `lib/qa/utils/pattern-matcher.js` — `findBalancedBrace()` + depth-aware segment splitter for nested `module.exports`
+
+#### Additional (from Q10 integration review)
+
+- **B12** [P2] ENH-167 partial: `BKIT_VERSION` centralization — `lib/core/paths.js:260,271` + 2 MCP servers no longer hardcode `'2.0.4'`
+- **B13** [P3] Dead `PDCA_STATUS_PATH` constant removed from `lib/control/checkpoint-manager.js:47`
+- **B14** [P3] Redundant `notifications/initialized` guard simplified in both MCP servers
+- **B15** [P3] JSDoc accuracy: `lib/qa/utils/pattern-matcher.js:44` now correctly documents string-aware capability
+- **B16** [P2] Word boundary: `lib/context/invariant-checker.js` uses `\bif\b` regex (was substring `.includes('if')`, matching `gift`/`diff`)
+
+#### Regression Fix
+
+- `tests/qa/dead-code.test.js:166` — word-boundary regex instead of `.includes()` substring (false positive on `unusedFunction` vs `usedFunction` check)
+
+#### New Tests
+
+- `tests/qa/bug-fixes-v218.test.js` — 24 TCs covering all 16 bugs × representative scenarios
+
+#### QA Methodology Proof
+
+- v2.1.8 deep QA (10 `code-analyzer` agents analyzing full codebase) discovered 11 real bugs during read-only analysis alone, producing 616 TC specs as byproduct
+- v2.1.8 cross-verification QA (10 `code-analyzer` agents verifying each fix) caught 1 incomplete fix (B1) + 5 additional issues (B12~B16) → "QA-as-Discovery + Cross-Verification" methodology
+
 ---
 
 ## [2.1.7] - 2026-04-16

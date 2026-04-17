@@ -46,7 +46,7 @@ function loadEvalDefinition(skillName) {
 
 /**
  * Strip matching outer quotes from a value (conservative).
- * v2.1.9 fix B6: only strips when value has BOTH matching leading and
+ * v2.1.8 fix B6: only strips when value has BOTH matching leading and
  * trailing quotes. Preserves internal colons and other content verbatim.
  * @param {string} value
  * @returns {string}
@@ -83,7 +83,7 @@ function parseEvalYaml(content) {
       if (topMatch) {
         const [, key, value] = topMatch;
         if (value && !value.startsWith('{') && !value.startsWith('[')) {
-          // v2.1.9 fix B6: preserve internal colons in quoted values.
+          // v2.1.8 fix B6: preserve internal colons in quoted values.
           // Only strip quotes if value has BOTH matching leading and trailing
           // quotes (conservative: avoids regressions with existing eval.yaml).
           result[key] = stripMatchingQuotes(value);
@@ -102,7 +102,7 @@ function parseEvalYaml(content) {
       // Calculate indent level
       const indent = line.length - line.trimStart().length;
 
-      // v2.1.9 fix B7: disambiguate new eval entry vs nested criteria list item.
+      // v2.1.8 fix B7: disambiguate new eval entry vs nested criteria list item.
       // Only treat indent<=2 "- " as a new eval entry when we are NOT currently
       // inside a `criteria:` block. When inCriteria is true, an indent-2 "- "
       // is still a criterion belonging to the current eval item.
@@ -243,7 +243,7 @@ function evaluateAgainstCriteria(prompt, expected, criteria) {
     ? matchedCriteria.length / effectiveCriteria.length
     : 0;
 
-  // v2.1.9 fix B8: if zero failures, score is 1.0 by construction.
+  // v2.1.8 fix B8: if zero failures, score is 1.0 by construction.
   // When partial scoring is introduced, re-introduce score threshold here.
   const pass = failedCriteria.length === 0;
 
