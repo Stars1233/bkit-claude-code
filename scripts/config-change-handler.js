@@ -14,13 +14,24 @@ const fs = require('fs');
 const { readStdinSync, outputEmpty } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
 
-// Dangerous config patterns that should be flagged
+// Dangerous config patterns that should be flagged.
+//
+// Defense-in-Depth Architecture (2026-04-21, ENH-254):
+//   Layer 1 (CC runtime sandbox):
+//     - CC v2.1.113 #23: `dangerouslyDisableSandbox` can no longer bypass sandbox without permission prompt
+//     - CC v2.1.116 S1: Sandbox auto-allow no longer bypasses dangerous-path safety for rm/rmdir on /, $HOME, critical dirs
+//     - CC v2.1.113 #14/#15/#16: Bash deny rule wrapper hardening (env/sudo/setsid), find -exec, /private/* rm
+//   Layer 2 (bkit config-change hook, this file):
+//     - Detects these 5 patterns in config file writes and flags as SECURITY WARNING
+//     - Complements CC runtime defense; provides early detection at settings layer
+//   IMPORTANT: Both layers together do NOT guarantee user data safety.
+//   Users must NOT rely on either layer alone. See docs/03-analysis/security-architecture.md.
 const DANGEROUS_PATTERNS = [
-  'dangerouslyDisableSandbox',
-  'excludedCommands',
-  'autoAllowBashIfSandboxed',
-  'chmod 777',
-  'allowRead',
+  'dangerouslyDisableSandbox',      // CC v2.1.113 #23 hardened at runtime (2026-04-17)
+  'excludedCommands',                // Sandbox bypass mechanism
+  'autoAllowBashIfSandboxed',        // Auto-allow without permission (v2.1.116 S1 tightened)
+  'chmod 777',                       // World-writable permissions
+  'allowRead',                       // Broad read access grants
 ];
 
 let input;
