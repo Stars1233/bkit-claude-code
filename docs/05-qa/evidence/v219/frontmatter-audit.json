@@ -1,0 +1,30 @@
+{
+  "_comment": "Frontmatter audit 2026-04-21 — 39 skills + 36 agents",
+  "skills": {
+    "total": 39,
+    "withName": 39,
+    "withDesc": 39,
+    "withAllowedTools": 38,
+    "withEffort": 39,
+    "withContextFork": 1,
+    "withPaths": 0,
+    "withMonitors": 0,
+    "withDisableModelInvocation": 0,
+    "missing_allowed_tools": ["zero-script-qa"],
+    "note": "zero-script-qa uses 'context: fork' and 'agent: bkit:qa-monitor' — tool inheritance is delegated to qa-monitor agent"
+  },
+  "agents": {
+    "total": 36,
+    "withDesc": 36,
+    "withModel": 36,
+    "withTools": 36,
+    "withEffort": 36,
+    "withMaxTurns": 36,
+    "withDisallowedTools": 20,
+    "withInitialPrompt": 0,
+    "withHooks": 0,
+    "byModel": { "opus": 13, "sonnet": 21, "haiku": 2 },
+    "byEffort": { "low": 2, "medium": 21, "high": 13, "xhigh": 0 },
+    "disallowedToolsCoverage": "20/36 = 55.6%"
+  }
+}
