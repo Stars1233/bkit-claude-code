@@ -34,6 +34,55 @@ A comprehensive guide to customizing Claude Code plugins for your organization, 
 
 ---
 
+## ⚠️ Important Notices
+
+### Custom Skills Data Loss Warning (CC v2.1.116+ Users)
+
+**Symptom**: On CC CLI v2.1.113+ (especially v2.1.116), the `~/.claude/skills/` directory may be **silently deleted** on first-run ([#51234](https://github.com/anthropics/claude-code/issues/51234)).
+
+**Impact on bkit**:
+- ✅ **bkit plugin itself is unaffected** — bkit's 39 skills live under `${CLAUDE_PLUGIN_ROOT}/skills/` (plugin bundle path).
+- ⚠️ **User custom skills affected** — if you keep personal skills under `~/.claude/skills/`, **data loss is possible**.
+
+#### Recommended Backup (run immediately)
+
+```bash
+# Full backup with date tag
+cp -R ~/.claude/skills ~/.claude/skills.backup.$(date +%Y%m%d)
+
+# Backup to an external safe location
+mkdir -p ~/Documents/claude-skills-backup
+cp -R ~/.claude/skills/* ~/Documents/claude-skills-backup/
+```
+
+#### Restore (if deletion occurs)
+
+```bash
+# Restore from backup
+cp -R ~/.claude/skills.backup.YYYYMMDD ~/.claude/skills
+```
+
+#### Recommended Paths for bkit Custom Skill Authors
+
+bkit stores skills under the **plugin bundle path** (`${CLAUDE_PLUGIN_ROOT}/skills/`), so it is unaffected. To author your own skill:
+
+1. **Recommended**: Fork the bkit plugin and create `skills/{skill-name}/SKILL.md` (see §9 of this guide).
+2. **Alternative**: Create a separate plugin (follow bkit's `.claude-plugin/plugin.json` + `skills/` structure).
+3. **Avoid**: Using `~/.claude/skills/` — risk of loss on CC upgrades.
+
+#### Monitoring Status
+
+This issue is tracked under **MON-CC-06** (16 regressions from CC v2.1.113 native-binary transition, consolidated). Related issues:
+- [#50274](https://github.com/anthropics/claude-code/issues/50274) session termination
+- [#50383](https://github.com/anthropics/claude-code/issues/50383) macOS 11 dyld
+- [#50974](https://github.com/anthropics/claude-code/issues/50974) postinstall failure
+- [#51165](https://github.com/anthropics/claude-code/issues/51165) `context: fork` failure
+- [#51234](https://github.com/anthropics/claude-code/issues/51234) custom skills deletion
+
+This warning will be relaxed once an official fix lands in v2.1.117+.
+
+---
+
 ## 1. bkit Design Philosophy
 
 Before customizing bkit, understanding its design intent helps you make better decisions about what to adapt and what to keep.
@@ -63,7 +112,7 @@ Layer 1: hooks.json          → SessionStart, PreToolUse, PostToolUse hooks
 Layer 2: Skill Frontmatter   → hooks: PreToolUse, PostToolUse, Stop
 Layer 3: Agent Frontmatter   → hooks: PreToolUse, PostToolUse
 Layer 4: Description Triggers → "Triggers:" keyword matching
-Layer 5: Scripts             → Actual Node.js logic execution (42 scripts)
+Layer 5: Scripts             → Actual Node.js logic execution (43 scripts)
 ```
 
 This separation allows fine-grained control over when and how automation triggers.
@@ -128,7 +177,7 @@ For deeper understanding, explore the `bkit-system/` folder:
 
 bkit is not just a collection of prompts—it's a **production-grade plugin architecture** with carefully designed components that work together as a cohesive system.
 
-### Component Inventory (v2.1.8)
+### Component Inventory (v2.1.9)
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
@@ -138,8 +187,9 @@ bkit is not just a collection of prompts—it's a **production-grade plugin arch
 | **Scripts** | 43 | Hook execution scripts with unified handlers |
 | **Templates** | 18 | Document templates (PDCA + 9 phases + shared) |
 | **Hooks** | 21 events | Event-driven automation (centralized in hooks.json) |
-| **lib/** | 101 modules (14 subdirs) | Modular utility library (includes v2.1.8 `lib/core/context-budget.js` + `session-ctx-fp.js`) |
+| **lib/** | 101 modules (11 subdirs) | Modular utility library. Subdirs: audit, context, control, core, intent, pdca, qa, quality, task, team, ui. |
 | **Output Styles** | 4 | Level-based response formatting |
+| **MCP Servers** | 2 | `bkit-pdca-server`, `bkit-analysis-server` (16 tools) |
 
 **Total: 600+ components** working in harmony.
 
@@ -219,7 +269,7 @@ bkit is a **practical implementation of Context Engineering**—the art of curat
 │                                                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
 │  │ Domain Knowledge │  │ Behavioral Rules │  │ State Mgmt   │  │
-│  │    (38 Skills)   │  │   (36 Agents)    │  │(lib/common)  │  │
+│  │    (39 Skills)   │  │   (36 Agents)    │  │(lib/common)  │  │
 │  │                  │  │                  │  │              │  │
 │  │ • 9-Phase Guide  │  │ • Role Def.      │  │ • PDCA v2.0  │  │
 │  │ • 3 Levels       │  │ • Constraints    │  │ • Multi-Feat │  │
@@ -234,7 +284,7 @@ bkit is a **practical implementation of Context Engineering**—the art of curat
 │  │  L2: Skill Frontmatter (PreToolUse/PostToolUse/Stop)     │  │
 │  │  L3: Agent Frontmatter (PreToolUse/PostToolUse)          │  │
 │  │  L4: Description Triggers (keyword matching)             │  │
-│  │  L5: Scripts (42 Node.js modules)                        │  │
+│  │  L5: Scripts (43 Node.js modules)                        │  │
 │  │  L6: Plugin Data Backup (${CLAUDE_PLUGIN_DATA})          │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                 │                               │
@@ -271,20 +321,20 @@ For detailed Context Engineering documentation, see [bkit-system/philosophy/cont
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│               bkit Component Architecture (v2.1.8)               │
+│               bkit Component Architecture (v2.1.9)               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  Knowledge Layer    │ Skills (38)      │ Domain expertise       │
+│  Knowledge Layer    │ Skills (39)      │ Domain expertise       │
 │  ─────────────────────────────────────────────────────────────  │
 │  Execution Layer    │ Agents (36)      │ Autonomous task work   │
 │  ─────────────────────────────────────────────────────────────  │
 │  Interface Layer    │ Commands (DEPRECATED) │ User interaction  │
 │  ─────────────────────────────────────────────────────────────  │
-│  Automation Layer   │ Hooks + Scripts (42) │ Event-driven triggers│
+│  Automation Layer   │ Hooks + Scripts (43) │ Event-driven triggers│
 │  ─────────────────────────────────────────────────────────────  │
 │  Template Layer     │ Templates (18)   │ Document standards     │
 │  ─────────────────────────────────────────────────────────────  │
-│  Shared Library     │ lib/ (93 modules)   │ Modular utilities     │
+│  Shared Library     │ lib/ (101 modules)  │ Modular utilities     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -332,7 +382,7 @@ Layer 3: Agent Frontmatter
 Layer 4: Description Triggers
    └─ "Triggers:" keywords for auto-activation
 
-Layer 5: Scripts (42 Node.js scripts)
+Layer 5: Scripts (43 Node.js scripts)
    └─ Actual logic execution
 ```
 
@@ -756,7 +806,7 @@ bkit-claude-code/
 │   ├── qa-strategist.md            # QA strategy coordinator
 │   ├── security-architect.md       # Security & vulnerability expert
 │   └── ... (36 total, including 8 CTO/PM Team + 8 PDCA Eval agents)
-├── skills/                         # Domain knowledge (38 skills)
+├── skills/                         # Domain knowledge (39 skills)
 │   ├── bkit-rules/SKILL.md         # Core PDCA rules
 │   ├── plan-plus/SKILL.md          # Brainstorming-enhanced planning (v1.5.5)
 │   ├── development-pipeline/SKILL.md
@@ -766,7 +816,7 @@ bkit-claude-code/
 ├── hooks/
 │   ├── hooks.json                  # Claude Code hook configuration (21 events)
 │   └── session-start.js            # Session initialization (Node.js)
-├── scripts/                        # Hook execution scripts (42 scripts)
+├── scripts/                        # Hook execution scripts (43 scripts)
 │   └── *.js
 ├── output-styles/                  # Level-based response formatting (v1.5.3)
 │   ├── bkit-learning.md            # Starter level style

@@ -1,7 +1,8 @@
 # Skills Overview
 
-> 39 Skills defined in bkit (v2.1.8)
+> 39 Skills defined in bkit (v2.1.9)
 >
+> **v2.1.9**: CC v2.1.116 response — ENH-253/254/259/263 (4 ENH shipping) + Docs=Code 100% sync. Skills unchanged (39, `zero-script-qa` retains sole `context: fork`). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.1.8**: Issue #81 hotfix - Docs=Code philosophy restored. Skills unchanged (cc-version-analysis, qa-phase retained). Focus was hook/lib layer (`lib/core/context-budget.js`, `session-ctx-fp.js`).
 > **v2.1.7**: Issue #79 hotfix, 38 skills.
 >

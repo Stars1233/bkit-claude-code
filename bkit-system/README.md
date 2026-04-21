@@ -77,7 +77,7 @@ bkit is a practical implementation of **Context Engineering**. Context Engineeri
 │                                                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
 │  │ Domain Knowledge │  │ Behavioral Rules │  │ State Mgmt   │  │
-│  │    (38 Skills)   │  │   (36 Agents)    │  │(12 subdirs)  │  │
+│  │    (39 Skills)   │  │   (36 Agents)    │  │(11 subdirs)  │  │
 │  │                  │  │                  │  │              │  │
 │  │ • 9-Phase Guide  │  │ • Role Def.      │  │ • PDCA v2.0  │  │
 │  │ • 3 Levels       │  │ • Constraints    │  │ • Multi-Feat │  │
@@ -92,7 +92,7 @@ bkit is a practical implementation of **Context Engineering**. Context Engineeri
 │  │  L2: Unified Scripts (stop, bash-pre, write-post, etc.)  │  │
 │  │  L3: Agent Frontmatter (constraints only)                │  │
 │  │  L4: Description Triggers (keyword matching)             │  │
-│  │  L5: Scripts (42 Node.js modules)                        │  │
+│  │  L5: Scripts (43 Node.js modules)                        │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                 │                               │
 │                                 ▼                               │
@@ -242,12 +242,12 @@ lib/
 
 | Component | Count | Role | Details |
 |-----------|-------|------|---------|
-| Skills | 38 | Domain knowledge + Slash commands | [[components/skills/_skills-overview]] |
+| Skills | 39 | Domain knowledge + Slash commands | [[components/skills/_skills-overview]] |
 | Agents | 36 | Specialized task execution | [[components/agents/_agents-overview]] |
 | Commands | DEPRECATED | Migrated to Skills (v1.4.4) | - |
 | Hooks | 21 events | Event-based triggers (unified) | [[components/hooks/_hooks-overview]] |
-| Scripts | 42 | Actual logic execution | [[components/scripts/_scripts-overview]] |
-| Lib | 12 subdirectories, 93 modules | Shared utilities | 607 exports |
+| Scripts | 43 | Actual logic execution | [[components/scripts/_scripts-overview]] |
+| Lib | 11 subdirectories, 101 modules | Shared utilities | Modular (no common.js bridge dependency) |
 | Evals | 28 | Skill evaluation definitions (v1.6.0) | Skill Creator + A/B Testing |
 | Config | 1 | Centralized settings | `bkit.config.json` |
 | Templates | 18 | Document templates | PDCA + Pipeline + Shared |
@@ -269,8 +269,8 @@ Layer 1: hooks.json (Global) → SessionStart, UserPromptSubmit, PreCompact, Pre
 Layer 2: Unified Scripts     → unified-stop.js, unified-bash-pre.js, unified-write-post.js, etc.
 Layer 3: Agent Frontmatter   → Constraints and role definitions (hooks deprecated)
 Layer 4: Description Triggers → "Triggers:" keyword matching
-Layer 5: Scripts             → Actual Node.js logic execution (42 modules)
-Layer 6: Lib Modules         → 12 subdirectories, 93 modules
+Layer 5: Scripts             → Actual Node.js logic execution (43 modules)
+Layer 6: Lib Modules         → 11 subdirectories, 101 modules
 ```
 
 > **Note (v1.4.4)**: All hooks centralized in hooks.json. SKILL.md frontmatter hooks deprecated (backward compatible).
@@ -360,7 +360,7 @@ The `bkit-system/.obsidian/` folder includes shared settings:
 | `workspace.json` | Personal workspace state | No |
 | `app.json` | Personal app settings | No |
 
-> **Tip**: The graph settings are pre-configured for optimal visualization of bkit's 38 skills, 36 agents, 42 scripts, and their relationships.
+> **Tip**: The graph settings are pre-configured for optimal visualization of bkit's 39 skills, 36 agents, 43 scripts, and their relationships.
 
 ---
 
@@ -387,12 +387,12 @@ bkit v1.6.0 integrates CC 2.1.0 Skills 2.0 features:
 
 | Component | Count |
 |-----------|-------|
-| Skills | 38 (18 Workflow / 18 Capability / 1 Hybrid) |
-| Agents | 36 |
-| Lib Modules | 93 (12 subdirectories) |
-| Scripts | 42 |
+| Skills | 39 |
+| Agents | 36 (13 opus / 21 sonnet / 2 haiku) |
+| Lib Modules | 101 (11 subdirectories) |
+| Scripts | 43 |
 | Hook Events | 21 |
+| Templates | 18 |
 | Output Styles | 4 |
-| Evals | 28 (56 content files) |
-| Tests | ~4,028 TC (201 files) |
+| MCP Servers | 2 (bkit-pdca, bkit-analysis; 16 tools) |
 | CC Recommended | v2.1.104+ |

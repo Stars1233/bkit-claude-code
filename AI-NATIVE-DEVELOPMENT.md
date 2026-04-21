@@ -14,7 +14,7 @@ flowchart TB
         subgraph ROW1[" "]
             direction LR
             SPEC["**1. SPEC**<br/>Plan Doc<br/>Design Doc"]
-            CONTEXT["**2. CONTEXT**<br/>CLAUDE.md<br/>38 Skills"]
+            CONTEXT["**2. CONTEXT**<br/>CLAUDE.md<br/>39 Skills"]
             AGENT["**3. AI AGENT**<br/>36 Agents<br/>Controllable Implementation"]
         end
 
@@ -140,11 +140,11 @@ Context Engineering is the **systematic design of information flow to LLMs**—g
 - Create adaptive triggers based on user intent (8-language, auto-detection)
 - Implement quality feedback loops with quality gates and metrics (M1-M10)
 
-**bkit v2.0.0 Implementation**:
+**bkit v2.1.9 Implementation**:
 ```
-Domain Knowledge (38 Skills) ──┐
+Domain Knowledge (39 Skills) ──┐
 Behavioral Rules (36 Agents) ──┼─→ 21-Event Hook System ─→ Dynamic Context Injection
-State Management (~620+ funcs) ─┤
+State Management (101 modules) ─┤
 Workflow Engine (3 presets) ────┤
 Controllable AI (L0-L4) ───────┤
 Audit System (JSONL traces) ───┘
@@ -183,16 +183,16 @@ bkit implements **Context Engineering**—the systematic curation of context tok
 | **3 Project Levels** | Starter, Dynamic, Enterprise contexts |
 | **Convention Skill (Phase 2)** | Defines naming, structure, patterns |
 | **CLAUDE.md Files** | Project-specific AI instructions |
-| **Skill System (38 skills)** | Domain-specific knowledge (18 Workflow / 18 Capability / 1 Hybrid) |
-| **21-Event Hook System** | Centralized context injection via hooks.json (21 events, 42 scripts) |
-| **lib/ (93 modules, ~620+ functions)** | 12 subdirectories: core, pdca, intent, task, team, ui, audit, control, quality, adapters, context, qa |
+| **Skill System (39 skills)** | Domain-specific knowledge |
+| **21-Event Hook System** | Centralized context injection via hooks.json (21 events, 43 scripts) |
+| **lib/ (101 modules)** | 11 subdirectories: audit, context, control, core, intent, pdca, qa, quality, task, team, ui |
 
-**Context Engineering Architecture (v2.0.0)**:
+**Context Engineering Architecture (v2.1.9)**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              bkit v2.0.0 Context Engineering Layers              │
+│              bkit v2.1.9 Context Engineering Layers              │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer 1: Domain Knowledge   │ 38 Skills (structured knowledge)  │
+│  Layer 1: Domain Knowledge   │ 39 Skills (structured knowledge)  │
 │  Layer 2: Behavioral Rules   │ 36 Agents (role + constraints)    │
 │  Layer 3: State Management   │ State machine, workflow engine    │
 │  Layer 4: Dynamic Injection  │ Intent detection, 8-lang triggers │
