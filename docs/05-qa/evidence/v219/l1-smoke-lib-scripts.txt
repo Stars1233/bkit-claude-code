@@ -1,0 +1,27 @@
+L1 Smoke Test Evidence — 2026-04-21 QA
+========================================
+
+[1] lib/ require smoke (101 modules)
+    command: walk lib/**/*.js + require() each
+    result : total=101 ok=101 fail=0
+    verdict: PASS
+
+[2] scripts/ parse check (43 files)
+    command: node --check scripts/*.js
+    result : total=43 ok=43 fail=0
+    verdict: PASS
+
+[3] BKIT_VERSION runtime assertion
+    file   : lib/core/version.js (dynamic lookup: bkit.config.json -> plugin.json -> fallback)
+    runtime: BKIT_VERSION === "2.1.9"
+    verdict: PASS (Docs=Code satisfied)
+
+[4] Architecture count runtime audit
+    skills      : 39  (filesystem: ls skills/ | wc -l)
+    agents      : 36  (filesystem: ls agents/*.md | wc -l)
+    scripts     : 43  (filesystem: ls scripts/*.js | wc -l)
+    lib modules : 101 (filesystem: find lib -name '*.js' -type f | wc -l)
+    hook events : 21  (hooks/hooks.json keys)
+    MCP servers : 2   (servers/: bkit-analysis-server, bkit-pdca-server)
+    output styles: 4  (output-styles/)
+    verdict     : PASS — matches plugin.json description "39 Skills, 36 Agents, 21 Hook Events"

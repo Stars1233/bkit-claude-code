@@ -1,0 +1,21 @@
+{
+  "_comment": "SessionStart hook runtime probe (QA 2026-04-21) — exit 0, JSON-valid, additionalContext=4401 chars (under 10,000 cap)",
+  "session_id": "qa-test",
+  "source": "startup",
+  "hook_event_name": "SessionStart",
+  "result": {
+    "exit_code": 0,
+    "stdout_keys": ["systemMessage", "hookSpecificOutput"],
+    "hookSpecificOutput.hookEventName": "SessionStart",
+    "additionalContext_length": 4401,
+    "cap": 10000,
+    "assertions": {
+      "contains_v2_1_9": true,
+      "contains_v2_1_116+": true,
+      "contains_39_Skills": true,
+      "contains_36_Agents": true,
+      "contains_Prompt_caching_1H": true
+    },
+    "verdict": "PASS"
+  }
+}

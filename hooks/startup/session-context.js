@@ -230,9 +230,16 @@ function buildVersionEnhancementsContext(detectedLevel) {
   let ctx = '';
 
   // v2.1.1: Consolidated version summary (reduced from 4 blocks to 1)
-  ctx += `\n## bkit v2.1.8 (Current)\n`;
-  ctx += `- CC recommended: v2.1.111+ | 72 consecutive compatible releases\n`;
-  ctx += `- Architecture: 37 Skills, 32 Agents, 19 Hook Events, 2 MCP Servers\n`;
+  ctx += `\n## bkit v2.1.9 (Current)\n`;
+  ctx += `- CC recommended: v2.1.116+ | 74 consecutive compatible releases (v2.1.115 skipped)\n`;
+  ctx += `- Architecture: 39 Skills, 36 Agents, 21 Hook Events, 2 MCP Servers\n`;
+  // ENH-265: ENABLE_PROMPT_CACHING_1H hint (CC v2.1.108+, 30-40% token savings on long sessions)
+  const _caching1h = process.env.ENABLE_PROMPT_CACHING_1H === '1' || process.env.ENABLE_PROMPT_CACHING_1H === 'true';
+  if (_caching1h) {
+    ctx += `- Prompt caching 1H: ✅ enabled (30-40% token savings on long PDCA sessions)\n`;
+  } else {
+    ctx += `- Prompt caching 1H: ⚠️ disabled — set ENABLE_PROMPT_CACHING_1H=1 before launching CC for 30-40% token savings on long sessions (see docs/03-analysis/prompt-caching-optimization.md)\n`;
+  }
   ctx += `- PDCA: state machine (20 transitions), L0-L4 automation, quality gates (M1-M10)\n`;
   ctx += `- Dashboard: progress-bar, workflow-map, impact-view, agent-panel, control-panel\n`;
   if (detectedLevel === 'Enterprise') {
@@ -381,7 +388,7 @@ function build(_input, context) {
     // fail-open: 기본값 유지 → 기존 동작 보존
   }
 
-  const header = `# bkit Vibecoding Kit v2.1.8 - Session Startup\n\n`;
+  const header = `# bkit Vibecoding Kit v2.1.9 - Session Startup\n\n`;
 
   if (!_ciEnabled) {
     return header;

@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.9] - 2026-04-21
+
+### 🎯 CC v2.1.114 → v2.1.116 Response (4 ENH Shipping + Docs=Code 100% Sync)
+
+Response cycle for Claude Code CLI v2.1.114~v2.1.116 changes. Delivers 4 ENH (253/254/259/263) plus positive drift from v2.1.10 roadmap (ENH-264 infrastructure + ENH-265 full implementation). Shipping-readiness QA passed Match Rate 100% / Coverage 90.3% / P0 Blocker 0 / Regression 0.
+
+### Added
+- **[ENH-253]** `docs/03-analysis/zero-script-qa-fork-v2116-verification.md` — manual reproduction of GitHub Issue [#51165](https://github.com/anthropics/claude-code/issues/51165) (`context: fork` + `disable-model-invocation` failure) on macOS. Verdict: non-reproduction on macOS (darwin 24.6.0). bkit's sole `context: fork` skill (`zero-script-qa`, 1/39) operates normally. bkit uses `disable-model-invocation` 0/39 → combination case is N/A. ENH-196/202 investment protection confirmed.
+- **[ENH-254]** `docs/03-analysis/security-architecture.md` — Defense-in-Depth security architecture formalization. **Layer 1** (CC runtime sandbox): v2.1.113 #23 `dangerouslyDisableSandbox` permission hardening + #14/#15/#16 Bash wrapper tightening + v2.1.116 S1 dangerous-path safety. **Layer 2** (bkit `config-change-handler.js` `DANGEROUS_PATTERNS`): 5-pattern settings-file detection + SECURITY WARNING audit. 5 sections including attack-vector matrix + user responsibility clause ("do NOT rely on either layer alone").
+- **[ENH-259]** `CUSTOMIZATION-GUIDE.md` (new §⚠️ Important Notices) + `README.md` (Custom Skills warning bullet) — Custom Skills data loss warning for GitHub Issue [#51234](https://github.com/anthropics/claude-code/issues/51234) (`~/.claude/skills/` silent deletion on CC v2.1.113+ first-run). bkit itself unaffected (uses `${CLAUDE_PLUGIN_ROOT}/skills/`), but user custom skills at risk. Backup/restore commands (full + selective) + recommended plugin-bundle path guidance for bkit custom skill authors.
+- **[ENH-264 partial — v2.1.10 roadmap positive drift]** `lib/core/io.js:114` `outputBlockWithContext(reason, alternatives, hookEvent)` + `scripts/unified-bash-pre.js` 2 call sites (deployment detection line 144, QA-phase detection line 183). Alternative-command suggestions via CC v2.1.110+ `hookSpecificOutput.additionalContext`. Full general-Bash coverage scheduled for v2.1.10 (ENH-274).
+- **[ENH-265 — v2.1.10 roadmap positive drift, fully shipped]** `hooks/startup/session-context.js:236-241` — `ENABLE_PROMPT_CACHING_1H` env-var branch in SessionStart additionalContext with disabled/enabled messaging. `docs/03-analysis/prompt-caching-optimization.md` operational guide (30-40% token savings on long PDCA sessions). `bkit.config.json:110-115` `performance.promptCaching1h` declaration (CC v2.1.108+ required).
+- **Shipping Readiness QA** — `docs/05-qa/cc-v2114-v2116-shipping-readiness.report.md` (19,780 bytes) + `docs/05-qa/evidence/v219/` 5-file runtime evidence directory.
+
+### Changed
+- **[ENH-263 + ENH-266 docs-sync]** Docs=Code 25-file architectural correction (v2.1.9 shipping + docs-sync merged at release):
+  - **Plugin/MCP metadata** — `.claude-plugin/plugin.json:5` `"39 Skills, 36 Agents, 21 Hook Events"`, `marketplace.json:36` adds Scripts count.
+  - **README.md** — Badge `v2.1.116+` (L4), Claude Code requirement table (L205), `lib/` comment `(101 modules across 11 subdirs)` (L294), new v2.1.9 feature bullet (prepended).
+  - **Session runtime** — `hooks/startup/session-context.js:234-235` CC recommended + Architecture lines.
+  - **bkit-system/** — README Layer 5/6, Component Counts table, Obsidian graph tip; `_GRAPH-INDEX.md` Context Engineering box + Components list; `philosophy/context-engineering.md` Layer 5 + Domain Knowledge Layer (2 occurrences); `components/{agents,skills,hooks,scripts}/_*-overview.md` all add v2.1.9 history entry.
+  - **CUSTOMIZATION-GUIDE.md** — Component Inventory header v2.1.8→v2.1.9, 3 ASCII diagrams synced (Skills 38→39, Scripts 42→43, lib 93→101 / 12→11 subdirs), Plugin Structure Example skills/scripts counts.
+  - **AI-NATIVE-DEVELOPMENT.md** — Mermaid CONTEXT box, Context Engineering Layers header v2.0.0→v2.1.9, table rows (Skill System, lib/). **Corrected `adapters` subdir myth** — actual subdirs are 11: audit, context, control, core, intent, pdca, qa, quality, task, team, ui.
+  - **lib/core/io.js, lib/core/cache.js** — JSDoc `@version 1.6.0` removed (ENH-270 acceptance: `grep -rn "v1\.6\.0" lib/` = **0 matches**).
+  - **17 agents** — CC recommended version v2.1.111+ → v2.1.116+ (74 consecutive compatible releases).
+- **Version** — 2.1.8 → 2.1.9 across `bkit.config.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `hooks/hooks.json`, `hooks/session-start.js`, `hooks/startup/session-context.js`.
+- **CC recommended version** — v2.1.111+ → **v2.1.116+** (74 consecutive compatible releases, v2.1.115 skipped — 8th skipped release in the v2.1.x series).
+
+### Verified
+- **Architecture inventory (runtime-measured 2026-04-21)** — **39 Skills** (39/39 `effort`, 1/39 `context: fork`, 0/39 `disable-model-invocation`/`paths`/`monitors`), **36 Agents** (13 opus / 21 sonnet / 2 haiku; 2 low / 21 medium / 13 high / 0 xhigh effort; 20/36 `disallowedTools`; 0/36 `initialPrompt`/`hooks:`), **43 Scripts**, **101 Lib modules** in **11 subdirectories** (audit, context, control, core, intent, pdca, qa, quality, task, team, ui — **no `adapters` subdir**), **21 Hook Events**, **18 Templates**, **4 Output Styles**, **2 MCP Servers**.
+- **L1 smoke** — 101/101 lib modules `require()` OK, 43/43 scripts `node --check` OK, `BKIT_VERSION` runtime = `"2.1.9"`.
+- **L3 runtime** — SessionStart hook `additionalContext` 4,401 chars (under 10,000 CC cap, 44%), contains v2.1.9 + v2.1.116+ + 39 Skills + 36 Agents + "Prompt caching 1H" all verified.
+- **L4 contract** — Plan/Design 4 ENH acceptance 15/15 met. Docs=Code grep `active-state` post-sync: 0 matches for `38 Skills`/`32 Agents`/`88 Lib`/`93 modules`/`42 scripts`/`12 subdirectories` (historic blockquotes preserved per Plan §5.2 DO NOT TOUCH policy).
+
+### MON-CC-06 Status (unchanged from v2.1.8)
+v2.1.113 native-binary transition 10+ regression issues + v2.1.114~v2.1.116 6 new HIGH issues tracked (total 16). v2.1.117+ hotfix awaited. Environmental exceptions: macOS 11 stays on v2.1.112 (#50383), non-AVX CPUs stay on v2.1.112 (#50384/#50852), Windows paren PATH partial improvement on v2.1.114+ via B12 (#50541).
+
+---
+
 ## [2.1.8] - 2026-04-17
 
 ### 🧪 Round 4 Runtime Matrix Verification (25 parallel agents, 2026-04-17)

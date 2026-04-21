@@ -1,7 +1,7 @@
 # bkit - Vibecoding Kit
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.111+-purple.svg)](https://code.claude.com)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.116+-purple.svg)](https://code.claude.com)
 [![Version](https://img.shields.io/badge/Version-2.1.8-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
@@ -36,9 +36,9 @@ bkit implements Context Engineering through three interconnected layers:
 
 | Layer | Components | Purpose |
 |-------|------------|---------|
-| **Domain Knowledge** | 38 Skills | Structured expert knowledge (phases, levels, specialized domains) |
+| **Domain Knowledge** | 39 Skills | Structured expert knowledge (phases, levels, specialized domains) |
 | **Behavioral Rules** | 36 Agents | Role-based constraints with model selection (opus/sonnet/haiku) |
-| **State Management** | 93 Lib Modules | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination |
+| **State Management** | 101 Lib Modules | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination |
 
 ### 6-Layer Hook System
 
@@ -61,6 +61,7 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 
 ![bkit Features](images/bkit-features.png)
 
+- **CC v2.1.116 Response + 4 ENH + Docs=Code 100% Sync (v2.1.9)** - 4 ENH shipping: **ENH-253** zero-script-qa `context: fork` macOS verification (Issue [#51165](https://github.com/anthropics/claude-code/issues/51165) non-reproduction on macOS, ENH-196/202 investment protected), **ENH-254** Defense-in-Depth security architecture formalization (Layer 1 CC runtime sandbox × Layer 2 bkit `DANGEROUS_PATTERNS` hook, `docs/03-analysis/security-architecture.md`), **ENH-259** Custom Skills data loss warning for Issue [#51234](https://github.com/anthropics/claude-code/issues/51234) (`CUSTOMIZATION-GUIDE.md` backup/restore/plugin-path guidance — bkit plugin itself unaffected at `${CLAUDE_PLUGIN_ROOT}/skills/`), **ENH-263** Docs=Code 15-file architectural correction (`@version 1.6.0` in lib/: **0 matches** — ENH-270 acceptance). Positive drift: **ENH-264** `lib/core/io.js` `outputBlockWithContext` infrastructure + 2 call sites in `unified-bash-pre.js` (deploy/QA phase paths), **ENH-265** `ENABLE_PROMPT_CACHING_1H` SessionStart branch + operational guide (`docs/03-analysis/prompt-caching-optimization.md`, 30-40% token savings on long PDCA sessions). Architecture: **39 Skills, 36 Agents, 43 Scripts, 101 Lib modules (11 subdirs), 21 Hook Events, 18 Templates, 4 Output Styles, 2 MCP Servers**. CC recommended v2.1.116+ (**74 consecutive compatible releases**, v2.1.115 skipped). Shipping QA: **Match Rate 100% / Coverage 90.3% / P0 Blocker 0 / Regression 0** (`docs/05-qa/cc-v2114-v2116-shipping-readiness.report.md`).
 - **Issue #81 Hotfix + Docs=Code Philosophy Restoration (v2.1.8)** - P0 `session-context.js` guard restored (ENH-238, ENH-226 Docs=Code violation fixed — `ui.contextInjection.enabled` + `sections[]` 3-way toggle mirrors `ui.dashboard` pattern), P0 compaction SHA-256 fingerprint dedup lock (ENH-239, `lib/core/session-ctx-fp.js` — prevents PreCompact re-fire duplicate injection, 1h TTL, GC 30d/LRU 100), P1 PersistedOutputGuard (ENH-240, `lib/core/context-budget.js` — CC 10,000-char cap defense with 8,000-char hard cap + priority-preserved truncation), P3 `hooks/hooks.json` `once: true` ADR documented in `docs/context-engineering.md` (ENH-244), Iterate-discovered `getUIConfig()` bug fixed (3 new fields exposed in `lib/core/config.js`), CC v2.1.111+ recommended (72 consecutive compatible releases), 11 files +641 LOC changed, 25 new TCs + 43 regression TCs = **74 PASS / 0 FAIL**, Match Rate **100%**. Additional: 16 bug fixes consolidated from 10-agent QA Discovery methodology (11 core bugs B1~B11 + 5 Q10-review findings B12~B16), 24 new QA TCs, 239 total PASS / 1 FAIL (pre-existing), ENH-167 partial (BKIT_VERSION centralization in paths.js + MCP servers)
 - **Issue #79 Hotfix + PDCA Workflow Stabilization (v2.1.7)** - P0 `updatePdcaStatus` argument order fix (`skill-post.js:229`), P0 full-auto chain completion (`generateAutoTrigger` report/completed phase added to `automation.js`), P1 phantom feature prevention (`pre-write.js` active feature guard), P2 gap-detector analysis document auto-generation (`gap-detector-stop.js`), `pdca-skill-stop.js` `[PDCA-COMPLETE]` directive for report phase, CC v2.1.110+ recommended (71 consecutive compatible releases), 5 files ~54 LOC changed
 - **Issue #77 Hotfix + v2.1.6 Maintenance Release (v2.1.6)** - P0 GitHub Issue #77 hotfix: Claude Code auto-session-title preservation through single-source `lib/pdca/session-title.js`, phase-change-only emission (6→1 per message, ≈83% reduction), 3-way UI opt-out (`ui.{sessionTitle,dashboard,contextInjection}.enabled` in bkit.config.json), stale feature TTL (24h default) auto-cleanup; PreCompact `decision:block` on PDCA `do/check/act` phases; output-styles audit script (CC v2.1.107 regression #47482 defense); BKIT_VERSION dynamic lookup (Docs=Code); **3268/3268 tests PASS (99.6%, 0 FAIL)**, 69 consecutive compatible releases (v2.1.34~v2.1.108)
@@ -95,11 +96,11 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 - **9-Stage Development Pipeline** - From schema design to deployment
 - **3 Project Levels** - Starter (static), Dynamic (fullstack), Enterprise (microservices)
 - **Multilingual Support** - 8 languages (EN, KO, JA, ZH, ES, FR, DE, IT)
-- **38 Skills** - Domain-specific knowledge (18 Workflow / 18 Capability / 1 Hybrid)
-- **36 Agents** - Specialized AI assistants (11 opus / 19 sonnet / 2 haiku) including CTO/PM Team + PDCA Eval agents
+- **39 Skills** - Domain-specific knowledge (Workflow / Capability / Hybrid classification; see bkit-system for counts)
+- **36 Agents** - Specialized AI assistants (opus / sonnet / haiku; see bkit-system for model distribution) including CTO/PM Team + PDCA Eval agents
 - **201 Test Files** - 4,028+ test cases across 12 categories with 100% export coverage
-- **42 Hook Scripts** - Hook execution with unified handlers across 21 event types
-- **93 Lib Modules** - across 12 subdirectories (core, pdca, intent, task, team, ui, audit, control, quality, adapters, context, qa)
+- **43 Hook Scripts** - Hook execution with unified handlers across 21 event types
+- **101 Lib Modules** - 24,616 LOC across 11 subdirectories (audit, context, control, core, intent, pdca, qa, quality, task, team, ui)
 - **Check-Act Iteration Loop** - Automatic gap analysis and fix cycles with max 5 iterations (90% threshold)
 - **12-Category Test Suite** - Unit, integration, E2E, behavioral, contract, security, performance, UX, philosophy, architecture, controllable-AI, regression (201 files, 4,028+ TC)
 
@@ -202,7 +203,7 @@ Skill Evals connect directly to bkit's PDCA workflow:
 
 | Requirement | Minimum Version | Notes |
 |-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.8 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: v2.1.111+ (72 consecutive compatible releases). |
+| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.9 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: **v2.1.116+** (74 consecutive compatible releases, includes v2.1.116 S1 security + I1/B10 /resume stability; v2.1.115 skipped). |
 | Node.js | v18+ | For hook script execution |
 | Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
 
@@ -210,6 +211,16 @@ Skill Evals connect directly to bkit's PDCA workflow:
 > ```bash
 > claude update
 > ```
+
+> ⚠️ **CC v2.1.116 Users — Custom Skills Data Loss Warning**
+>
+> On CC v2.1.113+ first-run, the `~/.claude/skills/` directory may be silently deleted ([#51234](https://github.com/anthropics/claude-code/issues/51234)).
+> - ✅ bkit plugin itself is unaffected (uses `${CLAUDE_PLUGIN_ROOT}/skills/`)
+> - ⚠️ If you keep user custom skills there, **back up before upgrading**:
+>   ```bash
+>   cp -R ~/.claude/skills ~/.claude/skills.backup.$(date +%Y%m%d)
+>   ```
+> - Full guide: [CUSTOMIZATION-GUIDE.md — Custom Skills Data Loss Warning](./CUSTOMIZATION-GUIDE.md#custom-skills-data-loss-warning-cc-v21116-users)
 
 ---
 
@@ -281,7 +292,7 @@ bkit-claude-code/
 ├── evals/                   # Skill eval definitions & runner
 ├── scripts/                 # Hook execution scripts
 ├── servers/                 # MCP servers (bkit-pdca, bkit-analysis)
-├── lib/                     # Shared utilities (93 modules across 12 subdirs)
+├── lib/                     # Shared utilities (101 modules across 11 subdirs)
 ├── output-styles/           # Level-based response formatting
 ├── templates/               # Document templates
 └── bkit.config.json         # Centralized configuration

@@ -46,7 +46,7 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 │  │  L3: Agent YAML ─→ PreToolUse, PostToolUse                            │  │
 │  │  L4: Triggers   ─→ 8-language keyword detection (EN/KO/JA/ZH/ES/FR/  │  │
 │  │                     DE/IT)                                             │  │
-│  │  L5: Scripts    ─→ 42 Node.js hook scripts                            │  │
+│  │  L5: Scripts    ─→ 43 Node.js hook scripts                            │  │
 │  │  L6: Team Orch. ─→ CTO-led phase routing                             │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
 │                                     │                                        │
@@ -86,7 +86,7 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 
 ---
 
-## Library Modules (84 files across 12 subdirectories, 607 exports)
+## Library Modules (101 files across 11 subdirectories)
 
 | Module | Files | Exports | Purpose |
 |--------|:-----:|:-------:|---------|
@@ -120,11 +120,11 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 
 ---
 
-## Domain Knowledge Layer (38 Skills)
+## Domain Knowledge Layer (39 Skills)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    Domain Knowledge Layer (38 Skills)                    │
+│                    Domain Knowledge Layer (39 Skills)                    │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │

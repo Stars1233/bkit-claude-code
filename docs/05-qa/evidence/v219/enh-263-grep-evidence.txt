@@ -1,0 +1,34 @@
+ENH-263 Docs=Code 6/15 정정 grep 증적 — 2026-04-21 QA
+=======================================================
+
+[검증 1] lib/ 내 @version 1.6.0 잔여
+  grep -rn "@version 1\.6\.0" lib/
+  → 0건 (PASS, 수락 기준 충족)
+
+[검증 2] .claude-plugin/ + memory/ 내 legacy count 잔여
+  grep "38 Skills|32 Agents|88 Lib|22,734|57 Scripts|31 Agents|78 Lib|~40K LOC"
+  → cc_version_history_v2115_v2116.md (HISTORIC record — Plan §5.2 DO NOT TOUCH)
+  → active state 0건 (PASS)
+
+[검증 3] plugin.json / marketplace.json / README / session-context.js / _overview 최신 표기
+  .claude-plugin/plugin.json:5     "39 Skills, 36 Agents, 21 Hook Events" ✅
+  .claude-plugin/marketplace.json  "39 Skills, 36 Agents, 43 Scripts, 21 Hook Events" ✅
+  README.md:4                      "Claude%20Code-v2.1.116+" 배지 ✅
+  README.md:205                    "Recommended: v2.1.116+ (74 consecutive compatible)" ✅
+  hooks/startup/session-context.js:234  "CC recommended: v2.1.116+ | 74 consecutive" ✅
+  hooks/startup/session-context.js:235  "Architecture: 39 Skills, 36 Agents, 21 Hook Events, 2 MCP Servers" ✅
+  bkit-system/components/agents/_agents-overview.md:5  "v2.1.9: CC v2.1.116 response...v2.1.116+ (74 consecutive)" ✅
+  bkit-system/components/skills/_skills-overview.md:3  "39 Skills defined in bkit (v2.1.8)" — (숫자 최신, 버전 태그는 v2.1.8 → 경미한 Docs=Code 잔여, P2)
+
+[검증 4] 17 agents CC recommended 버전 업데이트
+  grep -l "v2\.1\.116\+|74 consecutive" agents/
+  → 17 files matched (bkend/code-analyzer/cto-lead/design-validator/enterprise/frontend/
+     gap-detector/infra/pdca-iterator/pipeline/pm-lead/product-manager/qa-monitor/
+     qa-strategist/report-generator/security/starter-guide) ✅
+
+[검증 5] 의도적으로 남은 v2.1.111+/72 consecutive (HISTORIC records)
+  README.md:64                                     v2.1.8 feature bullet의 역사적 기록
+  bkit-system/components/agents/_agents-overview.md:6  v2.1.8 릴리스 노트 인라인
+  → Plan §5.2 "DO NOT TOUCH" 정책 준수 ✅
+
+총합: 15/15 active 파일 정정 완료 (2 historic records 의도 보존) — PASS

@@ -115,9 +115,9 @@ bkit is a practical implementation of **Context Engineering**:
 ┌─────────────────────────────────────────────────────────────────┐
 │              bkit Context Engineering Components                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  Domain Knowledge (38 Skills)  → Structured domain knowledge     │
+│  Domain Knowledge (39 Skills)  → Structured domain knowledge     │
 │  Behavioral Rules (36 Agents)  → Role-based behavioral rules     │
-│  State Management (lib/common) → 93 modules, ~620+ exports       │
+│  State Management (lib/)       → 101 modules, 11 subdirectories  │
 │  6-Layer Hook System           → Context injection timing ctrl   │
 │  Dynamic Injection             → Conditional context selection   │
 └─────────────────────────────────────────────────────────────────┘
@@ -425,11 +425,13 @@ bkit supports languages and frameworks organized by tier:
 > **v1.5.0**: bkit is now Claude Code exclusive. Gemini CLI support was removed for simplified architecture.
 
 **Components**:
-- `skills/` - 38 skills
+- `skills/` - 39 skills
 - `agents/` - 36 agents
-- `scripts/` - 42 scripts (Node.js)
-- `lib/` - 12 subdirectories, 93 modules (~620+ exports)
+- `scripts/` - 43 scripts (Node.js)
+- `lib/` - 11 subdirectories, 101 modules
 - `templates/` - 18 templates
+- `output-styles/` - 4 styles
+- `servers/` - 2 MCP servers (bkit-pdca, bkit-analysis)
 
 ## Templates (18)
 

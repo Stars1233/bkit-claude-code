@@ -2,6 +2,7 @@
 
 > Hook events triggered during Claude Code operations
 >
+> **v2.1.9**: CC v2.1.116 response — Hooks unchanged (21 events, 43 scripts). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.0.4**: 18 hook events implemented (18/22 = 82% CC coverage), 6-Layer Hook System, 57 scripts, CC v2.1.81+
 > **v1.6.2**: PostCompact + StopFailure hooks added (10->12 events), hook source display (CC v2.1.75+)
 > **v1.5.0**: Claude Code Exclusive - Gemini CLI support removed

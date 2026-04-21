@@ -1,7 +1,8 @@
 # Agents Overview
 
-> List of 36 Agents defined in bkit and their roles (v2.1.8)
+> List of 36 Agents defined in bkit and their roles (v2.1.9)
 >
+> **v2.1.9**: CC v2.1.116 response — ENH-253/254/259/263 (zero-script-qa fork verification, defense-in-depth security docs, custom skill warning, Docs=Code 15-file correction). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.1.8**: Issue #81 hotfix - agents unchanged. Hook/lib layer focus (`lib/core/context-budget.js`, `session-ctx-fp.js`). CC recommended: v2.1.111+ (72 consecutive compatible).
 > **v2.1.7**: Issue #79 hotfix, PDCA workflow stabilization.
 >
