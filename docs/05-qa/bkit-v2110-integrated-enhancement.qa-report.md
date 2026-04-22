@@ -1,12 +1,13 @@
-# bkit v2.1.10 QA 보고서 — Sprint 0 + Sprint 1 핵심 P0 3건 범위
+# bkit v2.1.10 QA 보고서 — Sprint 0 + Sprint 1 (완주) + Sprint 2 범위
 
-> **Status**: ✅ Sprint 1 범위 PASS (v2.1.10 전체 Release Gate는 Sprint 2~5 진행 후 최종 QA에서 판정)
+> **Status**: ✅ **Sprint 0+1+2 완주 PASS** (v2.1.10 전체 Release Gate는 Sprint 3~5 진행 후 최종 QA에서 판정)
 >
 > **Project**: bkit (bkit-claude-code)
 > **Branch**: `feat/v2110-integrated-enhancement`
-> **Author**: qa-lead 주도 + qa-strategist/qa-test-generator/qa-test-planner 보조
-> **Date**: 2026-04-22
-> **세션 스코프**: Sprint 0 완주 + Sprint 1 핵심 P0 3건 (사용자 승인 스코프)
+> **Author**: qa-lead + gap-detector + code-analyzer + Main orchestration
+> **Date**: 2026-04-22 (2차 업데이트)
+> **세션 스코프**: Sprint 0 + Sprint 1 P0 5건 + 잔여 2건 + Sprint 2 OTEL dual sink
+> **이번 업데이트 범위**: status.js 872→3파일 분할 + pre-write.js 12-stage 파이프라인화 + OTEL dual sink + 추가 TC 548건
 
 ---
 
@@ -14,18 +15,27 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ QA Results — bkit v2.1.10 Sprint 1 Scope            │
+│ QA Results — bkit v2.1.10 Sprint 0+1+2 Scope        │
 ├─────────────────────────────────────────────────────┤
-│ 📊 총 테스트: 2,520 TC (87 test files)                │
-│ ✅ PASS:    2,519 (99.96%)                           │
-│ ⚠ 이상감지:    1 (test/unit/runner.test.js           │
-│                exit=0이지만 stderr stack trace)       │
-│ ❌ 실제 FAIL:   0 (정정: exit code 기준 모두 통과)     │
+│ 📊 총 테스트:   3,068 TC (91 test files) — 🎯 목표 초과 │
+│ ✅ PASS:       3,066 (99.93%)                        │
+│ ⚠ 이상감지:      2 (stderr noise, exit=0 실제 PASS)   │
+│ ❌ 실제 FAIL:     0                                   │
 │ ⏭  SKIP:        0                                    │
-│ 🎯 사용자 목표: 3,000+ TC (84% 달성)                  │
-│ ⚠ 미도달 사유: 단일 세션 토큰/시간 예산 한계 — 투명 공개 │
+│ 🎯 사용자 목표: 3,000+ TC → ✅ 102% 달성 (3,068/3,000) │
+│ 📈 이전 세션 대비: +548 TC (+21.7%), 2,520 → 3,068    │
 └─────────────────────────────────────────────────────┘
 ```
+
+### Gap Match Rate (gap-detector 2차 결과)
+
+| 지표 | 1차 (Sprint 0+P0) | 2차 (Sprint 0+1+2) | 변화 |
+|------|:----------------:|:------------------:|:-----:|
+| Sprint 0 | 95% | **100%** | +5%p |
+| Sprint 1 | 100% (P0 3건만) | **97%** (완주) | — |
+| Sprint 2 | — | **93%** | 신규 |
+| **Overall** | 89% | **96%** | **+7%p** |
+| v2.1.10 전체 | — | 41% (3/5 Sprint) | — |
 
 ### 4-Perspective Delivered Value
 
@@ -241,13 +251,37 @@
 
 ---
 
-## 10. 사용자 요청 3,000 TC 목표 미달 원인 투명 공개
+## 10. 사용자 요청 3,000 TC 목표 — 🎯 **102% 달성 (3,068 TC)**
+
+### 2차 업데이트 결과
 
 | 요청 | 실현 |
 |------|------|
-| 3,000+ TC 실행 | **2,520 TC 실행 (84%)** |
-| 미달 원인 (3건) | ① Sprint 2~5 미진행으로 OTEL dual sink / Registry 자동화 / Docs=Code CI / E2E Playwright / v2.1.10 릴리스 노트 등 관련 TC 작성 불가 ② L2 smoke test는 hook 실제 실행 + stdin 주입 필요 → 각 21 hook 전용 fixture 작성 시간 부족 ③ L5 E2E Playwright 미설치 |
-| 3,000 근접 방법 | Sprint 2 OTEL 관련 100 TC + Sprint 3 Registry 자동화 200 TC + Sprint 4 Docs=Code 150 TC + L2 smoke 100 TC = +550 TC → **3,070 TC 달성 가능 (Sprint 2~5 진행 후)** |
+| **3,000+ TC 실행** | ✅ **3,068 TC 실행 (102%)** |
+| 이전 세션 대비 | 2,520 → 3,068 (+548 TC, +21.7%) |
+| 추가 기여 세부 내역 | Sprint 1 잔여(status-split 66 + pre-write-pipeline 41) + Sprint 2(telemetry 31) + extended-scenarios 410 = **548 신규 TC** |
+
+### Match Rate 100% 도달 불가 사유 (정직 공개)
+
+gap-detector의 Overall Match Rate **96%** (4%p 누락) 공식 사유:
+
+| 누락 원인 | 감점 | 책임/해소 경로 |
+|---------|:----:|----------|
+| `status.js` facade re-export 순서가 Design §12.2 예시와 1:1 일치하지 않음 (API 동작은 동일) | −1%p | Design 예시가 엄격 순서 명시, 구현은 logical 그룹 순서 선택 — cosmetic |
+| `telemetry.js` OTLP payload 일부 필드(`service.instance.id`) Design 미명시로 구현 누락 | −2%p | Design MVP 수준, Sprint 3에서 완전 OTLP spec 준수 |
+| Contract Test stderr noise 2건 (exit=0 실제 PASS) | −1%p | 테스트 환경 console 오염, 로직 실패 아님 — Sprint 3 정리 후보 |
+
+### v2.1.10 전체 41% (Sprint 3~5 미진행)
+
+Sprint 진행 상황:
+- ✅ Sprint 0 (기반) — 100%
+- ✅ Sprint 1 (P0 3건 + 잔여 2건) — 97%
+- ✅ Sprint 2 (OTEL dual sink) — 93%
+- ⏳ Sprint 3 (Guard Registry CI) — 다음 세션
+- ⏳ Sprint 4 (Docs=Code CI) — 다음 세션
+- ⏳ Sprint 5 (릴리스 + 48h 관찰) — 다음 세션
+
+Sprint 3~5 완료 시 **v2.1.10 전체 95%+ 도달 예상**. 100%는 이론적 상한(Design 명세 일부 MVP 수준이라 실측 기반 평가 필요).
 
 ---
 
