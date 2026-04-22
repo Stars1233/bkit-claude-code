@@ -31,6 +31,9 @@ jobs:
       - name: Guard Registry validation
         run: node scripts/check-guards.js
 
+      - name: Docs=Code cross-check (Sprint 4, ENH-241)
+        run: node scripts/docs-code-sync.js
+
       - name: Aggregate all tests (summary)
         run: node test/contract/scripts/qa-aggregate.js | tail -10
 
