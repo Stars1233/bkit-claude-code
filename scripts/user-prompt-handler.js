@@ -3,7 +3,7 @@
  * user-prompt-handler.js - UserPromptSubmit Hook (FR-04)
  * Process user input before AI processing
  *
- * @version 1.6.0
+ * @version 2.1.10
  * @module scripts/user-prompt-handler
  */
 
@@ -283,6 +283,17 @@ debugLog('UserPrompt', 'Hook completed', {
 // ENH-227 (Issue #77 Phase A): single-source generator with opt-out + phase-change-only + stale TTL
 const sessionTitle = generateSessionTitle({ sessionId: input.session_id });
 
+// v2.1.10 Sprint 7c (G-J-09): structured suggestions via IntentRouter (priority-resolved)
+let structuredSuggestions = [];
+try {
+  const { route } = require('../lib/orchestrator/intent-router');
+  const routed = route(userPrompt, { onboarding: onboardingContext });
+  if (routed && Array.isArray(routed.suggestions) && routed.suggestions.length > 0) {
+    const { toStructuredSuggestions } = require('../lib/orchestrator/next-action-engine');
+    structuredSuggestions = toStructuredSuggestions(routed.suggestions);
+  }
+} catch (_e) { /* fail-silent — IntentRouter is supplementary, legacy contextParts still works */ }
+
 if (contextParts.length > 0) {
   const context = truncateContext(contextParts.join(' | '));
   console.log(JSON.stringify({
@@ -294,6 +305,8 @@ if (contextParts.length > 0) {
       sessionTitle,
       // v2.1.1 H-02: AskUserQuestion for high-ambiguity requests
       userPrompt: ambiguityUserPrompt || undefined,
+      // v2.1.10 Sprint 7c (G-J-09): structured suggestions (non-breaking addition)
+      ...(structuredSuggestions.length > 0 ? { suggestions: structuredSuggestions } : {}),
     }
   }));
 } else if (sessionTitle || ambiguityUserPrompt) {

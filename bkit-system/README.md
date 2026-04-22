@@ -1,56 +1,17 @@
 # bkit System Architecture
 
-> Architecture guide documenting bkit plugin's internal structure and trigger system
+> Architecture guide documenting bkit plugin's internal structure and trigger system — **v2.1.10 (Sprint 0~7 Integrated Enhancement)**.
 >
-> **v1.4.0**: Dual Platform Support (Claude Code + Gemini CLI)
+> **Version history is maintained in a single source of truth**: see [CHANGELOG.md](../CHANGELOG.md) for the full release history (v1.0.0 → v2.1.10).
 >
-> **v1.4.1**: Context Engineering perspective added - Optimal token curation for LLM reasoning
->
-> **v1.4.2**: Context Engineering modules + Task Management integration + UserPromptSubmit/PreCompact hooks
->
-> **v1.4.3**: Gemini CLI v0.25+ compatibility - `xmlSafeOutput()` for XML wrapping, engines version update
->
-> **v1.4.4**: Commands deprecated → Skills migration, PDCA Skill integration (8 actions), hooks-json-integration (unified scripts)
->
-> **v1.4.5**: `/pdca archive` action, 8-language trigger completion (ES/FR/DE/IT), internationalization (KO→EN translation)
->
-> **v1.4.6**: Sub-agent call stability with `bkit:` prefix, all 11 agents updated
->
-> **v1.4.7**: Task Management + PDCA Integration, Core Modularization (lib/ split into 4 modules with 132 functions)
->
-> **v1.5.0**: Claude Code Exclusive - Gemini CLI support removed, simplified architecture
->
-> **v1.5.4**: bkend MCP Accuracy Fix - MCP tools 19→28+, accurate tool names, dynamic Base URL
->
-> **v1.5.5**: Plan Plus skill - Brainstorming-enhanced PDCA planning (community contribution)
->
-> **v1.5.6**: CC v2.1.59 auto-memory integration, ENH-48~51, 182 exports
->
-> **v1.5.7**: CC v2.1.63 /simplify + /batch + HTTP hooks PDCA integration, CC_COMMAND_PATTERNS 8-lang, English conversion
->
-> **v1.5.8**: Studio Support - Path Registry (lib/core/paths.js), state directory migration (.bkit/{state,runtime,snapshots}/), auto-migration with EXDEV fallback, 186 exports
->
-> **v1.5.9**: Executive Summary module, AskUserQuestion Preview UX, ENH-74~81, 199 exports
->
-> **v1.6.0**: Skills 2.0 - Skill Classification (9 Workflow / 18 Capability / 1 Hybrid), PM Agent Team (5 agents), Skill Evals (28 definitions), Skill Creator + A/B Testing
->
-> **v1.6.1**: CTO Orchestration Redesign (Main Session as CTO), P0 Bug Fixes (4), Config-Code Sync, 3-Tier Agent Security, Skill Evals 28/28, 1073 TC comprehensive test, CE-5 (88/100), 208 exports
->
-> **v1.6.2**: CC v2.1.78 Integration (14 ENH), 12 hook events, 29 agents, 31 skills, 49 scripts, 210 exports, 1186 TC, CC v2.1.78
->
-> **v2.0.0**: Architecture expansion — 18 hook events, 31 agents, 36 skills, 54 scripts, 260+ exports
->
-> **v2.1.0**: CC v2.1.86 compatibility — 34 skills description optimized (250-char cap), Hook `if` field docs, 52 consecutive compatible releases
->
-> **v2.1.1**: Architecture expansion — 38 skills, 36 agents, 21 hook events, 84 lib modules (12 subdirs), 42 scripts
->
-> **v2.0.6**: Living Context + Self-Healing — 18 hook events, 32 agents, 37 skills, 57 scripts, ~620+ exports
->
-> **v2.0.1**: Cross-project isolation fix — meta.json project identity guard, globalCache namespace (#48)
->
-> **v2.0.2**: PM Skills Integration — 43 PM frameworks (pm-skills MIT), PDCA Interactive Checkpoints 1~5, code-analyzer Confidence-Based Filtering, Design 3 Architecture Options, btw CTO Team Integration, pm-prd template v2.0
->
-> **v2.0.6**: Living Context System (lib/context/ 7 modules), Self-Healing agent (opus), Deploy skill + state machine, PDCA Handoff Fix Phase 2+3 (75-85% context preservation), 11 infra templates, 88 lib modules, 37 skills, 32 agents, 57 scripts
+> Current release highlights (v2.1.10):
+> - **Clean Architecture 4-Layer**: Domain (11 modules = 6 ports + 4 guards + 1 rules, 0 forbidden imports) / Application (cc-regression + pdca + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-test-harness) / Presentation (hooks + scripts)
+> - **Defense-in-Depth 4-Layer**: CC Built-in → bkit PreToolUse → audit-logger sanitizer → Token Ledger NDJSON
+> - **Invocation Contract L1~L5**: 226 CI-gated assertions + L2 smoke 98 TC + L3 MCP stdio 42 TC + L5 E2E shell 5 scenarios
+> - **Sprint 7 3-Layer Orchestration**: `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index)
+> - **Guard Registry 21**: `lib/cc-regression/registry.js` with `expectedFix` auto-release via `lifecycle.reconcile()`
+> - **BKIT_VERSION 5-location invariant**: `bkit.config.json` single SoT → `plugin.json` + `hooks.json` + `session-start.js` + `README.md` + `CHANGELOG.md`
+> - **Docs=Code CI**: `scripts/docs-code-sync.js` — 8 counts + 5-location version, 0 drift enforced
 
 ## Purpose of This Document
 
@@ -77,7 +38,7 @@ bkit is a practical implementation of **Context Engineering**. Context Engineeri
 │                                                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
 │  │ Domain Knowledge │  │ Behavioral Rules │  │ State Mgmt   │  │
-│  │    (39 Skills)   │  │   (36 Agents)    │  │(11 subdirs)  │  │
+│  │    (39 Skills)   │  │   (36 Agents)    │  │(15 subdirs)  │  │
 │  │                  │  │                  │  │              │  │
 │  │ • 9-Phase Guide  │  │ • Role Def.      │  │ • PDCA v2.0  │  │
 │  │ • 3 Levels       │  │ • Constraints    │  │ • Multi-Feat │  │
@@ -210,12 +171,12 @@ lib/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                bkit Trigger System (v2.0.4)                      │
+│                bkit Trigger System (v2.1.10)                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
 │  │   Skills     │───▶│   Agents     │───▶│   Scripts    │      │
-│  │  (38)        │    │  (36)        │    │  (42)        │      │
+│  │  (39)        │    │  (36)        │    │  (47)        │      │
 │  └──────────────┘    └──────────────┘    └──────────────┘      │
 │         │                   │                   │               │
 │         ▼                   ▼                   ▼               │
@@ -243,19 +204,26 @@ lib/
 | Component | Count | Role | Details |
 |-----------|-------|------|---------|
 | Skills | 39 | Domain knowledge + Slash commands | [[components/skills/_skills-overview]] |
-| Agents | 36 | Specialized task execution | [[components/agents/_agents-overview]] |
+| Agents | 36 | Specialized task execution (13 opus / 21 sonnet / 2 haiku) | [[components/agents/_agents-overview]] |
 | Commands | DEPRECATED | Migrated to Skills (v1.4.4) | - |
-| Hooks | 21 events | Event-based triggers (unified) | [[components/hooks/_hooks-overview]] |
-| Scripts | 43 | Actual logic execution | [[components/scripts/_scripts-overview]] |
-| Lib | 11 subdirectories, 101 modules | Shared utilities | Modular (no common.js bridge dependency) |
-| Evals | 28 | Skill evaluation definitions (v1.6.0) | Skill Creator + A/B Testing |
-| Config | 1 | Centralized settings | `bkit.config.json` |
+| Hooks | 21 events (24 blocks) | Event-based triggers (unified) | [[components/hooks/_hooks-overview]] |
+| Scripts | 47 | Actual logic execution | [[components/scripts/_scripts-overview]] |
+| Lib | 15 subdirectories, 128 modules (~27,085 LOC) | Clean Architecture 4-Layer (Domain / Application / Infrastructure / Presentation) | See [CHANGELOG](../CHANGELOG.md#architecture-snapshot) |
+| Evals | 28 | Skill evaluation definitions | Skill Creator + A/B Testing |
+| Config | 1 | Centralized settings | `bkit.config.json` (BKIT_VERSION SSoT) |
 | Templates | 18 | Document templates | PDCA + Pipeline + Shared |
+| MCP Servers | 2 | Runtime tools for Claude Code | `bkit-pdca` + `bkit-analysis` (16 tools) |
+| Output Styles | 4 | Response formatting | bkit-learning / bkit-pdca-guide / bkit-enterprise / bkit-pdca-enterprise |
 
-## v1.5.1 Features
+## v2.1.10 Features
 
 | Feature | Components | Discovery Mechanism |
 |---------|-----------|---------------------|
+| Clean Architecture 4-Layer | `lib/domain/` (11 modules) + `lib/infra/` + `lib/cc-regression/` + hooks/scripts | Auto-enforced by `scripts/check-domain-purity.js` (0 forbidden imports) |
+| Defense-in-Depth 4-Layer | `scripts/pre-write.js` + `unified-bash-pre.js` + defense-coordinator + audit-logger + Token Ledger | `docs/03-analysis/security-architecture.md` |
+| Invocation Contract L1~L5 | `test/contract/baseline/v2.1.9/` (94 JSON) + L2 smoke + L3 MCP stdio + L5 E2E shell | CI gate `contract-check.yml` (226 assertions) |
+| 3-Layer Orchestration | `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index) | Used by `cto-lead` + Stop-family hooks |
+| Guard Registry 21 | `lib/cc-regression/registry.js` | Daily cron `cc-regression-reconcile.yml` |
 | Output Styles | 4 style files in `output-styles/` | Auto-suggested at SessionStart based on level |
 | Agent Teams | `lib/team/` module (9 files) | Announced at SessionStart, suggested for major features |
 | Agent Memory | `memory:` frontmatter in all 36 agents | Auto-active, mentioned at SessionStart |
@@ -265,12 +233,18 @@ lib/
 bkit triggers occur across 6 layers:
 
 ```
-Layer 1: hooks.json (Global) → SessionStart, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, Stop
-Layer 2: Unified Scripts     → unified-stop.js, unified-bash-pre.js, unified-write-post.js, etc.
-Layer 3: Agent Frontmatter   → Constraints and role definitions (hooks deprecated)
-Layer 4: Description Triggers → "Triggers:" keyword matching
-Layer 5: Scripts             → Actual Node.js logic execution (43 modules)
-Layer 6: Lib Modules         → 11 subdirectories, 101 modules
+Layer 1: hooks.json (Global) → 21 events (24 blocks): SessionStart, UserPromptSubmit,
+                                PreCompact, PostCompact, PreToolUse, PostToolUse,
+                                Stop, StopFailure, SessionEnd, SubagentStart, SubagentStop,
+                                TaskCompleted, TeammateIdle, Notification, ConfigChange,
+                                PermissionRequest, InstructionsLoaded, CwdChanged,
+                                TaskCreated, PostToolUseFailure + more
+Layer 2: Unified Scripts     → unified-stop.js, unified-bash-pre.js, unified-write-post.js,
+                                session-end-handler.js, subagent-stop-handler.js, etc.
+Layer 3: Agent Frontmatter   → Constraints and role definitions (frontmatter hooks deprecated v1.4.4)
+Layer 4: Description Triggers → "Triggers:" keyword matching (8 languages)
+Layer 5: Scripts             → Actual Node.js logic execution (47 modules)
+Layer 6: Lib Modules         → 15 subdirectories, 128 modules (Clean Architecture 4-Layer)
 ```
 
 > **Note (v1.4.4)**: All hooks centralized in hooks.json. SKILL.md frontmatter hooks deprecated (backward compatible).
@@ -317,15 +291,14 @@ bkit-system/
 | Scripts | `scripts/*.js` |
 | Templates | `templates/*.md` |
 | Hooks | `hooks/hooks.json` |
-| Lib | `lib/core/`, `lib/pdca/`, `lib/intent/`, `lib/task/` |
+| Lib | `lib/audit/`, `lib/cc-regression/`, `lib/context/`, `lib/control/`, `lib/core/`, `lib/domain/`, `lib/infra/`, `lib/intent/`, `lib/orchestrator/`, `lib/pdca/`, `lib/qa/`, `lib/quality/`, `lib/task/`, `lib/team/`, `lib/ui/` |
 | Config | `bkit.config.json` |
 | Context | `CLAUDE.md` |
 | Manifest | `.claude-plugin/plugin.json` |
 
 > **Note (v1.5.0)**: bkit is now Claude Code exclusive. Gemini CLI support was removed.
 
-> **Note**: The `.claude/` folder is not in version control. All plugin elements are at root level.
-> **v1.4.0**: Skills, Agents, Scripts, Templates, Lib, and Config are shared between both platforms.
+> **Note**: The `.claude/` folder is not in version control. All plugin elements (skills, agents, scripts, templates, lib, output-styles, config) live at the repository root and are bundled via `.claude-plugin/plugin.json`. bkit is Claude Code exclusive since v1.5.0.
 
 ---
 
@@ -360,7 +333,7 @@ The `bkit-system/.obsidian/` folder includes shared settings:
 | `workspace.json` | Personal workspace state | No |
 | `app.json` | Personal app settings | No |
 
-> **Tip**: The graph settings are pre-configured for optimal visualization of bkit's 39 skills, 36 agents, 43 scripts, and their relationships.
+> **Tip**: The graph settings are pre-configured for optimal visualization of bkit's 39 skills, 36 agents, 47 scripts, 128 lib modules (15 subdirs), and their relationships.
 
 ---
 
@@ -383,16 +356,21 @@ bkit v1.6.0 integrates CC 2.1.0 Skills 2.0 features:
 - `pm-research` — Competitive analysis and data gathering
 - `pm-prd` — PRD document generation
 
-### Component Counts (v2.1.5)
+### Component Counts (v2.1.10 Final, runtime-measured 2026-04-22)
 
 | Component | Count |
 |-----------|-------|
 | Skills | 39 |
 | Agents | 36 (13 opus / 21 sonnet / 2 haiku) |
-| Lib Modules | 101 (11 subdirectories) |
-| Scripts | 43 |
-| Hook Events | 21 |
+| Lib Modules | 128 across 15 subdirectories (~27,085 LOC) |
+| Scripts | 47 |
+| Hook Events | 21 (24 blocks) |
 | Templates | 18 |
 | Output Styles | 4 |
 | MCP Servers | 2 (bkit-pdca, bkit-analysis; 16 tools) |
-| CC Recommended | v2.1.104+ |
+| Test Files | 113 (qa-aggregate scope) |
+| Test Cases | 3,762 (PASS 3,760 / FAIL 0 / Expected 2) |
+| BKIT_VERSION SSoT | 2.1.10 (`bkit.config.json`) |
+| CC Recommended | v2.1.117+ (75 consecutive compatible releases) |
+
+> Measurement source: `scripts/docs-code-sync.js` + `find lib -name "*.js" -type f | wc -l`.

@@ -1,7 +1,8 @@
 # Scripts Overview
 
-> 43 Node.js Scripts used by bkit hooks (v2.1.9)
+> 47 Node.js Scripts used by bkit hooks (v2.1.10)
 >
+> **v2.1.10**: Sprint 5a~7 complete — BKIT_VERSION centralization (5-location single SoT), 3-Layer Orchestration (`lib/orchestrator/` 5 new modules), legacy cleanup (removed 3 modules: hook-io / ops-metrics / deploy-state-machine), new `cc-bridge.js` Port↔Adapter, MCP stdio L3 runtime runner (42 TC), `check-domain-purity.js` CI step. Scripts 43→47. CC recommended: v2.1.117+.
 > **v2.1.9**: CC v2.1.116 response — Scripts unchanged (43). ENH-254 `config-change-handler.js:17-29` defense-in-depth comment reinforced (5 DANGEROUS_PATTERNS + Layer 1/Layer 2 architecture). Positive drift: ENH-264 `unified-bash-pre.js:144,183` `outputBlockWithContext` calls (deploy/QA phase paths). CC recommended: v2.1.116+.
 > **v2.1.8**: Issue #81 hotfix - scripts unchanged (43). Focus was `hooks/session-start.js` (ENH-239 fingerprint dedup integration) + `hooks/startup/session-context.js` (ENH-238/240 guard + budget). Two new `lib/core/` modules: `context-budget.js` (95 LOC) + `session-ctx-fp.js` (115 LOC).
 > **v2.1.7**: Issue #79 hotfix - `skill-post.js` argument order, `pre-write.js` phantom feature guard, `gap-detector-stop.js` analysis doc auto-generation.
@@ -226,6 +227,7 @@ bkit-claude-code/
 
 ## Shared Library: lib/ (v2.0.6)
 
+> **v2.1.10 (current)**: 15 subdirectories, 128 lib modules (Clean Architecture 4-Layer: Domain/Application/Infrastructure/Presentation), 47 scripts. New subdirs: domain, infra, cc-regression, orchestrator (Sprint 0~7).
 > **v2.0.6**: 11 subdirectories, 88 modules with ~620+ exports total
 > **v2.0.3**: 10 subdirectories, 76 modules with ~580+ exports total
 > **v1.6.2**: 5 module directories with 210 exports total
@@ -245,7 +247,7 @@ bkit-claude-code/
 | `lib/context/` | 7 | 30+ | Living Context loader, invariant checker, impact analyzer, scenario runner, self-healing |
 | `lib/common.js` | 1 | ~620+ | Migration Bridge (re-exports all modules) |
 
-**Export summary**: ~620+ total exports via bridge (11 subdirectories, 88 modules)
+**Export summary (v2.1.10 current)**: 128 modules across 15 subdirectories (audit, cc-regression, context, control, core, domain, infra, intent, orchestrator, pdca, qa, quality, task, team, ui) — Clean Architecture 4-Layer. Historical v2.0.6 snapshot: ~620+ exports via bridge (11 subdirectories, 88 modules).
 
 ### Import Options
 

@@ -1,0 +1,64 @@
+name: Invocation Contract Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, feat/**]
+
+jobs:
+  contract-l1-l4:
+    name: Contract Test (L1 Frontmatter + L4 Deprecation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Self-contained: no npm install required (bkit runtime deps = 0).
+      - name: Show working tree
+        run: |
+          ls -la
+          echo "---"
+          node --version
+
+      - name: Domain Layer Purity Check (Sprint 5.5 — Clean Architecture enforcement)
+        run: node scripts/check-domain-purity.js
+
+      - name: L1 Frontmatter Schema + L4 Deprecation (CI Gate)
+        run: node test/contract/scripts/contract-test-run.js --compare v2.1.9 --level L1,L4
+
+      - name: Guard Registry validation
+        run: node scripts/check-guards.js
+
+      - name: Docs=Code cross-check (Sprint 4, ENH-241)
+        run: node scripts/docs-code-sync.js
+
+      - name: Dead code detection (Sprint 4.5 — prevent new dead code in v2.1.10+)
+        run: node scripts/check-deadcode.js
+
+      - name: Runtime Integration Tests (Sprint 4.5 — recursion guard + prod hook paths)
+        run: node test/contract/integration-runtime.test.js
+
+      - name: Aggregate all tests (summary)
+        run: node test/contract/scripts/qa-aggregate.js | tail -10
+
+  contract-l5-e2e:
+    name: Contract Test L5 (관찰 전용 — 머지 차단 아님)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: L5 smoke (static inventory)
+        run: |
+          if [ -f test/contract/invocation-inventory.test.js ]; then
+            node test/contract/invocation-inventory.test.js
+          else
+            echo "L5 not yet implemented"
+          fi

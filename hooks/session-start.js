@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.9)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.10, uses BKIT_VERSION from lib/core/version)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -240,8 +240,30 @@ try {
   // fail-open: 기존 동작 유지
 }
 
+// Sprint 4.5 Integration: cc-regression lifecycle reconcile.
+// Marks Guards as resolved when CC version ≥ expectedFix. Fire-and-forget.
+try {
+  const ccRegression = require('../lib/cc-regression');
+  const ccVersion = ccRegression.detectCCVersion();
+  if (ccVersion) {
+    const result = ccRegression.reconcile(ccRegression.CC_REGRESSIONS, ccVersion);
+    const newlyResolved = (result.resolved || []).filter((g) => g.resolvedBy === ccVersion);
+    if (newlyResolved.length > 0) {
+      debugLog('SessionStart', 'cc-regression auto-deactivated', {
+        ccVersion,
+        resolved: newlyResolved.map((g) => g.id),
+      });
+    }
+  }
+} catch (e) {
+  debugLog('SessionStart', 'cc-regression reconcile failed', { error: e.message });
+  // fail-open
+}
+
+const { BKIT_VERSION } = require('../lib/core/version');
+
 const response = {
-  systemMessage: `bkit Vibecoding Kit v2.1.9 activated (Claude Code)`,
+  systemMessage: `bkit Vibecoding Kit v${BKIT_VERSION} activated (Claude Code)`,
   hookSpecificOutput: {
     hookEventName: "SessionStart",
     onboardingType: onboardingContext.onboardingData.type,

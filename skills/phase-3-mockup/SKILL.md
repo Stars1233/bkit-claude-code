@@ -1,5 +1,6 @@
 ---
 name: phase-3-mockup
+context: fork
 classification: capability
 classification-reason: Highly likely to be subsumed by model's native capabilities
 deprecation-risk: high

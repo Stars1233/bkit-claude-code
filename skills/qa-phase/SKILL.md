@@ -1,5 +1,6 @@
 ---
 name: qa-phase
+context: fork
 classification: workflow
 classification-reason: QA phase automation within PDCA cycle
 deprecation-risk: none

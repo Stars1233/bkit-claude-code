@@ -1,0 +1,59 @@
+name: CC Regression Registry Reconcile
+
+# Sprint 3 (Design §6.3): lifecycle.reconcile() CI 자동화.
+# Daily cron at 09:00 KST (00:00 UTC) — detect CC version bumps that resolve guards,
+# mark resolved guards and open tracking issue.
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 매일 00:00 UTC (09:00 KST)
+  workflow_dispatch: {}
+
+jobs:
+  reconcile:
+    name: Reconcile Guard Registry against installed CC
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code (for version detection)
+        run: |
+          mkdir -p ~/.claude
+          npm install --prefix ~/.claude @anthropic-ai/claude-code 2>&1 | tail -3 || true
+          cat ~/.claude/node_modules/@anthropic-ai/claude-code/package.json 2>/dev/null | grep '"version"' || echo "(not installed)"
+
+      - name: Run lifecycle.reconcile()
+        id: reconcile
+        run: |
+          node <<'EOF'
+          const lifecycle = require('./lib/cc-regression/lifecycle');
+          const registry = require('./lib/cc-regression/registry');
+          const ver = lifecycle.detectCCVersion() || 'unknown';
+          console.log(`CC version detected: ${ver}`);
+          if (ver === 'unknown' || ver === null) {
+            console.log('::notice::CC not installed — skipping reconcile.');
+            process.exit(0);
+          }
+          const result = lifecycle.reconcile(registry.CC_REGRESSIONS, ver);
+          console.log(`Active guards: ${result.active.length}`);
+          console.log(`Newly resolved: ${result.resolved.filter((g) => g.resolvedBy === ver).length}`);
+          const newlyResolved = result.resolved.filter((g) => g.resolvedBy === ver);
+          if (newlyResolved.length > 0) {
+            console.log('NEWLY_RESOLVED=' + JSON.stringify(newlyResolved.map((g) => g.id)));
+            for (const g of newlyResolved) {
+              console.log(`::notice::Guard ${g.id} resolved by CC ${ver}`);
+            }
+          }
+          EOF
+
+      - name: Write reconcile log
+        run: |
+          mkdir -p .bkit/runtime
+          echo "{\"at\":\"$(date -u +%FT%TZ)\",\"workflow\":\"cc-regression-reconcile\"}" > .bkit/runtime/last-reconcile.json
+          cat .bkit/runtime/last-reconcile.json

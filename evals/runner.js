@@ -102,14 +102,14 @@ function parseEvalYaml(content) {
       // Calculate indent level
       const indent = line.length - line.trimStart().length;
 
-      // v2.1.8 fix B7: disambiguate new eval entry vs nested criteria list item.
-      // Only treat indent<=2 "- " as a new eval entry when we are NOT currently
-      // inside a `criteria:` block. When inCriteria is true, an indent-2 "- "
-      // is still a criterion belonging to the current eval item.
-      if (indent <= 2 && trimmed.startsWith('- ') && !inCriteria) {
+      // v2.1.10 fix: indent<=2 "- <key>:" is ALWAYS a new eval entry, regardless
+      // of inCriteria state. Criteria items live at indent >= 4 (since "criteria:"
+      // is at indent 4, its "- ..." items must be at indent >= 6). Seeing indent<=2
+      // "- " implies we've exited the nested criteria block.
+      if (indent <= 2 && trimmed.startsWith('- ')) {
         if (currentItem) result.evals.push(currentItem);
         currentItem = {};
-        inCriteria = false;
+        inCriteria = false; // reset — new eval entry
         const kvMatch = trimmed.slice(2).match(/^([\w_]+)\s*:\s*(.+)$/);
         if (kvMatch) {
           currentItem[kvMatch[1]] = stripMatchingQuotes(kvMatch[2]);

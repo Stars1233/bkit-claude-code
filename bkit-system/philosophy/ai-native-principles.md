@@ -135,7 +135,7 @@ To-Be: Configure quality gates + Monitor metrics dashboard
 
 ### Agent Frontmatter (v2.0.0)
 
-All 32 agents support native frontmatter fields:
+All 36 agents support native frontmatter fields:
 - `effort`: min/max reasoning effort per agent role
 - `maxTurns`: execution budget control
 - `disallowedTools`: restrict dangerous tool access per agent

@@ -114,11 +114,11 @@ assert('EC-010',
 // ============================================================
 
 const ALL_NEW_MODULES = [
-  // Core (12) — v2.1.0: backup-scheduler removed (dead code)
+  // Core (11) — v2.1.10 Sprint 6: hook-io removed (merged into core/io)
   'lib/core/cache.js', 'lib/core/config.js', 'lib/core/debug.js',
   'lib/core/file.js', 'lib/core/io.js', 'lib/core/platform.js',
   'lib/core/constants.js', 'lib/core/errors.js', 'lib/core/state-store.js',
-  'lib/core/hook-io.js', 'lib/core/index.js', 'lib/core/paths.js',
+  'lib/core/index.js', 'lib/core/paths.js',
   // PDCA (14) — v2.1.0: commit-context, decision-record, deploy-gate, do-detector removed
   'lib/pdca/automation.js', 'lib/pdca/executive-summary.js', 'lib/pdca/level.js',
   'lib/pdca/phase.js', 'lib/pdca/template-validator.js', 'lib/pdca/tier.js',

@@ -10,6 +10,11 @@ description: |
 context: fork
 agent: bkit:qa-monitor
 user-invocable: true
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
 ---
 
 # Zero Script QA Expert Knowledge

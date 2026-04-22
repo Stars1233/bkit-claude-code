@@ -3,7 +3,7 @@
  * context-compaction.js - Context Compaction Hook (FR-07)
  * Preserves PDCA state before context compression
  *
- * @version 1.6.0
+ * @version 2.1.10
  * @module scripts/context-compaction
  */
 
@@ -46,6 +46,18 @@ try {
       `[bkit] PDCA ${String(pdcaStatus.currentPhase).toUpperCase()} phase 진행 중 (${pdcaStatus.primaryFeature}). ` +
       `Manual compaction은 컨텍스트 손실 위험이 있어 차단됨. ` +
       `먼저 \`/pdca status\`로 진행 상황을 확인하거나, \`/pdca report\` 후 진행하세요.`;
+    // v2.1.10 Sprint 5.5: PreCompact counter (ENH-247/257 2-week measurement)
+    try {
+      const cc = require('../lib/cc-regression');
+      cc.recordPrecompactEvent({
+        blocked: true,
+        reason: reason || 'unknown',
+        ccVersion: cc.detectCCVersion() || 'unknown',
+        phase: pdcaStatus.currentPhase,
+        sessionId: input && input.session_id ? input.session_id : null,
+      });
+    } catch (_e) { /* fail-silent */ }
+
     console.log(JSON.stringify({
       decision: 'block',
       reason: blockMsg,
@@ -54,6 +66,18 @@ try {
     debugLog('ContextCompaction', 'PreCompact blocked', { reason, phase: pdcaStatus.currentPhase, feature: pdcaStatus.primaryFeature });
     process.exit(2); // CC: exit 2 == block
   }
+
+  // v2.1.10 Sprint 5.5: sample counter even when not blocked
+  try {
+    const cc = require('../lib/cc-regression');
+    cc.recordPrecompactEvent({
+      blocked: false,
+      reason: reason || 'unknown',
+      ccVersion: cc.detectCCVersion() || 'unknown',
+      phase: (pdcaStatus && pdcaStatus.currentPhase) || null,
+      sessionId: input && input.session_id ? input.session_id : null,
+    });
+  } catch (_e) { /* fail-silent */ }
 } catch (_e) {
   // Block 로직 실패는 silent (기존 snapshot 경로 진행)
 }

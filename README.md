@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.116+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.1.8-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.1.10-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 > **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
@@ -38,7 +38,7 @@ bkit implements Context Engineering through three interconnected layers:
 |-------|------------|---------|
 | **Domain Knowledge** | 39 Skills | Structured expert knowledge (phases, levels, specialized domains) |
 | **Behavioral Rules** | 36 Agents | Role-based constraints with model selection (opus/sonnet/haiku) |
-| **State Management** | 101 Lib Modules | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination |
+| **State Management** | 128 Lib Modules (~27,085 LOC) across 15 subdirs | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination, 3-Layer Orchestration (Sprint 7), Clean Architecture 4-Layer (Domain/Application/Infrastructure/Presentation) |
 
 ### 6-Layer Hook System
 
@@ -61,6 +61,7 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 
 ![bkit Features](images/bkit-features.png)
 
+- **Integrated Enhancement — Clean Architecture + Defense-in-Depth + Invocation Contract + 3-Layer Orchestration (v2.1.10)** — Sprint 0~7 complete. **Clean Architecture 4-Layer** (Domain: 11 modules = 6 ports + 4 guards + 1 rules, 0 forbidden imports CI-enforced; Application: cc-regression 8 modules + pdca + team; Infrastructure: cc-bridge + telemetry + docs-code-scanner + mcp-test-harness; Presentation: hooks + scripts). **Port↔Adapter mapping 6 complete** (cc-payload↔cc-bridge, state-store, regression-registry, audit-sink↔telemetry, token-meter, docs-code-index). **Guard Registry** 21 guards + `lifecycle.reconcile()` auto-release (`expectedFix` seed × 4). **Invocation Contract L1~L5**: 226 assertions (L1 + L4 CI-gated) + L2 hook attribution 13 TC + L3 MCP stdio runtime 42 TC (real spawn + tools/list) + L5 E2E shell smoke 5 scenarios. **Defense-in-Depth 4-Layer** formalized: Layer 1 (CC Built-in sandbox) → Layer 2 (bkit PreToolUse Hook: `pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 (audit-logger OWASP A03/A08 sanitizer, 7-key PII redaction) → Layer 4 (Token Ledger `.bkit/runtime/token-ledger.json` NDJSON). **Docs=Code CI** (`scripts/docs-code-sync.js`, 0 drift, 8 counts + **BKIT_VERSION 5-location invariant**). **Sprint 7 3-Layer Orchestration** (`lib/orchestrator/` 5 modules = intent-router + next-action-engine + team-protocol + workflow-state-machine + index, 19 exports): SKILL_TRIGGER_PATTERNS 4→15, matchRate SSoT 100→90, Enterprise teammates 5→6, Trust Score level auto-reflect restored, `cto-lead` body 5 Task spawn examples + `Task(pm-lead)` / `Task(qa-lead)` / `Task(pdca-iterator)` in frontmatter, 79 `@version` bulk refresh to 2.1.10. **BKIT_VERSION centralization complete** (ENH-167, `bkit.config.json` single SoT; 5-location invariant: plugin.json / hooks.json / session-start.js / README / CHANGELOG). **ENH-202** `context: fork` 1→9 skills. **Legacy 3 modules removed** (421 LOC). **audit-logger 682GB recursion** root-fixed (`createDualSink` avoidance + Integration Runtime TC permanent defense). **Critical Bug C1/C2 fix** (`startDate`→`date`, PII 6-key blacklist + 500-char cap). **Domain purity CI** (`check-domain-purity.js`, 11 files / 0 forbidden imports: fs/child_process/net/http/https/os). **PreCompact counter** (ENH-247/257, 2-week measurement). **Hook attribution** 3 sites (Stop/SessionEnd/SubagentStop). **6 Validator CLIs**: `check-guards` / `docs-code-sync` / `check-deadcode` / `check-domain-purity` / `l3-mcp-runtime` / `test/e2e/run-all.sh`. Architecture: **39 Skills, 36 Agents, 21 Hook Events (24 blocks), 16 MCP Tools, 2 MCP Servers, 128 Lib Modules (~27,085 LOC across 15 subdirs), 47 Scripts, 113 test files, 3,762 TC** (3,760 PASS / 0 FAIL / 2 expected legacy). CC recommended v2.1.117+ (**75 consecutive compatible releases**). Invocation Contract 100% preserved + Starter/Dynamic/Enterprise zero-action update. MEMORY.md 302→79 lines decomposed (detail: `cc_version_history_v21xx.md` / `enh_backlog.md` / `github_issues_monitor.md`).
 - **CC v2.1.116 Response + 4 ENH + Docs=Code 100% Sync (v2.1.9)** - 4 ENH shipping: **ENH-253** zero-script-qa `context: fork` macOS verification (Issue [#51165](https://github.com/anthropics/claude-code/issues/51165) non-reproduction on macOS, ENH-196/202 investment protected), **ENH-254** Defense-in-Depth security architecture formalization (Layer 1 CC runtime sandbox × Layer 2 bkit `DANGEROUS_PATTERNS` hook, `docs/03-analysis/security-architecture.md`), **ENH-259** Custom Skills data loss warning for Issue [#51234](https://github.com/anthropics/claude-code/issues/51234) (`CUSTOMIZATION-GUIDE.md` backup/restore/plugin-path guidance — bkit plugin itself unaffected at `${CLAUDE_PLUGIN_ROOT}/skills/`), **ENH-263** Docs=Code 15-file architectural correction (`@version 1.6.0` in lib/: **0 matches** — ENH-270 acceptance). Positive drift: **ENH-264** `lib/core/io.js` `outputBlockWithContext` infrastructure + 2 call sites in `unified-bash-pre.js` (deploy/QA phase paths), **ENH-265** `ENABLE_PROMPT_CACHING_1H` SessionStart branch + operational guide (`docs/03-analysis/prompt-caching-optimization.md`, 30-40% token savings on long PDCA sessions). Architecture: **39 Skills, 36 Agents, 43 Scripts, 101 Lib modules (11 subdirs), 21 Hook Events, 18 Templates, 4 Output Styles, 2 MCP Servers**. CC recommended v2.1.116+ (**74 consecutive compatible releases**, v2.1.115 skipped). Shipping QA: **Match Rate 100% / Coverage 90.3% / P0 Blocker 0 / Regression 0** (`docs/05-qa/cc-v2114-v2116-shipping-readiness.report.md`).
 - **Issue #81 Hotfix + Docs=Code Philosophy Restoration (v2.1.8)** - P0 `session-context.js` guard restored (ENH-238, ENH-226 Docs=Code violation fixed — `ui.contextInjection.enabled` + `sections[]` 3-way toggle mirrors `ui.dashboard` pattern), P0 compaction SHA-256 fingerprint dedup lock (ENH-239, `lib/core/session-ctx-fp.js` — prevents PreCompact re-fire duplicate injection, 1h TTL, GC 30d/LRU 100), P1 PersistedOutputGuard (ENH-240, `lib/core/context-budget.js` — CC 10,000-char cap defense with 8,000-char hard cap + priority-preserved truncation), P3 `hooks/hooks.json` `once: true` ADR documented in `docs/context-engineering.md` (ENH-244), Iterate-discovered `getUIConfig()` bug fixed (3 new fields exposed in `lib/core/config.js`), CC v2.1.111+ recommended (72 consecutive compatible releases), 11 files +641 LOC changed, 25 new TCs + 43 regression TCs = **74 PASS / 0 FAIL**, Match Rate **100%**. Additional: 16 bug fixes consolidated from 10-agent QA Discovery methodology (11 core bugs B1~B11 + 5 Q10-review findings B12~B16), 24 new QA TCs, 239 total PASS / 1 FAIL (pre-existing), ENH-167 partial (BKIT_VERSION centralization in paths.js + MCP servers)
 - **Issue #79 Hotfix + PDCA Workflow Stabilization (v2.1.7)** - P0 `updatePdcaStatus` argument order fix (`skill-post.js:229`), P0 full-auto chain completion (`generateAutoTrigger` report/completed phase added to `automation.js`), P1 phantom feature prevention (`pre-write.js` active feature guard), P2 gap-detector analysis document auto-generation (`gap-detector-stop.js`), `pdca-skill-stop.js` `[PDCA-COMPLETE]` directive for report phase, CC v2.1.110+ recommended (71 consecutive compatible releases), 5 files ~54 LOC changed
@@ -98,11 +99,11 @@ Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state mana
 - **Multilingual Support** - 8 languages (EN, KO, JA, ZH, ES, FR, DE, IT)
 - **39 Skills** - Domain-specific knowledge (Workflow / Capability / Hybrid classification; see bkit-system for counts)
 - **36 Agents** - Specialized AI assistants (opus / sonnet / haiku; see bkit-system for model distribution) including CTO/PM Team + PDCA Eval agents
-- **201 Test Files** - 4,028+ test cases across 12 categories with 100% export coverage
-- **43 Hook Scripts** - Hook execution with unified handlers across 21 event types
-- **101 Lib Modules** - 24,616 LOC across 11 subdirectories (audit, context, control, core, intent, pdca, qa, quality, task, team, ui)
+- **113 Test Files** - 3,762 test cases (3,760 PASS / 0 FAIL / 2 expected legacy) across 12 categories with Invocation Contract L1-L5 (226 assertions CI-gated)
+- **47 Hook Scripts** - Hook execution with unified handlers across 21 event types (24 blocks)
+- **128 Lib Modules** - ~27,085 LOC across 15 subdirectories (audit, cc-regression, context, control, core, domain, infra, intent, orchestrator, pdca, qa, quality, task, team, ui) — Clean Architecture 4-Layer
 - **Check-Act Iteration Loop** - Automatic gap analysis and fix cycles with max 5 iterations (90% threshold)
-- **12-Category Test Suite** - Unit, integration, E2E, behavioral, contract, security, performance, UX, philosophy, architecture, controllable-AI, regression (201 files, 4,028+ TC)
+- **12-Category Test Suite** - Unit, integration, E2E, behavioral, contract, security, performance, UX, philosophy, architecture, controllable-AI, regression (113 files, 3,762 TC in qa-aggregate scope)
 
 ---
 
@@ -122,7 +123,7 @@ bkit builds three layers on top of Claude Code's native Evals:
 |-------|-------------------|------------------|
 | **Eval Execution** | Basic eval runner | `evals/runner.js` with benchmark mode, 29 pre-built eval definitions |
 | **A/B Testing** | Not available | `evals/ab-tester.js` compares skill performance across models (e.g., Sonnet 4.6 vs Opus 4.6) |
-| **Skill Classification** | Not available | All 38 skills classified as Workflow (18) / Capability (18) / Hybrid (1) with deprecation-risk scoring |
+| **Skill Classification** | Not available | All 39 skills classified as Workflow / Capability / Hybrid with deprecation-risk scoring (v2.1.10 scope) |
 
 ```
 evals/
@@ -203,7 +204,7 @@ Skill Evals connect directly to bkit's PDCA workflow:
 
 | Requirement | Minimum Version | Notes |
 |-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.9 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events, MCP servers, and ${CLAUDE_PLUGIN_DATA}. Recommended: **v2.1.116+** (74 consecutive compatible releases, includes v2.1.116 S1 security + I1/B10 /resume stability; v2.1.115 skipped). |
+| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.10 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events (24 blocks), 2 MCP servers + 16 tools, Clean Architecture Domain layer, and ${CLAUDE_PLUGIN_DATA}. Recommended: **v2.1.117+** (75 consecutive compatible releases, includes Defense-in-Depth 4-Layer + Invocation Contract 226 assertions). |
 | Node.js | v18+ | For hook script execution |
 | Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
 
@@ -292,7 +293,7 @@ bkit-claude-code/
 ├── evals/                   # Skill eval definitions & runner
 ├── scripts/                 # Hook execution scripts
 ├── servers/                 # MCP servers (bkit-pdca, bkit-analysis)
-├── lib/                     # Shared utilities (101 modules across 11 subdirs)
+├── lib/                     # Shared utilities (128 modules across 15 subdirs — Clean Architecture 4-Layer)
 ├── output-styles/           # Level-based response formatting
 ├── templates/               # Document templates
 └── bkit.config.json         # Centralized configuration
@@ -598,7 +599,7 @@ The software industry has spent decades refining how humans write code—version
 
 - **Verification over trust.** AI generates plausible code. Plausible is not correct. Every implementation goes through gap analysis against its design document. If the match rate falls below 90%, the system iterates automatically. We do not ship hope.
 
-- **Context over prompts.** A well-structured prompt helps once. A well-structured context system helps every time. bkit's 93 lib modules, 38 skills, and 36 agents exist to ensure the AI receives the right context at the right moment—not through clever prompting, but through systematic engineering.
+- **Context over prompts.** A well-structured prompt helps once. A well-structured context system helps every time. bkit's 128 lib modules (15 subdirs, Clean Architecture 4-Layer), 39 skills, and 36 agents exist to ensure the AI receives the right context at the right moment—not through clever prompting, but through systematic engineering.
 
 - **Constraints over features.** We intentionally limit what bkit does. Three project levels, not infinite configuration. A fixed 9-stage pipeline, not a customizable workflow builder. Opinionated defaults, not a framework for frameworks. Constraints eliminate decision fatigue and make the system learnable.
 

@@ -28,12 +28,19 @@ test('IV-01', 'trust-engine resetScore does not crash (uses levelHistory, not pr
   fs.mkdirSync(stateDir, { recursive: true });
 
   const origCwd = process.cwd();
+  const origProjectDir = process.env.CLAUDE_PROJECT_DIR;
   process.chdir(tmpDir);
+  process.env.CLAUDE_PROJECT_DIR = tmpDir;
 
   try {
-    // Clear require cache to get fresh module with new cwd
-    const modPath = require.resolve('../../lib/control/trust-engine');
-    delete require.cache[modPath];
+    // v2.1.10: clear full dependency chain (platform caches PROJECT_DIR at module load)
+    for (const p of [
+      '../../lib/control/trust-engine',
+      '../../lib/core/paths',
+      '../../lib/core/platform',
+    ]) {
+      try { delete require.cache[require.resolve(p)]; } catch {}
+    }
     const trustEngine = require('../../lib/control/trust-engine');
 
     // resetScore should not throw
@@ -47,9 +54,13 @@ test('IV-01', 'trust-engine resetScore does not crash (uses levelHistory, not pr
     const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
     assert.ok(Array.isArray(profile.levelHistory), 'Profile should have levelHistory array');
     assert.ok(profile.levelHistory.length > 0, 'levelHistory should have the reset entry');
-    assert.strictEqual(profile.levelHistory[profile.levelHistory.length - 1].type, 'score_reset');
+    // v2.1.8 B4 unified schema: { trigger: 'reset', reason: ... } (not {type:'score_reset'})
+    const last = profile.levelHistory[profile.levelHistory.length - 1];
+    assert.strictEqual(last.trigger, 'reset', 'Last entry trigger should be "reset"');
   } finally {
     process.chdir(origCwd);
+    if (origProjectDir === undefined) delete process.env.CLAUDE_PROJECT_DIR;
+    else process.env.CLAUDE_PROJECT_DIR = origProjectDir;
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
@@ -122,11 +133,19 @@ test('IV-08', 'checkpoint-manager createCheckpoint stores pdcaStatusHash', () =>
   fs.writeFileSync(path.join(stateDir, 'pdca-status.json'), JSON.stringify(mockStatus));
 
   const origCwd = process.cwd();
+  const origProjectDir = process.env.CLAUDE_PROJECT_DIR;
   process.chdir(tmpDir);
+  process.env.CLAUDE_PROJECT_DIR = tmpDir;
 
   try {
-    const modPath = require.resolve('../../lib/control/checkpoint-manager');
-    delete require.cache[modPath];
+    // v2.1.10: clear full dependency chain so PROJECT_DIR re-resolves
+    for (const p of [
+      '../../lib/control/checkpoint-manager',
+      '../../lib/core/paths',
+      '../../lib/core/platform',
+    ]) {
+      try { delete require.cache[require.resolve(p)]; } catch {}
+    }
     const { createCheckpoint, getCheckpoint } = require('../../lib/control/checkpoint-manager');
 
     const { id } = createCheckpoint('test-feature', 'plan', 'manual', 'test checkpoint');
@@ -138,6 +157,8 @@ test('IV-08', 'checkpoint-manager createCheckpoint stores pdcaStatusHash', () =>
     assert.deepStrictEqual(cp.pdcaStatus, mockStatus, 'pdcaStatus should match written status');
   } finally {
     process.chdir(origCwd);
+    if (origProjectDir === undefined) delete process.env.CLAUDE_PROJECT_DIR;
+    else process.env.CLAUDE_PROJECT_DIR = origProjectDir;
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });

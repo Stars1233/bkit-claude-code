@@ -1,0 +1,8 @@
+{
+  "context": null,
+  "descriptionLength": 1,
+  "dirName": "rollback",
+  "effort": "medium",
+  "name": "rollback",
+  "userInvocable": true
+}

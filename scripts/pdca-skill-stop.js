@@ -6,7 +6,7 @@
  * Hook: Stop for pdca skill
  * Part of v1.4.4 Skills/Agents/Commands Enhancement
  *
- * @version 1.6.0
+ * @version 2.1.10
  * @module scripts/pdca-skill-stop
  */
 

@@ -63,14 +63,39 @@ function main() {
     debugLog('SubagentStop', 'Progress update failed (non-fatal)', { error: e.message });
   }
 
+  // v2.1.10 Sprint 5.5: cc-regression attribution (fail-silent)
+  try {
+    const cc = require('../lib/cc-regression');
+    const ccVersion = cc.detectCCVersion();
+    if (ccVersion) {
+      cc.recordEvent({
+        hookEvent: 'SubagentStop',
+        ccVersion,
+        sessionId: hookContext.session_id || null,
+        timestamp: new Date().toISOString(),
+        context: { agentType, status },
+      });
+    }
+  } catch (_e) { /* fail-silent */ }
+
+  // v2.1.10 Sprint 7c (G-J-06): Next Action suggestion on SubagentStop
+  let nextActionHint = null;
+  try {
+    const { generateSubagentStop } = require('../lib/orchestrator/next-action-engine');
+    const { getPdcaStatusFull } = require('../lib/pdca/status');
+    const pdcaStatus = (typeof getPdcaStatusFull === 'function') ? getPdcaStatusFull() : null;
+    nextActionHint = generateSubagentStop({ agentName, status, pdcaStatus });
+  } catch (_e) { /* fail-silent */ }
+
   const response = {
-    systemMessage: `Subagent ${agentName} stopped (${status})`,
+    systemMessage: `Subagent ${agentName} stopped (${status})${nextActionHint ? '\n' + nextActionHint : ''}`,
     hookSpecificOutput: {
       hookEventName: "SubagentStop",
       agentId,
       agentName,
       agentType,
       status,
+      ...(nextActionHint ? { additionalContext: nextActionHint } : {}),
     }
   };
 

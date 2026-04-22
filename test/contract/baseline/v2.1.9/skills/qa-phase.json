@@ -1,0 +1,8 @@
+{
+  "context": "fork",
+  "descriptionLength": 1,
+  "dirName": "qa-phase",
+  "effort": "high",
+  "name": "qa-phase",
+  "userInvocable": true
+}

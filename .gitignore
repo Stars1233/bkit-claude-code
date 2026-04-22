@@ -22,6 +22,9 @@ node_modules/
 test/
 tests/
 test-scripts/
+# v2.1.10: Contract Test (Invocation Contract baseline) — tracked for CI Gate
+!test/contract/
+!test/contract/**
 
 # Obsidian - Root level (personal settings, not for sharing)
 .obsidian/

@@ -120,7 +120,7 @@ After:  Regression guard + metrics collector → Cross-session learning
 
 ```
 Before: "Setting up config files is tedious"
-After:  38 skills auto-detected by keywords → Zero config needed
+After:  39 skills auto-detected by keywords → Zero config needed
 
 Before: "Writing design docs is annoying"
 After:  Templates + PM Agent Team → Design doc in 5 minutes
@@ -148,7 +148,7 @@ After:  L0-L4 levels + trust score + emergency stop → Controllable AI
 
 > **v2.1.1**: AI Native Development OS — Declarative PDCA state machine, YAML workflow DSL,
 > L0-L4 controllable AI, CLI dashboard, audit logging, quality gates, MCP servers,
-> checkpoint/rollback, destructive operation detection, 38 Skills, 36 Agents, 21 Hook Events
+> checkpoint/rollback, destructive operation detection, 39 Skills, 36 Agents, 21 Hook Events (24 blocks), 128 Lib modules (15 subdirs Clean Architecture 4-Layer), 47 Scripts, 2 MCP Servers (16 tools). BKIT_VERSION SSoT: `bkit.config.json`.
 
 ### Component Counts
 
@@ -158,7 +158,7 @@ After:  L0-L4 levels + trust score + emergency stop → Controllable AI
 | Agents | 36 | `agents/*.md` |
 | Hook Events | 21 | `hooks/hooks.json` |
 | Hook Scripts | 42 | `hooks/`, `scripts/` |
-| lib/ Modules | 84 files across 12 subdirs (607 exports) | `lib/` |
+| lib/ Modules | 128 files across 15 subdirs (Clean Architecture 4-Layer: Domain/Application/Infrastructure/Presentation) | `lib/` |
 | MCP Servers | 2 (16 tools) | `servers/` |
 | Workflow Presets | 3 (default, enterprise, hotfix) | `.bkit/workflows/` |
 | Output Styles | 4 | `output-styles/` |

@@ -12,7 +12,7 @@
  * Input: { session_id, reason: 'clear'|'logout'|'other' }
  * Output: none (cleanup only)
  *
- * @version 2.0.0
+ * @version 2.1.10
  * @module scripts/session-end-handler
  */
 
@@ -128,6 +128,32 @@ try {
 } catch (e) {
   debugLog('SessionEnd', 'Cleanup failed (non-critical)', { error: e.message });
 }
+
+// v2.1.10 Sprint 5.5: cc-regression attribution (fail-silent)
+try {
+  const cc = require('../lib/cc-regression');
+  const ccVersion = cc.detectCCVersion();
+  if (ccVersion) {
+    cc.recordEvent({
+      hookEvent: 'SessionEnd',
+      ccVersion,
+      sessionId,
+      timestamp: new Date().toISOString(),
+      context: { reason },
+    });
+  }
+} catch (e) {
+  debugLog('SessionEnd', 'cc-regression recordEvent failed', { error: e.message });
+}
+
+// v2.1.10 Sprint 7c (G-J-06): Next Action suggestion on SessionEnd (resume hint)
+try {
+  const { generateSessionEnd } = require('../lib/orchestrator/next-action-engine');
+  const { getPdcaStatusFull } = require('../lib/pdca/status');
+  const pdcaStatus = (typeof getPdcaStatusFull === 'function') ? getPdcaStatusFull() : null;
+  const hint = generateSessionEnd({ pdcaStatus });
+  if (hint) debugLog('SessionEnd', 'NextAction hint', { hint });
+} catch (_e) { /* fail-silent */ }
 
 debugLog('SessionEnd', 'Hook completed', { sessionId, reason });
 process.exit(0);

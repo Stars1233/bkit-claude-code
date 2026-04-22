@@ -1,7 +1,8 @@
 # Skills Overview
 
-> 39 Skills defined in bkit (v2.1.9)
+> 39 Skills defined in bkit (v2.1.10)
 >
+> **v2.1.10**: Sprint 5a~7 complete — SKILL_TRIGGER_PATTERNS expanded 4→15 (G-J-01), matchRate SSoT changed 100→90 (G-P-01), ENH-202 `context: fork` expanded 1→9 skills (phase-1 ~ phase-8 + qa-phase + zero-script-qa). Skills stay at 39. CC recommended: v2.1.117+.
 > **v2.1.9**: CC v2.1.116 response — ENH-253/254/259/263 (4 ENH shipping) + Docs=Code 100% sync. Skills unchanged (39, `zero-script-qa` retains sole `context: fork`). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.1.8**: Issue #81 hotfix - Docs=Code philosophy restored. Skills unchanged (cc-version-analysis, qa-phase retained). Focus was hook/lib layer (`lib/core/context-budget.js`, `session-ctx-fp.js`).
 > **v2.1.7**: Issue #79 hotfix, 38 skills.
@@ -70,7 +71,7 @@ Skills form bkit's **Domain Knowledge Layer**, designed according to [[../../phi
 
 ## Skill Classification (v1.6.0)
 
-All 38 skills are classified into three categories based on CC 2.1.0 Skills 2.0 (per `evals/config.json` SSOT):
+All 39 skills are classified into three categories based on CC 2.1.0 Skills 2.0 (per `evals/config.json` SSOT):
 
 ### Workflow Skills (18) — Permanent Core Value
 
