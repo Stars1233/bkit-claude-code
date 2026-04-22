@@ -6,7 +6,7 @@
  * Input: { tool_name, tool_input, error, is_interrupt }
  * Output: hookSpecificOutput with additionalContext (recovery guidance)
  *
- * @version 2.0.0
+ * @version 2.1.10
  * @module scripts/tool-failure-handler
  */
 

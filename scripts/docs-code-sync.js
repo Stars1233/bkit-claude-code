@@ -68,12 +68,19 @@ async function main() {
     allDocDiffs.push(...diffs);
   }
 
+  // v2.1.10 Sprint 6 NEW 6-6 (ENH-276): BKIT_VERSION invariant cross-check
+  const versionReport = await scanner.scanVersions();
+
   const report = {
     measured,
     expected: EXPECTED_COUNTS,
     invariantDiffs,
     docDiffs: allDocDiffs,
-    passed: invariantDiffs.length === 0 && allDocDiffs.length === 0,
+    version: versionReport,
+    passed:
+      invariantDiffs.length === 0 &&
+      allDocDiffs.length === 0 &&
+      versionReport.mismatches.length === 0,
   };
 
   if (isJsonFlag()) {
@@ -109,13 +116,36 @@ async function main() {
       }
     }
 
+    // v2.1.10 Sprint 6 NEW 6-6: version invariant report
+    // eslint-disable-next-line no-console
+    console.log(`\n[docs-code-sync] BKIT_VERSION invariant:`);
+    // eslint-disable-next-line no-console
+    console.log(`  canonical (bkit.config.json): ${versionReport.canonical || '(none)'}`);
+    // eslint-disable-next-line no-console
+    console.log(`  plugin.json:    ${versionReport.pluginJson || '(none)'}`);
+    // eslint-disable-next-line no-console
+    console.log(`  README.md:      ${versionReport.readme || '(none)'}`);
+    // eslint-disable-next-line no-console
+    console.log(`  CHANGELOG.md:   ${versionReport.changelog || '(none)'}`);
+    // eslint-disable-next-line no-console
+    console.log(`  hooks/hooks.json: ${versionReport.hooksJson || '(none)'}`);
+
+    if (versionReport.mismatches.length > 0) {
+      // eslint-disable-next-line no-console
+      console.error('\n[docs-code-sync] ✗ BKIT_VERSION mismatch:');
+      for (const m of versionReport.mismatches) {
+        // eslint-disable-next-line no-console
+        console.error(`  ✗ ${m.file} (${m.field}): declared ${m.declared}, canonical ${versionReport.canonical}`);
+      }
+    }
+
     if (report.passed) {
       // eslint-disable-next-line no-console
       console.log('\n[docs-code-sync] ✓ PASSED — all counts consistent across code + docs');
     } else {
       // eslint-disable-next-line no-console
       console.error(
-        `\n[docs-code-sync] ✗ FAILED — ${invariantDiffs.length} invariant + ${allDocDiffs.length} doc drift`
+        `\n[docs-code-sync] ✗ FAILED — ${invariantDiffs.length} invariant + ${allDocDiffs.length} doc drift + ${versionReport.mismatches.length} version drift`
       );
     }
   }

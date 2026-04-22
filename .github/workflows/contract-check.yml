@@ -25,6 +25,9 @@ jobs:
           echo "---"
           node --version
 
+      - name: Domain Layer Purity Check (Sprint 5.5 — Clean Architecture enforcement)
+        run: node scripts/check-domain-purity.js
+
       - name: L1 Frontmatter Schema + L4 Deprecation (CI Gate)
         run: node test/contract/scripts/contract-test-run.js --compare v2.1.9 --level L1,L4
 

@@ -146,19 +146,35 @@ CC_REG_FILES.forEach((f) => {
 test('.eslintrc.json exists', () => assert.ok(fs.existsSync(path.join(ROOT, '.eslintrc.json'))));
 test('.prettierrc exists', () => assert.ok(fs.existsSync(path.join(ROOT, '.prettierrc'))));
 
-// ==================== Frontmatter cross-check: zero-script-qa is the sole context:fork ====================
-test('zero-script-qa has context:fork', () => {
+// ==================== Frontmatter cross-check: v2.1.10 ENH-202 — context:fork expanded ====================
+// v2.1.9: only zero-script-qa had context:fork (1/39)
+// v2.1.10 Sprint 6 NEW 6-1 (ENH-202): expanded to 9 skills (zero-script-qa retained + 8 new).
+// The EXPECTED set below must be kept in sync with Design §3.4.1 and the
+// `context-fork-l1.test.js` acceptance list. When extending further, update both.
+test('zero-script-qa has context:fork (v2.1.9 baseline preserved)', () => {
   const md = fs.readFileSync(path.join(skillsDir, 'zero-script-qa', 'SKILL.md'), 'utf8');
   assert.ok(/context:\s*fork/m.test(md));
 });
-test('Only zero-script-qa has context:fork', () => {
+test('v2.1.10 ENH-202: context:fork skill set matches expected 9 (readonly-safe skills only)', () => {
+  const EXPECTED_FORK_SKILLS = [
+    'phase-1-schema',
+    'phase-2-convention',
+    'phase-3-mockup',
+    'phase-4-api',
+    'phase-5-design-system',
+    'phase-8-review',
+    'qa-phase',
+    'skill-status',
+    'zero-script-qa',
+  ].sort();
   const forkSkills = [];
   for (const name of skillDirs) {
     const md = path.join(skillsDir, name, 'SKILL.md');
     if (!fs.existsSync(md)) continue;
     if (/context:\s*fork/m.test(fs.readFileSync(md, 'utf8'))) forkSkills.push(name);
   }
-  assert.deepStrictEqual(forkSkills, ['zero-script-qa']);
+  forkSkills.sort();
+  assert.deepStrictEqual(forkSkills, EXPECTED_FORK_SKILLS);
 });
 
 // ==================== CLAUDE.md rules ====================

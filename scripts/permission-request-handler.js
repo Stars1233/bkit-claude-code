@@ -10,7 +10,7 @@
  * Input: { tool_name, tool_input, permission_suggestions }
  * Output: { decision: { behavior: 'allow'|'deny'|null, updatedInput: null } }
  *
- * @version 2.0.0
+ * @version 2.1.10
  * @module scripts/permission-request-handler
  */
 

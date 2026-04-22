@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.9)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.10, uses BKIT_VERSION from lib/core/version)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -260,8 +260,10 @@ try {
   // fail-open
 }
 
+const { BKIT_VERSION } = require('../lib/core/version');
+
 const response = {
-  systemMessage: `bkit Vibecoding Kit v2.1.9 activated (Claude Code)`,
+  systemMessage: `bkit Vibecoding Kit v${BKIT_VERSION} activated (Claude Code)`,
   hookSpecificOutput: {
     hookEventName: "SessionStart",
     onboardingType: onboardingContext.onboardingData.type,

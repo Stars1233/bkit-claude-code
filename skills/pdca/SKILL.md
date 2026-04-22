@@ -381,7 +381,7 @@ Feature: user-auth
 |-------|:---------:|:---------:|:--------:|
 | Starter | No | - | - |
 | Dynamic | Yes | 3 | cto-lead (opus) |
-| Enterprise | Yes | 5 | cto-lead (opus) |
+| Enterprise | Yes | 6 | cto-lead (opus) |
 
 ### archive (Archive Phase)
 

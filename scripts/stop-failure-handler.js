@@ -3,7 +3,7 @@
  * stop-failure-handler.js - StopFailure Hook Handler (ENH-118)
  * Handles API errors (rate limit, auth failure, server error) that cause turn termination
  *
- * @version 1.6.2
+ * @version 2.1.10
  * @module scripts/stop-failure-handler
  */
 

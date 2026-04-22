@@ -44,15 +44,11 @@ const EXEMPT_PATTERNS = [
   /^lib\/qa\/(scanner-base|test-plan-builder|test-runner)\.js$/, // QA subsystem dynamic load
 ];
 
-// Pre-v2.1.10 technical debt — modules known to be unused but kept for rollback.
-// Tracked in docs/03-analysis/v2110-deadcode-legacy.md (to be created in v2.1.11).
-// These are REPORTED but do NOT cause CI failure — Sprint 4.5 goal is preventing
-// NEW dead code in v2.1.10 additions (lib/cc-regression, lib/domain, lib/infra).
-const LEGACY_DEBT_PATTERNS = [
-  /^lib\/context\/ops-metrics\.js$/,
-  /^lib\/core\/hook-io\.js$/,
-  /^lib\/pdca\/deploy-state-machine\.js$/,
-];
+// v2.1.10 Sprint 6: legacy 3 modules removed (ops-metrics 150, hook-io 10,
+// deploy-state-machine 261 LOC). Production-code references: 0 at removal time.
+// If any legacy module is re-added, add it here to suppress CI failure while
+// a proper refactor lands.
+const LEGACY_DEBT_PATTERNS = [];
 
 function isJsonFlag() {
   return process.argv.includes('--json');

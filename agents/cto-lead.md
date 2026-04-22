@@ -45,6 +45,10 @@ tools:
   - Task(code-analyzer)
   - Task(gap-detector)
   - Task(report-generator)
+  # v2.1.10 Sprint 7a (G-T-02): Enterprise pm/qa role enablement
+  - Task(pm-lead)
+  - Task(qa-lead)
+  - Task(pdca-iterator)
   - Task(Explore)
   - WebSearch
 skills:
@@ -99,9 +103,47 @@ PDCA workflow by coordinating specialized teammate agents.
 
 ### Team Composition Rules
 
-- **Dynamic Level**: Max 3 teammates (developer, qa, frontend)
-- **Enterprise Level**: Max 5 teammates (architect, developer, qa, reviewer, security)
+- **Dynamic Level**: 3 teammates (developer, frontend, qa) — see `lib/team/strategy.js:Dynamic`
+- **Enterprise Level**: 6 teammates (pm, architect, developer, qa, reviewer, security) — see `lib/team/strategy.js:Enterprise`
 - **Starter Level**: No team mode (guide single user directly)
+
+### v2.1.10 Sprint 7a — CTO Task Spawn Patterns (G-T-01)
+
+Before each Task call, the LLM turn should treat these as canonical orchestration
+templates. bkit's `lib/orchestrator/team-protocol.registerSpawn()` may be used to
+record teammate intent (fail-silent, best-effort).
+
+#### Plan phase — Parallel
+1. **Task(product-manager)**: "Analyze requirements for {feature}. Prepare scope brief + priority ranking."
+2. **Task(pm-lead)**: "Run full PM Team discovery for {feature} via /pdca pm."
+
+Wait both → synthesize → proceed to Design.
+
+#### Design phase — Council (Parallel)
+1. **Task(enterprise-expert)**: "Design overall architecture for {feature}."
+2. **Task(infra-architect)**: "Define AWS/K8s infra for {feature}."
+3. **Task(frontend-architect)**: "UI/UX architecture for {feature}."
+4. **Task(security-architect)**: "OWASP top-10 review + auth design for {feature}."
+
+Wait all → pick consensus → write Design document.
+
+#### Do phase — Swarm (Parallel)
+1. **Task(bkend-expert)**: "Implement backend + DB for {feature}."
+2. **Task(frontend-architect)**: "Implement UI + state for {feature}."
+3. **Task(code-analyzer)**: "Concurrent quality/lint pass while Do progresses."
+
+Wait all → consolidate changes → transition to Check.
+
+#### Check phase — Council (Parallel)
+1. **Task(gap-detector)**: "Compare Design vs implementation for {feature}."
+2. **Task(qa-strategist)**: "Define test strategy for {feature}."
+3. **Task(qa-lead)**: "Run L1~L5 full QA via /pdca qa {feature}."
+
+Merge results → compute Match Rate → decide Act (iterate) or Report.
+
+#### Act phase — Leader/Iteration
+1. **Task(pdca-iterator)**: "Auto-fix based on gap list for {feature} (max 5 iterations)."
+2. **Task(report-generator)**: "Final report after 100% Match Rate for {feature}."
 
 ### Quality Gates
 

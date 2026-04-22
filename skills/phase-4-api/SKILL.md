@@ -1,5 +1,6 @@
 ---
 name: phase-4-api
+context: fork
 classification: capability
 classification-reason: Pattern guidance may overlap with model's built-in knowledge as it improves
 deprecation-risk: medium
@@ -20,7 +21,6 @@ allowed-tools:
   - Glob
   - Grep
   - Bash
-user-invocable: false
 next-skill: phase-5-design-system
 pdca-phase: do
 task-template: "[Phase-4] {feature}"

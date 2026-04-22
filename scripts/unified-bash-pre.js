@@ -13,7 +13,7 @@
  * - Added scope limiter check (control module)
  * - Added audit logging for destructive commands
  *
- * bkit v2.1.9 (ENH-264):
+ * bkit v2.1.10 (ENH-264):
  * - Leverages CC v2.1.110+ PreToolUse `hookSpecificOutput.additionalContext`
  *   to surface safer alternatives instead of bare "blocked" reasons.
  *   Claude receives actionable recovery suggestions and can propose a

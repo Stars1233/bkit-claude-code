@@ -3,7 +3,7 @@
  * post-compaction.js - PostCompact Hook Handler (ENH-117)
  * Validates PDCA state integrity after context compaction
  *
- * @version 1.6.2
+ * @version 2.1.10
  * @module scripts/post-compaction
  */
 

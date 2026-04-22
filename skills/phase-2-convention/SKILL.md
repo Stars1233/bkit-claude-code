@@ -1,5 +1,6 @@
 ---
 name: phase-2-convention
+context: fork
 classification: workflow
 classification-reason: Process automation persists regardless of model advancement
 deprecation-risk: none

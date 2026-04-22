@@ -5,6 +5,147 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.10] - 2026-04-22 (branch: `feat/v2110-integrated-enhancement`, pre-main-merge)
+
+> **Release discipline**: 본 섹션은 `git tag v2.1.10` + main 머지 직전의 스냅샷입니다. 48h 관찰 후 최종 릴리스 시 섹션 재정리 예정.
+
+### 🎯 Sprint 0 ~ Sprint 6 — Integrated Enhancement (Clean Architecture + Defense-in-Depth + Invocation Contract)
+
+CC v2.1.117 기준 호환성 유지 + 6 Sprint(0/1/2/3/4/4.5 + 5a/5b/5.5/6) 누적 구현. Plan-Plus §20에 따른 전범위 편입 버전.
+
+### Added
+
+- **Clean Architecture 4-Layer**: `lib/domain/{ports,guards,rules}` 11 modules (Domain 의존성 0), `lib/infra/{telemetry,docs-code-scanner,cc-bridge,mcp-test-harness}` (Adapters), `lib/cc-regression/` (Application) 6 modules = 568 LOC.
+- **Domain Ports 6종**: `cc-payload`, `state-store`, `regression-registry`, `audit-sink`, `token-meter`, `docs-code-index` — JSDoc typedef 기반 Type-only 계약.
+- **Domain Guards 4종** (CC v2.1.117 회귀 방어): `enh-254-fork-precondition` (#51165), `enh-262-hooks-combo` (#51798), `enh-263-claude-write` (#51801), `enh-264-token-threshold` (#51809).
+- **Guard Registry**: `lib/cc-regression/registry.js` — 21 Guards 등록 (MON-CC-02, MON-CC-06 17건, ENH-262/263/264, ENH-214). `expectedFix` seed 4건으로 `lifecycle.reconcile()` 자동 해제 활성화.
+- **Invocation Contract Test L1~L4** (619 assertions 중 L1+L4 226 assertions CI gate): `test/contract/baseline/v2.1.9/` 94 JSON baseline (39 skills + 36 agents + 16 MCP tools + hook events 24 blocks + slash commands + 3 MCP resources).
+- **Contract L2 Smoke** (`l2-smoke.test.js` 98 TC) + **L3 MCP Compatibility** (`l3-mcp-compat.test.js` 83 TC).
+- **Docs=Code CI** (ENH-241): `lib/infra/docs-code-scanner.js` + `scripts/docs-code-sync.js` — skills/agents/hookEvents/hookBlocks/mcpServers/mcpTools/libModules/scripts 8개 수치 0-drift 자동 검증.
+- **CI Workflows 2종**: `.github/workflows/contract-check.yml` (lint + contract + docs-code-sync + check-guards + check-deadcode), `cc-regression-reconcile.yml` (daily cron).
+- **Validator CLIs 3종**: `scripts/check-guards.js` (21 guards), `scripts/docs-code-sync.js` (0 drift), `scripts/check-deadcode.js` (Live/Exempt/Legacy 분류).
+- **Integration Runtime Test** (`test/contract/integration-runtime.test.js` 23 TC): Sprint 4.5 재귀 버그 영구 방어선.
+- **Legacy QA Integration** (v2.1.10 Sprint 5a): `qa-aggregate.js` `tests/qa/` 통합 집계 + `EXPECTED_FAILURES` 분리 카운터.
+- **Test Case 총합**: **3,649 TC** (PASS 3,647 / FAIL 0 / Expected 2) — 111 test files 집계 기준. v2.1.9 대비 +581 TC.
+
+### Changed
+
+- **lib/pdca/status.js** 872 LOC → facade 52 + `status-core.js`(399) + `status-migration.js`(156) + `status-cleanup.js`(255) 분할.
+- **scripts/pre-write.js** 286 → 529 LOC 12-stage 파이프라인화 (defense-coordinator 통합).
+- **plugin.json `description`** 재서술: 39 Skills / 36 Agents / 24 Hook Blocks / 16 MCP Tools 명시.
+- **MEMORY.md Architecture** 수치 v2.1.10 기준 재정렬: 101 → **123 Lib Modules**, 24,616 → **26,296 LOC**, 43 → **46 Scripts**.
+- **BKIT_VERSION 중앙화 완결** (ENH-167): `hooks/session-start.js`, `hooks/hooks.json`, `scripts/unified-bash-pre.js`, `lib/core/io.js` 모두 `lib/core/version.js` 참조. `bkit.config.json:version`이 단일 진실원.
+- **`createDualSink` audit-logger 사용 금지**: Sprint 4.5 재귀 학습 — `lib/audit/audit-logger.js:219` `createOtelSink()` 단독 호출로 변경. `lib/infra/telemetry.js:56-73` DANGER ZONE 14줄 경고 주석 추가.
+
+### Fixed
+
+- **C1 (Critical)**: `lib/audit/audit-logger.js:332-344` `startDate` → `date` 파라미터 (설계 명세와 동기화).
+- **C2 (Critical)**: audit details PII 유출 방지 — `sanitizeDetails` 6-key 블랙리스트 + 500자 cap.
+- **Sprint 4.5 자기 도입 버그**: `createDualSink(createFileSink, createOtelSink)` + `createFileSink`가 `audit-logger.writeAuditLog()` 재호출 → 682 GB recursion. `createOtelSink()` 단독 호출로 교체 + integration-runtime TC 영구 방어.
+
+### Security
+
+- **Defense-in-Depth 4-Layer** 공식화: Layer 1 (CC Built-in) → Layer 2 (bkit PreToolUse Hook: `pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 (`audit-logger` OWASP A03/A08 sanitizer) → Layer 4 (Token Ledger `.bkit/runtime/token-ledger.json` NDJSON).
+- **PII Redaction 7-key**: `text`, `content`, `prompt`, `message`, `api_key`, `token`, `password` 블랙리스트.
+- **ENH-263 `.claude/` write + bypassPermissions 조합 차단** (#51801).
+- **ENH-262 dangerouslyDisableSandbox + allow 조합 차단** (#51798).
+
+### Compatibility
+
+- **Invocation Contract 100% 보존** (226 assertions PASS 유지).
+- **Starter / Dynamic / Enterprise 세그먼트 zero-action update**.
+- **CC CLI 호환**: v2.1.78+ 필수, **v2.1.117+ 권장** (75 consecutive compatible releases).
+- **Deprecation**: 없음 (첫 정책 도입 마이너).
+
+### Architecture Snapshot (v2.1.10 Final — Sprint 7 워크플로우 유기성 완결)
+
+**39 Skills · 36 Agents · 21 Hook Events (24 blocks) · 16 MCP Tools · 2 MCP Servers · 127 Lib Modules (~27,000 LOC) · 47 Scripts · 113 Test Files · 3,762 TC** (PASS 3,760 / 0 FAIL / 2 expected legacy).
+
+### Sprint 7 — Workflow Orchestration Integrity (신규, 사용자 재정의 대응)
+
+Phase A 4 + Phase A+ 1 = **5개 병렬 실측 에이전트** 기반 Gap Taxonomy 72건(7축) 도출 후 P0 10 + P1 12 + P2/3 50건 처리.
+
+**New: lib/orchestrator/ (3-Layer Orchestration)**
+- `intent-router.js` — priority-resolved intent detection (feature > skill > agent)
+- `next-action-engine.js` — Stop-family hook 전체 Next Action 표준화
+- `team-protocol.js` — PM/CTO/QA Lead의 실 Task spawn 경로 프로토콜 (state-writer lifecycle + cc-regression attribution)
+- `workflow-state-machine.js` — PDCA phase × Control Level 통합 + matchRate SSoT + ARCHIVE dispatcher + DO_COMPLETE setter
+- `index.js` — 단일 facade (19 exports)
+
+**Changed (Invocation Contract 100% 보존)**:
+- `lib/intent/language.js:SKILL_TRIGGER_PATTERNS` — 4 skills → **15 skills** (pdca, pm-discovery, plan-plus, qa-phase, code-review, deploy, rollback, skill-create, control, audit, phase-4-api 신규 11개)
+- `lib/pdca/state-machine.js:288` + `lib/pdca/automation.js:82` — matchRate threshold default **100→90** (bkit.config.json:pdca.matchRateThreshold SSoT)
+- `lib/control/trust-engine.js:syncToControlState` — **Trust Score currentLevel auto-reflect 복원** (autoEscalation/autoDowngrade 플래그 실 연결, G-C-01/02)
+- `agents/cto-lead.md` — body에 Phase별 Task spawn 예시 5개 블록 추가 + frontmatter `Task(pm-lead)`, `Task(qa-lead)`, `Task(pdca-iterator)` 추가 (G-T-01/02)
+- `skills/pdca/SKILL.md:384` — Enterprise teammates **5→6** (strategy.js와 동기, G-T-03)
+- `scripts/unified-stop.js`, `session-end-handler.js`, `subagent-stop-handler.js` — Next Action Engine 연결 (G-J-05/06/07)
+- `scripts/user-prompt-handler.js` — structured `suggestions` 필드 병행 emit (G-J-09)
+- 79건 `@version 2.0.0 → 2.1.10` + `@version 1.6.x → 2.1.10` 일괄 갱신 (lib 66 + scripts 13)
+- `skills/phase-4-api/SKILL.md` + `phase-5-design-system/SKILL.md` — 중복 `user-invocable` 필드 정리
+- `skills/zero-script-qa/SKILL.md` — `allowed-tools` 명시
+
+**Test (Sprint 7 신규)**:
+- `test/contract/orchestrator.test.js` — 21 L1/L2 TC (IntentRouter + NextActionEngine + TeamProtocol + WorkflowStateMachine)
+- SKILL_TRIGGER coverage L1 test 확장
+
+**Quality Gates (8/8 PASS)**:
+- check-guards (21 guards)
+- docs-code-sync (BKIT_VERSION 5-location sync, 0 count drift)
+- check-deadcode (Live 92 / Exempt 30 / Legacy 0 / Dead NEW 0)
+- check-domain-purity (11 files, 0 forbidden imports)
+- L3 MCP runtime (42/42)
+- L5 E2E shell smoke (5/5)
+- Orchestrator (21/21)
+- qa-aggregate (**3,760 PASS / 0 FAIL / 2 expected / TOTAL 3,762**)
+
+### Success Criteria D19~D30
+
+| # | 기준 | 결과 |
+|---|------|:---:|
+| D19 | Skill trigger coverage ≥ 15 | ✅ 15 |
+| D20 | Feature intent 주입률 ≥ 8/10 | ✅ IntentRouter loose threshold 0.7 |
+| D21 | Agent-Skill resolver 구현 | ✅ |
+| D22 | matchRate threshold SSoT 90 only | ✅ |
+| D23 | cto-lead body Task 예시 ≥ 5 | ✅ (Plan/Design/Do/Check/Act 5 블록) |
+| D24 | CTO teammates Task 선언 | ✅ pm-lead + qa-lead + pdca-iterator |
+| D25 | Enterprise teammates 6 = 6 | ✅ |
+| D26 | Next Action 제안 범위 ≥ 15 hook | ✅ (Stop + SessionEnd + SubagentStop + PDCA 13 경로) |
+| D27 | L4 자동 체인 smoke ≤ 2 manual | ⏳ Phase 7 /pdca qa로 실측 |
+| D28 | Trust Score level 반영 | ✅ |
+| D29 | Agents "Use proactively" ≥ 30 | ⏳ (Sprint 7e 부분 진행, 18→28+ 확장은 릴리스 전 지속) |
+| D30 | Legacy `@version 2.0.0` = 0 | ✅ (lib 66 + scripts 13 = 79건 전량 2.1.10) |
+
+**25/30 충족** (D27 L4 자동 체인 + D29 proactive 문구 일부 + D1 tag + D3 CI PR + D8 48h 관측 = 5건이 릴리스 workflow 외 영역).
+
+### Quality Gates (all PASS)
+
+- `check-guards` — 21 guards, 0 warning
+- `docs-code-sync` — 8 counts consistent + **BKIT_VERSION invariant** 5-location sync (canonical: `bkit.config.json:2.1.10`)
+- `check-deadcode` — Live 89 / Exempt 30 / Legacy 0 / Dead NEW 0
+- `check-domain-purity` — 11 domain files, 0 forbidden imports (fs/child_process/net/http/https/os)
+- `l3-mcp-runtime` — 42/42 PASS (MCP initialize + tools/list runtime, 16 tools × 2 servers)
+- `test/e2e/run-all.sh` — 5/5 PASS (SessionStart / .claude block / check-guards / docs-code-sync / MCP runtime)
+- `qa-aggregate` — **3,739 PASS / 0 FAIL / 2 expected-failure / TOTAL 3,741 TC across 112 test files**
+
+### Sprint 6 Completions (post-initial-draft)
+
+- **NEW 6-1 (ENH-202)**: Skills `context: fork` 1 → **9** (zero-script-qa + qa-phase + phase-1/2/3/4/5/8 + skill-status). Readonly-safe workflow skills isolated.
+- **NEW 6-2**: Legacy 3 modules removed (`lib/core/hook-io.js`, `lib/context/ops-metrics.js`, `lib/pdca/deploy-state-machine.js`, total 421 LOC, 0 production references).
+- **NEW 6-3 (Port↔Adapter)**: `lib/infra/cc-bridge.js` 신설 — Port `cc-payload.port.js` 구현체. `parseHookInput` / `detectCCVersion` / `getSessionId` / `isBypassMode` / `getToolName` / `getPermissionFlags` / `getHookEventName`. 24 L2 TC PASS. `lib/cc-regression/index.js`에서 `ccBridge` re-export.
+- **NEW 6-4 (ENH-275)**: MCP stdio L3 runtime runner (`test/contract/l3-mcp-runtime.test.js`). JSON-RPC 2.0 `initialize` + `tools/list` real spawn for both bkit servers. 42 TC PASS.
+- **NEW 6-5**: L5 E2E shell smoke suite (5 scenarios: SessionStart / .claude write block / check-guards / docs-code-sync / MCP tools).
+- **NEW 6-6 (ENH-276)**: `docs-code-scanner.scanVersions()` — BKIT_VERSION invariant 스캔 (bkit.config.json / plugin.json / README / CHANGELOG / hooks.json 5곳 sync).
+- **NEW 6-7**: MEMORY.md 302 → 79 lines (≤150 cap). 3 detail files: `cc_version_history_v21xx.md`, `enh_backlog.md`, `github_issues_monitor.md`.
+- **Sprint 5.5 wiring**: hook attribution 3 sites (Stop / SessionEnd / SubagentStop) + CI Domain ESLint step (`scripts/check-domain-purity.js`) + PreCompact block counter (ENH-247/257 2-week measurement).
+
+### Known Limitations
+
+- 본 섹션은 브랜치 스냅샷. `git tag v2.1.10` + GitHub Release 노트 작업은 main PR 머지 + 48h 관찰 후 예정.
+- `docs/02-design/features/bkit-v2110-integrated-enhancement.design.md` (2,644 lines) 리팩토링(≤800 lines overview + 4 addendum)은 v2.1.11+로 이월. 본 문서는 역사 기록으로 유지, Sprint 5a~6는 `bkit-v2110-gap-closure.design.md`에 정리.
+- `madge --circular` baseline 재생성(npm install 권한)은 v2.1.11+.
+
+---
+
 ## [2.1.9] - 2026-04-21
 
 ### 🎯 CC v2.1.114 → v2.1.116 Response (4 ENH Shipping + Docs=Code 100% Sync)
