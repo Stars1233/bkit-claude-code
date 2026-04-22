@@ -264,12 +264,44 @@ if (!blocked) {
   } catch (_) {}
 }
 
+// ============================================================
+// Sprint 4.5 Integration: CC regression attribution (ENH-262 / #51798)
+// Best-effort — attribution only, never blocks. bkit does NOT fix the CC
+// regression; it surfaces "not a bkit failure" context when the combo hits.
+// ============================================================
+let ccRegressionAttr = '';
+if (!blocked) {
+  try {
+    const ccRegression = require('../lib/cc-regression');
+    const toolInput = parseHookInput(input);
+    const envOverrides = {
+      dangerouslyDisableSandbox:
+        process.env.CLAUDE_CODE_DANGEROUSLY_DISABLE_SANDBOX === '1' ||
+        process.env.CLAUDE_DANGEROUSLY_DISABLE_SANDBOX === '1',
+    };
+    const result = ccRegression.checkCCRegression({
+      tool: 'Bash',
+      command: toolInput.command,
+      envOverrides,
+      permissionDecision: input.permissionDecision || 'allow',
+    });
+    if (result && Array.isArray(result.attributions) && result.attributions.length > 0) {
+      ccRegressionAttr = ' | ' + result.attributions.join(' | ');
+      debugLog('UnifiedBashPre', 'CC regression attribution', {
+        attr: ccRegressionAttr.slice(0, 80),
+      });
+    }
+  } catch (e) {
+    debugLog('UnifiedBashPre', 'cc-regression unavailable', { error: e.message });
+  }
+}
+
 // Allow if not blocked
 if (!blocked) {
   const contextMsg = activeSkill || activeAgent
     ? `Bash command validated for ${activeSkill || activeAgent}.`
     : 'Bash command validated.';
-  outputAllow(contextMsg, 'PreToolUse');
+  outputAllow(contextMsg + ccRegressionAttr, 'PreToolUse');
 }
 
 debugLog('UnifiedBashPre', 'Hook completed', { blocked });

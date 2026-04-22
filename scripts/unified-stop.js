@@ -670,6 +670,28 @@ if (!handled) {
   outputAllow(`Stop event processed.${trustInfo}${auditInfo}${copyTip}`, 'Stop');
 }
 
+// Sprint 4.5 Integration: Record turn marker for ENH-264 per-turn tracking.
+// Best-effort — never blocks Stop flow. stdin has already been consumed higher up
+// in this script; we record a turn marker with env-sourced metadata. When CC
+// provides usage via env vars or context files, this captures it; otherwise the
+// ledger still tracks turn count/agent/model which is useful for ENH-264
+// "session Sonnet share" policy decisions.
+try {
+  const ccRegression = require('../lib/cc-regression');
+  ccRegression.recordTurn({
+    sessionId: process.env.CLAUDE_SESSION_ID || '',
+    agent: activeAgent || 'main',
+    model: process.env.CLAUDE_MODEL || 'unknown',
+    ccVersion: process.env.CLAUDE_CODE_VERSION || 'unknown',
+    turnIndex: parseInt(process.env.CLAUDE_TURN_INDEX || '0', 10),
+    inputTokens: parseInt(process.env.CLAUDE_INPUT_TOKENS || '0', 10),
+    outputTokens: parseInt(process.env.CLAUDE_OUTPUT_TOKENS || '0', 10),
+    overheadDelta: parseInt(process.env.CLAUDE_OVERHEAD_DELTA || '0', 10),
+  });
+} catch (e) {
+  debugLog('UnifiedStop', 'token-accountant recordTurn failed', { error: e.message });
+}
+
 debugLog('UnifiedStop', 'Hook completed', {
   handled,
   activeSkill,

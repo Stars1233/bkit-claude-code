@@ -34,6 +34,12 @@ jobs:
       - name: Docs=Code cross-check (Sprint 4, ENH-241)
         run: node scripts/docs-code-sync.js
 
+      - name: Dead code detection (Sprint 4.5 — prevent new dead code in v2.1.10+)
+        run: node scripts/check-deadcode.js
+
+      - name: Runtime Integration Tests (Sprint 4.5 — recursion guard + prod hook paths)
+        run: node test/contract/integration-runtime.test.js
+
       - name: Aggregate all tests (summary)
         run: node test/contract/scripts/qa-aggregate.js | tail -10
 

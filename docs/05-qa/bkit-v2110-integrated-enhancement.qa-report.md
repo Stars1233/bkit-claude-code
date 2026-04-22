@@ -1,6 +1,8 @@
-# bkit v2.1.10 QA 보고서 — Sprint 0 + Sprint 1 + Sprint 2 + Sprint 3 + Sprint 4 범위
+# bkit v2.1.10 QA 보고서 — Sprint 0+1+2+3+4 + Sprint 4.5 Integration
 
-> **Status**: ✅ **Sprint 0+1+2+3+4 완주 PASS** (v2.1.10 전체 Release Gate는 Sprint 5 완주 후 최종 QA에서 판정)
+> **Status**: ✅ **Sprint 0~4 + 4.5 완주 PASS** (v2.1.10 전체 Release Gate는 Sprint 5 완주 후 최종 QA에서 판정)
+>
+> **🚨 Sprint 4.5 Emergency**: 2026-04-22 audit-logger ↔ telemetry.createDualSink **무한 재귀 버그** 발견 및 수정. 단일 `writeAuditLog` 호출이 **682 GB 파일 증폭** 유발. 근본 원인: `createDualSink = composeSinks(createFileSink, createOtelSink)` 에서 `createFileSink`가 `audit-logger.writeAuditLog()` 재호출 → 사이클. 수정: audit-logger가 `createOtelSink()`만 호출 (file sink 재진입 차단) + telemetry `createFileSink`에 DANGER ZONE 경고 + Integration TC에 recursion guard 영구 내장.
 >
 > **Project**: bkit (bkit-claude-code)
 > **Branch**: `feat/v2110-integrated-enhancement`
