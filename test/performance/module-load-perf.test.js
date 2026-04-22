@@ -54,8 +54,7 @@ const CORE_MODULES = [
   'lib/core/index.js', 'lib/core/state-store.js', 'lib/core/constants.js',
   'lib/core/errors.js', 'lib/core/paths.js', 'lib/core/config.js',
   'lib/core/cache.js', 'lib/core/debug.js', 'lib/core/platform.js',
-  'lib/core/hook-io.js', 'lib/core/io.js', 'lib/core/file.js',
-  'lib/core/backup-scheduler.js',
+  'lib/core/io.js', 'lib/core/file.js',
 ];
 
 let coreAllOk = true;

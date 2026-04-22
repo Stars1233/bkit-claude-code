@@ -50,7 +50,6 @@ const CATEGORIES = {
       'unit/constants.test.js',
       'unit/errors.test.js',
       'unit/state-store.test.js',
-      'unit/hook-io.test.js',
       'unit/state-machine.test.js',
       'unit/automation-controller.test.js',
       'unit/workflow-parser.test.js',
@@ -92,12 +91,10 @@ const CATEGORIES = {
       'unit/context-loader.test.js',
       'unit/impact-analyzer.test.js',
       'unit/invariant-checker.test.js',
-      'unit/ops-metrics.test.js',
       'unit/scenario-runner.test.js',
       'unit/import-resolver.test.js',
       'unit/skill-orchestrator.test.js',
       'unit/permission-manager.test.js',
-      'unit/deploy-state-machine.test.js',
       'unit/strategy.test.js',
       'unit/cto-logic.test.js',
       'unit/task-queue.test.js',
@@ -300,11 +297,18 @@ function parseTestOutput(output, filePath) {
 
   // Strategy 1: Look for summary line (most reliable)
   // Formats: "Total: 35 | Pass: 35 | Fail: 0", "Total: 30 | PASS: 30 | FAIL: 0"
+  //          "--- Results: 15/15 passed, 0 failed ---" (behavioral/contract)
   const summaryMatch = output.match(/Total:\s*(\d+)\s*\|\s*Pass(?:ed)?:\s*(\d+)\s*\|\s*Fail(?:ed)?:\s*(\d+)/i);
+  const resultsMatch = output.match(/Results:\s*(\d+)\s*\/\s*(\d+)\s*passed,\s*(\d+)\s*failed/i);
   if (summaryMatch) {
     const total = parseInt(summaryMatch[1]);
     passed = parseInt(summaryMatch[2]);
     failed = parseInt(summaryMatch[3]);
+    skipped = total - passed - failed;
+  } else if (resultsMatch) {
+    passed = parseInt(resultsMatch[1]);
+    const total = parseInt(resultsMatch[2]);
+    failed = parseInt(resultsMatch[3]);
     skipped = total - passed - failed;
   } else {
     // Strategy 2: Count individual lines with various formats

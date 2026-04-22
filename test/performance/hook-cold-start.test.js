@@ -63,8 +63,7 @@ const NEW_MODULES = [
   { id: 'HS-006', path: path.join(BASE_DIR, 'lib/core/cache'),         name: 'core/cache' },
   { id: 'HS-007', path: path.join(BASE_DIR, 'lib/core/debug'),         name: 'core/debug' },
   { id: 'HS-008', path: path.join(BASE_DIR, 'lib/core/platform'),      name: 'core/platform' },
-  { id: 'HS-009', path: path.join(BASE_DIR, 'lib/core/hook-io'),       name: 'core/hook-io' },
-  { id: 'HS-010', path: path.join(BASE_DIR, 'lib/core/io'),            name: 'core/io' },
+  { id: 'HS-009', path: path.join(BASE_DIR, 'lib/core/io'),            name: 'core/io' },
 ];
 
 for (const mod of NEW_MODULES) {

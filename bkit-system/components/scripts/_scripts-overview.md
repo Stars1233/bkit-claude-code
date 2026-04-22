@@ -1,7 +1,8 @@
 # Scripts Overview
 
-> 43 Node.js Scripts used by bkit hooks (v2.1.9)
+> 47 Node.js Scripts used by bkit hooks (v2.1.10)
 >
+> **v2.1.10**: Sprint 5a~7 완결 — BKIT_VERSION 중앙화 (5 locations 단일 SoT), 3-Layer Orchestration (`lib/orchestrator/` 5 modules 신설), Legacy 청산 (hook-io / ops-metrics / deploy-state-machine 3 모듈 제거), `cc-bridge.js` Port↔Adapter, MCP stdio L3 runtime runner (42 TC), `check-domain-purity.js` CI step. Scripts 43→47. CC recommended: v2.1.117+.
 > **v2.1.9**: CC v2.1.116 response — Scripts unchanged (43). ENH-254 `config-change-handler.js:17-29` defense-in-depth comment reinforced (5 DANGEROUS_PATTERNS + Layer 1/Layer 2 architecture). Positive drift: ENH-264 `unified-bash-pre.js:144,183` `outputBlockWithContext` calls (deploy/QA phase paths). CC recommended: v2.1.116+.
 > **v2.1.8**: Issue #81 hotfix - scripts unchanged (43). Focus was `hooks/session-start.js` (ENH-239 fingerprint dedup integration) + `hooks/startup/session-context.js` (ENH-238/240 guard + budget). Two new `lib/core/` modules: `context-budget.js` (95 LOC) + `session-ctx-fp.js` (115 LOC).
 > **v2.1.7**: Issue #79 hotfix - `skill-post.js` argument order, `pre-write.js` phantom feature guard, `gap-detector-stop.js` analysis doc auto-generation.

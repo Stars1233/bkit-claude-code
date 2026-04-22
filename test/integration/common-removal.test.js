@@ -50,7 +50,7 @@ const V2_MODULES = [
   { id: 'CR-001', path: 'lib/core/constants.js', name: 'core/constants' },
   { id: 'CR-002', path: 'lib/core/errors.js', name: 'core/errors' },
   { id: 'CR-003', path: 'lib/core/state-store.js', name: 'core/state-store' },
-  { id: 'CR-004', path: 'lib/core/hook-io.js', name: 'core/hook-io' },
+  { id: 'CR-004', path: 'lib/core/io.js', name: 'core/io' },
   { id: 'CR-005', path: 'lib/core/paths.js', name: 'core/paths' },
 
   // PDCA modules (5)
