@@ -13,6 +13,8 @@ const { debugLog } = require('../../lib/core/debug');
 const { getPdcaStatusFull } = require('../../lib/pdca/status');
 const { getUIConfig } = require('../../lib/core/config');
 const { applyBudget } = require('../../lib/core/context-budget');
+// v2.1.10 (ENH-167 완결): 하드코딩된 "v2.1.9" 제거 — BKIT_VERSION 중앙화 사용
+const { BKIT_VERSION } = require('../../lib/core/version');
 
 /**
  * Build onboarding context section.
@@ -230,7 +232,8 @@ function buildVersionEnhancementsContext(detectedLevel) {
   let ctx = '';
 
   // v2.1.1: Consolidated version summary (reduced from 4 blocks to 1)
-  ctx += `\n## bkit v2.1.9 (Current)\n`;
+  // v2.1.10 (ENH-167): 하드코딩 문자열 제거, BKIT_VERSION 사용
+  ctx += `\n## bkit v${BKIT_VERSION} (Current)\n`;
   ctx += `- CC recommended: v2.1.116+ | 74 consecutive compatible releases (v2.1.115 skipped)\n`;
   ctx += `- Architecture: 39 Skills, 36 Agents, 21 Hook Events, 2 MCP Servers\n`;
   // ENH-265: ENABLE_PROMPT_CACHING_1H hint (CC v2.1.108+, 30-40% token savings on long sessions)
@@ -388,7 +391,8 @@ function build(_input, context) {
     // fail-open: 기본값 유지 → 기존 동작 보존
   }
 
-  const header = `# bkit Vibecoding Kit v2.1.9 - Session Startup\n\n`;
+  // v2.1.10 (ENH-167): 하드코딩 제거, BKIT_VERSION 사용
+  const header = `# bkit Vibecoding Kit v${BKIT_VERSION} - Session Startup\n\n`;
 
   if (!_ciEnabled) {
     return header;

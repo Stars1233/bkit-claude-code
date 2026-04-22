@@ -1,0 +1,8 @@
+{
+  "context": null,
+  "descriptionLength": 1,
+  "dirName": "deploy",
+  "effort": "high",
+  "name": "deploy",
+  "userInvocable": true
+}
