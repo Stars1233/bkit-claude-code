@@ -119,9 +119,11 @@ Output Styles (v1.5.3)
 | `/phase-8-review` | Code review and gap analysis |
 | `/phase-9-deployment` | Production deployment (CI/CD, K8s) |
 
-### Agents (21, auto-triggered by keywords)
+### Agents (36 total, auto-triggered by keywords — 13 opus / 21 sonnet / 2 haiku)
 
-#### Core Agents (11)
+> Full agent list at [bkit-system/components/agents/_agents-overview.md](../bkit-system/components/agents/_agents-overview.md). Models and constraints enforced by v2.1.10 3-Tier Agent Security Model + Sprint 7 `cto-lead` body (5 Task spawn examples + `Task(pm-lead)`/`Task(qa-lead)`/`Task(pdca-iterator)` frontmatter).
+
+#### Core Agents (11 — excerpt)
 
 | Agent | Trigger Keywords | Model |
 |-------|-----------------|-------|
@@ -204,6 +206,25 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 | Output Styles | `/output-style` | Custom response formatting |
 | TaskCompleted Hook | Automatic | Auto-advance PDCA phases on task completion |
 | TeammateIdle Hook | Automatic | Assign work to idle teammates |
+
+### v2.1.10 Features (current — Sprint 0~7 Integrated Enhancement)
+
+| Feature | Activation | Description |
+|---------|-----------|-------------|
+| Clean Architecture 4-Layer | Automatic (CI-enforced) | `lib/domain/` 11 modules (6 ports + 4 guards + 1 rules) / `lib/infra/` adapters / `lib/cc-regression/` application / hooks+scripts presentation. `scripts/check-domain-purity.js` enforces 0 forbidden imports (fs/child_process/net/http/https/os). |
+| Defense-in-Depth 4-Layer | Automatic (runtime + CI) | Layer 1 CC Built-in sandbox → Layer 2 bkit PreToolUse (`pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 audit-logger OWASP A03/A08 sanitizer (PII 7-key) → Layer 4 Token Ledger NDJSON |
+| Invocation Contract L1~L5 | CI gate `contract-check.yml` | 226 assertions (L1 contract baseline 94 JSON + L4 CI gate) + L2 smoke 98 TC + L3 MCP stdio 42 TC (real spawn) + L5 E2E shell 5 scenarios |
+| 3-Layer Orchestration (Sprint 7) | Automatic | `lib/orchestrator/` 5 modules: intent-router (feature>skill>agent priority) + next-action-engine (Stop-family) + team-protocol (PM/CTO/QA Lead Task spawn) + workflow-state-machine (matchRate SSoT 90) + index (19 exports) |
+| Guard Registry 21 | Daily cron | `lib/cc-regression/registry.js` — 21 guards (MON-CC-02, MON-CC-06 17 items, ENH-262/263/264, ENH-214) + `expectedFix` seed × 4 auto-release via `lifecycle.reconcile()` |
+| SKILL_TRIGGER_PATTERNS 15 | Automatic (Sprint 7 G-J-01) | `lib/intent/language.js` — expanded from 4 to 15 skills (pdca, pm-discovery, plan-plus, qa-phase, code-review, deploy, rollback, skill-create, control, audit, phase-4-api, ...) |
+| matchRate SSoT 90 | `bkit.config.json:pdca.matchRateThreshold` | Sprint 7 G-P-01: threshold default changed 100→90 across `lib/pdca/state-machine.js` + `lib/pdca/automation.js` |
+| Enterprise Teammates 6 | `/pdca team {feature}` on Enterprise | Sprint 7 G-T-03: 5→6 (strategy.js + `skills/pdca/SKILL.md:384` synchronized) |
+| Trust Score Level Auto-Reflect | Automatic | Sprint 7 G-C-01/02: `lib/control/trust-engine.js:syncToControlState` restored (autoEscalation/autoDowngrade flags wired) |
+| BKIT_VERSION 5-Location Invariant | `scripts/docs-code-sync.js scanVersions()` | `bkit.config.json` canonical → `plugin.json` + `hooks.json` + `session-start.js` + `README.md` + `CHANGELOG.md`, 0 drift enforced |
+| Docs=Code CI | `scripts/docs-code-sync.js` | 8 counts (skills/agents/hookEvents/hookBlocks/mcpServers/mcpTools/libModules/scripts) + version, 0 drift required |
+| 6 Validator CLIs | Manual + CI | `check-guards` (21) / `docs-code-sync` (0 drift) / `check-deadcode` (Live/Exempt/Legacy) / `check-domain-purity` (11 files, 0 violations) / `l3-mcp-runtime` (42/42) / `test/e2e/run-all.sh` (5/5) |
+| Hook Attribution (3 sites) | Automatic | Stop + SessionEnd + SubagentStop hooks emit cc-regression `recordEvent` + `recordPrecompactEvent` via `lib/cc-regression/event-recorder.js` |
+| @version Refresh (79 files) | Sprint 7e | 66 lib + 13 scripts `@version 2.0.0 → 2.1.10` bulk update (legacy 2.0.0 = 0 matches) |
 
 ### v2.0.5 Features
 

@@ -1,6 +1,6 @@
 # Priority Rules
 
-> Priority and conflict resolution rules when multiple triggers fire simultaneously
+> Priority and conflict resolution rules when multiple triggers fire simultaneously. **v2.1.10 Sprint 7 addition**: `lib/orchestrator/intent-router.js` enforces priority order `feature > skill > agent` across 15 `SKILL_TRIGGER_PATTERNS` (expanded from 4).
 
 ## Hook Execution Order
 
