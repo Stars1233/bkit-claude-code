@@ -1,0 +1,17 @@
+{
+  "language": "zh",
+  "version": "2.1.11",
+  "description": "FR-δ3 trigger accuracy baseline — Chinese prompts",
+  "prompts": [
+    { "text": "运行此功能的差距分析", "expectedLang": "zh" },
+    { "text": "当前的PDCA状态是什么？", "expectedLang": "zh" },
+    { "text": "为v2.1.11发布生成完成报告", "expectedLang": "zh" },
+    { "text": "用/pdca pm my-feature开始新功能", "expectedLang": "zh" },
+    { "text": "显示活动功能列表", "expectedLang": "zh" },
+    { "text": "运行QA L1-L3测试套件", "expectedLang": "zh" },
+    { "text": "迭代直到匹配率达到90%", "expectedLang": "zh" },
+    { "text": "立即归档bkit-v2110功能", "expectedLang": "zh" },
+    { "text": "将信任分数阈值设置为85", "expectedLang": "zh" },
+    { "text": "列出所有已安装的技能和代理", "expectedLang": "zh" }
+  ]
+}

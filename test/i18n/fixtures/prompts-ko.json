@@ -1,0 +1,17 @@
+{
+  "language": "ko",
+  "version": "2.1.11",
+  "description": "FR-δ3 trigger accuracy baseline — Korean prompts",
+  "prompts": [
+    { "text": "이 기능 갭 분석 실행해줘", "expectedLang": "ko" },
+    { "text": "현재 PDCA 상태가 어떻게 돼?", "expectedLang": "ko" },
+    { "text": "v2.1.11 릴리스 완료 보고서 만들어줘", "expectedLang": "ko" },
+    { "text": "새 기능을 /pdca pm my-feature로 시작", "expectedLang": "ko" },
+    { "text": "활성 기능 목록 보여줘", "expectedLang": "ko" },
+    { "text": "QA L1-L3 테스트 스위트 실행", "expectedLang": "ko" },
+    { "text": "매치 레이트 90% 도달할 때까지 반복", "expectedLang": "ko" },
+    { "text": "bkit-v2110 기능 지금 아카이브해", "expectedLang": "ko" },
+    { "text": "신뢰 점수 임계값 85로 설정", "expectedLang": "ko" },
+    { "text": "설치된 스킬과 에이전트 목록 알려줘", "expectedLang": "ko" }
+  ]
+}

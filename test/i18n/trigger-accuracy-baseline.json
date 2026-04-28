@@ -1,0 +1,23 @@
+{
+  "version": "2.1.11",
+  "description": "FR-δ3 v2.1.11 GA baseline. Future versions assert ≥ these values to detect regression.",
+  "measuredAt": "2026-04-28",
+  "fixtureSize": 80,
+  "perLanguageAccuracy": {
+    "en": 1.00,
+    "ko": 1.00,
+    "ja": 1.00,
+    "zh": 1.00,
+    "es": 0.30,
+    "fr": 0.30,
+    "de": 0.70,
+    "it": 0.20
+  },
+  "aggregateAccuracy": 0.6875,
+  "notes": [
+    "Romance languages (es, fr, it) have low accuracy because the v2.1.11 detector narrows scope per RD-5 — only KO/EN are full-quality, others fall through to EN.",
+    "CJK languages (ja, zh) score 100% via script-based detection (Hiragana/Katakana/Kanji + Han).",
+    "German achieves 50% via umlaut detection (ü, ö, ä, ß).",
+    "Aggregate 68.75% reflects v2.1.11 narrowed scope. v2.1.12 may expand Romance language detection."
+  ]
+}
