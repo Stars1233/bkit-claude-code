@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.10, uses BKIT_VERSION from lib/core/version)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.11, uses BKIT_VERSION from lib/core/version)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -89,7 +89,8 @@ try {
 const dashboardSections = [];
 
 // ENH-226 (Issue #77 Phase A): dashboard opt-out gate
-// 사용자가 ui.dashboard.enabled=false 시 5종 박스(progress/workflow/impact/agent/control) 렌더링 전부 스킵.
+// When ui.dashboard.enabled=false, skip rendering all 5 boxes
+// (progress / workflow / impact / agent / control).
 let _uiDashboardEnabled = true;
 let _uiDashboardSections = ['progress', 'workflow', 'impact', 'agent', 'control'];
 try {
@@ -100,7 +101,7 @@ try {
     if (Array.isArray(_ui.dashboard.sections)) _uiDashboardSections = _ui.dashboard.sections;
   }
 } catch (_e) {
-  // 기본값(true) 유지
+  // keep default (true)
 }
 
 // Session Context is already in additionalContext (base content)
@@ -237,8 +238,9 @@ const sessionTitle = generateSessionTitle({
 });
 
 // ENH-239 (Issue #81 Phase B): SHA-256 fingerprint dedup lock
-// PreCompact/PostCompact 재발화로 인한 동일 payload 중복 주입 차단.
-// TTL 1시간, multi-session 격리, fail-open 설계.
+// Prevents duplicate injection of identical payloads caused by
+// PreCompact/PostCompact re-fires. 1-hour TTL, multi-session
+// isolation, fail-open design.
 try {
   const { computeFingerprint, shouldDedup, record } = require('../lib/core/session-ctx-fp');
   const fp = computeFingerprint(additionalContext);
@@ -250,7 +252,7 @@ try {
   }
 } catch (e) {
   debugLog('SessionStart', 'ENH-239 fingerprint failed', { error: e.message });
-  // fail-open: 기존 동작 유지
+  // fail-open: keep prior behavior
 }
 
 // Sprint 4.5 Integration: cc-regression lifecycle reconcile.
