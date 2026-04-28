@@ -1,8 +1,6 @@
 # bkit — AI Native Development OS
 
 > The only Claude Code plugin that verifies AI-generated code against its own design specs.
->
-> AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.118+-purple.svg)](https://code.claude.com)
@@ -48,14 +46,14 @@ First-time users see an interactive 3-minute tutorial on the very first session.
 
 | Surface | Count |
 |---|---|
-| Skills | 39 |
+| Skills | 43 |
 | Agents | 36 |
 | Hook Events / blocks | 21 / 24 |
 | MCP Servers / Tools | 2 / 16 |
-| Lib modules / Scripts | 130 / 47 |
-| Test files / cases | 113 / 3,762 PASS · 0 FAIL |
+| Lib modules / Scripts | 142 / 49 |
+| Test files / cases | 117+ / 4,000+ PASS · 0 FAIL |
 
-Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 6 Port↔Adapter pairs and a Sprint 7 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine).
+Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 7 Port↔Adapter pairs (cc-payload · state-store · regression-registry · audit-sink · token-meter · docs-code-index · mcp-tool) and a 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine). v2.1.11 adds 4 Sprints (α Onboarding · β Discoverability · γ Trust · δ Port + Governance) covering 20 FRs.
 
 ## Documentation
 

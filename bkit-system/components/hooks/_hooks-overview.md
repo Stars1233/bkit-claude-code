@@ -2,7 +2,8 @@
 
 > Hook events triggered during Claude Code operations
 >
-> **v2.1.10 (current)**: 21 events / 24 blocks, 47 scripts, hook attribution 3 sites (Stop/SessionEnd/SubagentStop), CC recommended v2.1.117+ (75 consecutive compatible). Full release history: [CHANGELOG.md](../../../CHANGELOG.md).
+> **v2.1.11 (current)**: 21 events / 24 blocks, 49 scripts, hook attribution 3 sites (Stop/SessionEnd/SubagentStop), CC recommended v2.1.118+ (79 consecutive compatible). v2.1.11 adds 2 startup hook scripts (`hooks/startup/preflight.js` Agent Teams env, `hooks/startup/first-run.js` AskUserQuestion tutorial). Full release history: [CHANGELOG.md](../../../CHANGELOG.md).
+> **v2.1.10**: 21 events / 24 blocks, 47 scripts, hook attribution 3 sites (Stop/SessionEnd/SubagentStop), CC recommended v2.1.117+ (75 consecutive compatible).
 > **v2.1.9**: CC v2.1.116 response — Hooks unchanged (21 events, 43 scripts). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.0.4**: 18 hook events implemented (18/22 = 82% CC coverage), 6-Layer Hook System, 57 scripts, CC v2.1.81+
 > **v1.6.2**: PostCompact + StopFailure hooks added (10->12 events), hook source display (CC v2.1.75+)
@@ -31,7 +32,7 @@ Hooks are the core of bkit's **context injection system**, organized into 6 laye
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    6-Layer Hook System (v2.1.10)                 │
+│                    6-Layer Hook System (v2.1.11)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  Layer 1: hooks.json (Global)                                   │
@@ -47,11 +48,11 @@ Hooks are the core of bkit's **context injection system**, organized into 6 laye
 │  Layer 4: Description Triggers                                  │
 │           └── "Triggers:" keyword matching (8 languages)        │
 │                                                                  │
-│  Layer 5: Scripts (47 modules — v2.1.10)                        │
+│  Layer 5: Scripts (49 modules — v2.1.11)                        │
 │           └── Actual Node.js logic execution                    │
 │                                                                  │
-│  Layer 6: Lib Modules (128 modules / 15 subdirs — v2.1.10)      │
-│           └── Clean Architecture 4-Layer (Domain/App/Infra/Pres)│
+│  Layer 6: Lib Modules (142 modules / 16 subdirs — v2.1.11)      │
+│           └── Clean Architecture 4-Layer + 7 Port↔Adapter pairs │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -67,7 +68,7 @@ Hooks are the core of bkit's **context injection system**, organized into 6 laye
 | **PreCompact** | Before context compaction (v1.4.2) | PDCA state snapshot, context preservation |
 | **Stop** | Agent termination | State transition, user choice prompt |
 
-## Hook Events (v2.1.10 — 21 events / 24 blocks)
+## Hook Events (v2.1.11 — 21 events / 24 blocks)
 
 | Hook Event | Description | Added |
 |------------|-------------|:-----:|
@@ -487,12 +488,12 @@ PM Team agents (5) use the existing hook infrastructure:
 
 ### Skills 2.0 Compatibility
 
-bkit v2.1.10 uses `command` type hooks exclusively (21 hook events / 24 blocks).
+bkit v2.1.11 uses `command` type hooks exclusively (21 hook events / 24 blocks).
 CC 2.1.0 adds `type: "http"`, `type: "prompt"`, and `type: "agent"` hook types — bkit may adopt these in future versions.
 
 ### v2.0.4 Path Quoting Fix ([#53](https://github.com/popup-studio-ai/bkit-claude-code/issues/53))
 
-All hook commands now properly quote `${CLAUDE_PLUGIN_ROOT}` paths with double-quotes to prevent bash syntax errors when the path contains special characters (parentheses, spaces, etc.). This is critical for Windows users whose username may contain parentheses (e.g., `홍길동(HongGildong)`).
+All hook commands now properly quote `${CLAUDE_PLUGIN_ROOT}` paths with double-quotes to prevent bash syntax errors when the path contains special characters (parentheses, spaces, etc.). This is critical for Windows users whose username may contain parentheses (e.g., `John(JohnDoe)`).
 
 **Pattern**: `node "${CLAUDE_PLUGIN_ROOT}/scripts/foo.js"` (not `node ${CLAUDE_PLUGIN_ROOT}/scripts/foo.js`)
 

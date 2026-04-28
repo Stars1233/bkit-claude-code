@@ -36,12 +36,12 @@ A comprehensive guide to customizing Claude Code plugins for your organization, 
 
 ## ⚠️ Important Notices
 
-### Custom Skills Data Loss Warning (CC v2.1.116+ Users)
+### Custom Skills Data Loss Warning (CC v2.1.113+ Users)
 
 **Symptom**: On CC CLI v2.1.113+ (especially v2.1.116), the `~/.claude/skills/` directory may be **silently deleted** on first-run ([#51234](https://github.com/anthropics/claude-code/issues/51234)).
 
 **Impact on bkit**:
-- ✅ **bkit plugin itself is unaffected** — bkit's 39 skills live under `${CLAUDE_PLUGIN_ROOT}/skills/` (plugin bundle path).
+- ✅ **bkit plugin itself is unaffected** — bkit's 43 skills live under `${CLAUDE_PLUGIN_ROOT}/skills/` (plugin bundle path).
 - ⚠️ **User custom skills affected** — if you keep personal skills under `~/.claude/skills/`, **data loss is possible**.
 
 #### Recommended Backup (run immediately)
@@ -79,7 +79,7 @@ This issue is tracked under **MON-CC-06** (16 regressions from CC v2.1.113 nativ
 - [#51165](https://github.com/anthropics/claude-code/issues/51165) `context: fork` failure
 - [#51234](https://github.com/anthropics/claude-code/issues/51234) custom skills deletion
 
-This warning will be relaxed once an official fix lands in v2.1.117+.
+This warning is monitored under CC v2.1.118+ ongoing observation; bkit's plugin-bundle path keeps the plugin itself safe regardless.
 
 ---
 
@@ -112,7 +112,7 @@ Layer 1: hooks.json          → SessionStart, PreToolUse, PostToolUse hooks
 Layer 2: Skill Frontmatter   → hooks: PreToolUse, PostToolUse, Stop
 Layer 3: Agent Frontmatter   → hooks: PreToolUse, PostToolUse
 Layer 4: Description Triggers → "Triggers:" keyword matching
-Layer 5: Scripts             → Actual Node.js logic execution (47 scripts)
+Layer 5: Scripts             → Actual Node.js logic execution (49 scripts)
 ```
 
 This separation allows fine-grained control over when and how automation triggers.
@@ -177,37 +177,46 @@ For deeper understanding, explore the `bkit-system/` folder:
 
 bkit is not just a collection of prompts—it's a **production-grade plugin architecture** with carefully designed components that work together as a cohesive system.
 
-### Component Inventory (v2.1.10 — runtime-measured 2026-04-22)
+### Component Inventory (v2.1.11 — runtime-measured 2026-04-28)
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
 | **Agents** | 36 | Specialized AI subagents (13 opus / 21 sonnet / 2 haiku), memory persistence |
-| **Skills** | 39 | Domain knowledge and slash commands (9 with `context: fork` per ENH-202) |
+| **Skills** | 43 | Domain knowledge and slash commands (v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track) |
 | **Commands** | DEPRECATED | Migrated to Skills in v1.4.4+ |
-| **Scripts** | 47 | Hook execution scripts (v2.1.10 adds defense-coordinator, check-guards, docs-code-sync, check-deadcode, check-domain-purity, l3-mcp-runtime runners) |
+| **Scripts** | 49 | Hook execution scripts (v2.1.11 adds check-trust-score-reconcile, check-quality-gates-m1-m10, release-plugin-tag.sh) |
 | **Templates** | 18 | Document templates (PDCA + 9 phases + shared) |
-| **Hooks** | 21 events / 24 blocks | Event-driven automation (centralized in hooks.json, 3 attribution sites added in Sprint 7: Stop/SessionEnd/SubagentStop) |
-| **lib/** | 128 modules across 15 subdirs (~27,085 LOC) | **Clean Architecture 4-Layer**: Domain (ports 6 + guards 4 + rules) / Application (cc-regression + pdca + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-test-harness) / Presentation (hooks + scripts). Subdirs: audit, cc-regression, context, control, core, domain, infra, intent, orchestrator, pdca, qa, quality, task, team, ui. |
+| **Hooks** | 21 events / 24 blocks | Event-driven automation (centralized in hooks.json, 3 attribution sites: Stop/SessionEnd/SubagentStop) |
+| **lib/** | 142 modules across 16 subdirs | **Clean Architecture 4-Layer with 7 Port↔Adapter pairs**: Domain (ports 7 + guards 4 + rules) / Application (cc-regression + pdca + pdca-lifecycle pilot + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-port-registry + mcp-test-harness + cc-version-checker + branding) / Presentation (hooks + scripts). Subdirs: audit, application, cc-regression, context, control, core, dashboard, discovery, domain, evals, i18n, infra, intent, orchestrator, pdca, qa, quality, task, team, ui. |
 | **Output Styles** | 4 | Level-based response formatting (bkit-learning, bkit-pdca-guide, bkit-enterprise, bkit-pdca-enterprise) |
-| **MCP Servers** | 2 | `bkit-pdca-server`, `bkit-analysis-server` (16 tools total) |
-| **Test Files** | 113 (qa-aggregate scope) | 3,762 TC total (PASS 3,760 / FAIL 0 / Expected 2 legacy) |
-| **BKIT_VERSION** | 2.1.10 | `bkit.config.json` single source of truth; 5-location invariant enforced by `scripts/docs-code-sync.js` |
+| **MCP Servers** | 2 | `bkit-pdca-server`, `bkit-analysis-server` (16 tools total, registered via `lib/infra/mcp-port-registry.js` per FR-δ1) |
+| **Test Files** | 117+ (qa-aggregate scope) | 4,000+ TC total (3,762 baseline + 261 v2.1.11) |
+| **BKIT_VERSION** | 2.1.11 | `bkit.config.json` single source of truth; 5-location invariant enforced by `scripts/docs-code-sync.js` |
 
-**Total: 600+ components** working in harmony across **Clean Architecture 4-Layer + Defense-in-Depth 4-Layer + Invocation Contract L1~L5 + Sprint 7 3-Layer Orchestration**.
+**Total: 700+ components** working in harmony across **Clean Architecture 4-Layer + Defense-in-Depth 4-Layer + Invocation Contract L1~L5 + 3-Layer Orchestration + v2.1.11 Application Layer pilot**.
 
-### v2.1.10 Integrated Enhancement Features
+### v2.1.11 Integrated Enhancement Features (4 Sprints × 20 FRs)
+
+| Sprint | Highlights |
+|---|---|
+| **α Onboarding Revolution** | One-Liner SSoT 5/5 enforced; README split (≤100 lines + README-FULL); first-run AskUserQuestion tutorial with design anchor lock; Agent Teams env preflight; `cc-version-checker.js` subprocess + version.json fallback + module cache |
+| **β Discoverability** | `/bkit explore` 5-category tree; `/bkit evals run` skill regex + spawnSync wrapper; `/pdca watch` read-only NDJSON state tap; `/pdca fast-track` Daniel-mode auto-approve (DEFAULT_FAST_TRACK frozen); error-friendly i18n via `lib/i18n/translator.js` + `detector.js` (KO/EN full + 6-lang fallback) |
+| **γ Trust Foundation** | `trust-engine.reconcile()` public API + `syncToControlState()`; Application Layer pilot (`lib/application/pdca-lifecycle/{index,phases,transitions}.js`); ADR 0004 (agent-hook multi-event deferral) + ADR 0005 (Application Layer pilot) |
+| **δ Port + Governance** | `mcp-tool.port.js` + 16-tool registry (7th Port↔Adapter pair); Quality Gates M1-M10 catalog + `check-quality-gates-m1-m10.js` invariant; `token-report.js` aggregate + markdown render with CAND-004 OTEL 3-attr (I4-121 + F8-119 + I6-119); ADR 0006 CC Upgrade Policy; `release-plugin-tag.sh` automation |
 
 | Feature | Location | Purpose |
 |---------|----------|---------|
-| **Clean Architecture 4-Layer** | `lib/domain/` (11 modules = 6 ports + 4 guards + 1 rules) + `lib/infra/` (4 adapters) + `lib/cc-regression/` (8 application) + hooks/scripts (presentation) | 0 forbidden imports CI-enforced via `scripts/check-domain-purity.js` |
+| **Clean Architecture 4-Layer** | `lib/domain/` (ports 7 + guards 4 + rules 1) + `lib/infra/` adapters + `lib/application/pdca-lifecycle/` pilot + `lib/cc-regression/` + hooks/scripts | 0 forbidden imports CI-enforced via `scripts/check-domain-purity.js` |
 | **Defense-in-Depth 4-Layer** | Layer 1 (CC Built-in sandbox) → Layer 2 (`pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 (audit-logger OWASP A03/A08 sanitizer, 7-key PII) → Layer 4 (Token Ledger NDJSON) | Formalized in `docs/03-analysis/security-architecture.md` |
-| **Invocation Contract L1~L5** | `test/contract/baseline/v2.1.9/` (94 JSON = 39 skills + 36 agents + 16 MCP tools + 24 hook blocks) + L2 smoke 98 TC + L3 MCP stdio 42 TC + L5 E2E shell 5 scenarios | 226 L1+L4 assertions CI-gated via `.github/workflows/contract-check.yml` |
-| **Guard Registry** | `lib/cc-regression/registry.js` — 21 guards + `expectedFix` seed × 4 | Daily cron `cc-regression-reconcile.yml` auto-releases guards via `lifecycle.reconcile()` |
-| **3-Layer Orchestration (Sprint 7)** | `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index, 19 exports) | Feature > skill > agent priority, SKILL_TRIGGER_PATTERNS 15, matchRate SSoT 90 |
+| **Invocation Contract L1~L5** | `test/contract/baseline/` (94+ JSON = 43 skills + 36 agents + 16 MCP tools + 24 hook blocks) + L2 smoke + L3 MCP stdio + L5 E2E shell | 226 L1+L4 assertions CI-gated via `.github/workflows/contract-check.yml` |
+| **Guard Registry** | `lib/cc-regression/registry.js` — 21 guards + `expectedFix` seed | Daily cron `cc-regression-reconcile.yml` auto-releases guards via `lifecycle.reconcile()` |
+| **3-Layer Orchestration** | `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index) | Feature > skill > agent priority, SKILL_TRIGGER_PATTERNS 15, matchRate SSoT 90 |
 | **BKIT_VERSION 5-location Invariant** | `bkit.config.json` (canonical) → `plugin.json` + `hooks.json` + `session-start.js` + `README.md` + `CHANGELOG.md` | `scripts/docs-code-sync.js scanVersions()` enforces 0 drift |
-| **Docs=Code CI** | `scripts/docs-code-sync.js` + `lib/infra/docs-code-scanner.js` | 8 counts (skills/agents/hookEvents/hookBlocks/mcpServers/mcpTools/libModules/scripts) + version invariant, 0 drift required |
+| **One-Liner SSoT 5/5** | `lib/infra/branding.js` (canonical) → `plugin.json` + `README.md` + `README-FULL.md` + `hooks/startup/session-context.js` + `CHANGELOG.md` | `scripts/docs-code-sync.js scanOneLiner()` enforces 0 drift |
+| **Docs=Code CI** | `scripts/docs-code-sync.js` + `lib/infra/docs-code-scanner.js` | Counts (skills/agents/hookEvents/hookBlocks/mcpServers/mcpTools) + version invariant + One-Liner invariant, 0 drift required |
+| **Quality Gates M1-M10** | `docs/reference/quality-gates-m1-m10.md` (catalog) + `scripts/check-quality-gates-m1-m10.js` (invariant) | I4-121 stop_reason / OTEL telemetry alignment with PDCA phase gates |
 
-### Library Module Structure (v2.1.10 — Clean Architecture 4-Layer)
+### Library Module Structure (v2.1.11 — Clean Architecture 4-Layer with 7 Port↔Adapter pairs)
 
 ```
 lib/
@@ -215,21 +224,28 @@ lib/
 ├── permission-manager.js  # Top-level: permission mode enforcement
 ├── skill-orchestrator.js  # Top-level: skill dispatch
 │
-├── domain/                # Domain Layer (11 modules) — 0 forbidden imports CI-enforced
-│   ├── ports/             # 6 ports (JSDoc typedef contracts)
+├── domain/                # Domain Layer — 0 forbidden imports CI-enforced
+│   ├── ports/             # 7 ports (JSDoc typedef contracts)
 │   │   ├── cc-payload.port.js
 │   │   ├── state-store.port.js
 │   │   ├── regression-registry.port.js
 │   │   ├── audit-sink.port.js
 │   │   ├── token-meter.port.js
-│   │   └── docs-code-index.port.js
+│   │   ├── docs-code-index.port.js
+│   │   └── mcp-tool.port.js   # v2.1.11 FR-δ1
 │   ├── guards/            # 4 CC regression guards (ENH-254/262/263/264)
 │   └── rules/             # Invariants (e.g., docs-code-invariants.js EXPECTED_COUNTS)
 │
+├── application/           # Application Layer (v2.1.11 γ2 pilot)
+│   └── pdca-lifecycle/    # index.js + phases.js + transitions.js
+│
 ├── infra/                 # Infrastructure Layer (adapter implementations)
 │   ├── cc-bridge.js       # Port: cc-payload (parseHookInput, detectCCVersion, etc.)
-│   ├── telemetry.js       # Port: audit-sink (createOtelSink — DANGER ZONE comment)
-│   ├── docs-code-scanner.js  # Port: docs-code-index (measure + crossCheck + scanVersions)
+│   ├── telemetry.js       # Port: audit-sink (createOtelSink — sanitizeForOtel 2-gate AND-logic)
+│   ├── docs-code-scanner.js  # Port: docs-code-index (measure + crossCheck + scanVersions + scanOneLiner)
+│   ├── mcp-port-registry.js  # v2.1.11 FR-δ1: 16-tool registry per mcp-tool port
+│   ├── cc-version-checker.js # v2.1.11 FR-α5: subprocess + version.json fallback + module-level cache
+│   ├── branding.js           # v2.1.11 FR-α2-a: One-Liner SSoT canonical
 │   └── mcp-test-harness.js   # L3 MCP stdio runtime test runner
 │
 ├── cc-regression/         # Application Layer (8 modules)
@@ -264,11 +280,17 @@ lib/
 │   └── trust-engine.js    # syncToControlState — level auto-reflect restored Sprint 7
 ├── audit/                 # Audit logger (4 modules)
 ├── context/               # Living Context (5 modules)
+├── dashboard/             # v2.1.11 β4: /pdca watch read-only NDJSON state tap
+├── discovery/             # v2.1.11 β1: /bkit explore 5-category tree
+├── evals/                 # v2.1.11 β2: /bkit evals run wrapper
+├── i18n/                  # v2.1.11 β3/β6: detector + translator (KO/EN full + 6-lang fallback)
+├── pdca/
+│   └── token-report.js    # v2.1.11 δ4: aggregate + markdown render with CAND-004 OTEL 3-attr
 ├── qa/                    # QA infrastructure (14 modules)
 ├── quality/               # Quality gates (4 modules)
 └── ui/                    # CLI dashboard (7 modules)
 
-Total: 128 files across 15 subdirectories + 3 top-level
+Total: 142 files across 16 subdirectories + 3 top-level
 ```
 
 **Import Options**:
@@ -304,7 +326,7 @@ bkit is a **practical implementation of Context Engineering**—the art of curat
 │                                                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
 │  │ Domain Knowledge │  │ Behavioral Rules │  │ State Mgmt   │  │
-│  │    (39 Skills)   │  │   (36 Agents)    │  │(lib/common)  │  │
+│  │    (43 Skills)   │  │   (36 Agents)    │  │(lib/common)  │  │
 │  │                  │  │                  │  │              │  │
 │  │ • 9-Phase Guide  │  │ • Role Def.      │  │ • PDCA v2.0  │  │
 │  │ • 3 Levels       │  │ • Constraints    │  │ • Multi-Feat │  │
@@ -356,20 +378,20 @@ For detailed Context Engineering documentation, see [bkit-system/philosophy/cont
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│               bkit Component Architecture (v2.1.9)               │
+│               bkit Component Architecture (v2.1.11)              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  Knowledge Layer    │ Skills (39)      │ Domain expertise       │
+│  Knowledge Layer    │ Skills (43)      │ Domain expertise       │
 │  ─────────────────────────────────────────────────────────────  │
 │  Execution Layer    │ Agents (36)      │ Autonomous task work   │
 │  ─────────────────────────────────────────────────────────────  │
 │  Interface Layer    │ Commands (DEPRECATED) │ User interaction  │
 │  ─────────────────────────────────────────────────────────────  │
-│  Automation Layer   │ Hooks + Scripts (43) │ Event-driven triggers│
+│  Automation Layer   │ Hooks + Scripts (49) │ Event-driven triggers│
 │  ─────────────────────────────────────────────────────────────  │
 │  Template Layer     │ Templates (18)   │ Document standards     │
 │  ─────────────────────────────────────────────────────────────  │
-│  Shared Library     │ lib/ (128 modules, 15 subdirs) │ Clean Architecture 4-Layer │
+│  Shared Library     │ lib/ (142 modules, 16 subdirs) │ Clean Architecture 4-Layer + 7 Port↔Adapter pairs │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -841,7 +863,7 @@ bkit-claude-code/
 │   ├── qa-strategist.md            # QA strategy coordinator
 │   ├── security-architect.md       # Security & vulnerability expert
 │   └── ... (36 total, including 8 CTO/PM Team + 8 PDCA Eval agents)
-├── skills/                         # Domain knowledge (39 skills)
+├── skills/                         # Domain knowledge (43 skills)
 │   ├── bkit-rules/SKILL.md         # Core PDCA rules
 │   ├── plan-plus/SKILL.md          # Brainstorming-enhanced planning (v1.5.5)
 │   ├── development-pipeline/SKILL.md
@@ -851,7 +873,7 @@ bkit-claude-code/
 ├── hooks/
 │   ├── hooks.json                  # Claude Code hook configuration (21 events)
 │   └── session-start.js            # Session initialization (Node.js)
-├── scripts/                        # Hook execution scripts (47 scripts — v2.1.10 Sprint 0~7 additions: defense-coordinator, check-guards, docs-code-sync, check-deadcode, check-domain-purity, l3-mcp-runtime)
+├── scripts/                        # Hook execution scripts (49 scripts — v2.1.11 additions: check-trust-score-reconcile, check-quality-gates-m1-m10, release-plugin-tag.sh)
 │   └── *.js
 ├── output-styles/                  # Level-based response formatting (v1.5.3)
 │   ├── bkit-learning.md            # Starter level style

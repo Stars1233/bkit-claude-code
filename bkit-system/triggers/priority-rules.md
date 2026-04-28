@@ -1,6 +1,6 @@
 # Priority Rules
 
-> Priority and conflict resolution rules when multiple triggers fire simultaneously. **v2.1.10 Sprint 7 addition**: `lib/orchestrator/intent-router.js` enforces priority order `feature > skill > agent` across 15 `SKILL_TRIGGER_PATTERNS` (expanded from 4).
+> Priority and conflict resolution rules when multiple triggers fire simultaneously. **v2.1.10 Sprint 7 addition (carried into v2.1.11)**: `lib/orchestrator/intent-router.js` enforces priority order `feature > skill > agent` across 15 `SKILL_TRIGGER_PATTERNS` (expanded from 4). v2.1.11 keeps the priority order unchanged; SKILL_TRIGGER_PATTERNS catalog evolves with 4 new skills (bkit-evals, bkit-explore, pdca-watch, pdca-fast-track).
 
 ## Hook Execution Order
 

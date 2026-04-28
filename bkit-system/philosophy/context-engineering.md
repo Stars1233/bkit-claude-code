@@ -3,7 +3,7 @@
 > Optimal token curation for LLM inference — bkit v2.0.0 architecture
 >
 > **v2.0.0**: AI Native Development OS — State machine, workflow engine, controllable AI,
-> audit system, quality gates, CLI dashboard, MCP servers — original v2.0.0 baseline. Current v2.1.10: 128 lib modules across 15 subdirs (Clean Architecture 4-Layer), 47 scripts, 21 hook events (24 blocks). See [CHANGELOG.md](../../CHANGELOG.md) for version history.
+> audit system, quality gates, CLI dashboard, MCP servers — original v2.0.0 baseline. Current v2.1.11: 142 lib modules across 16 subdirs (Clean Architecture 4-Layer with 7 Port↔Adapter pairs), 49 scripts, 21 hook events (24 blocks). See [CHANGELOG.md](../../CHANGELOG.md) for version history.
 
 ## What is Context Engineering?
 
@@ -16,7 +16,7 @@ Context Engineering:
    to provide LLMs with optimal context for inference"
 ```
 
-bkit is a **practical implementation of Context Engineering**, providing a systematic context management system for Claude Code with 39 skills, 36 agents, 21 hook events (24 blocks), 128 lib modules across 15 subdirs (Clean Architecture 4-Layer), 47 scripts, and 2 MCP servers with 16 tools. See [CHANGELOG.md](../../CHANGELOG.md) for version history.
+bkit is a **practical implementation of Context Engineering**, providing a systematic context management system for Claude Code with 43 skills, 36 agents, 21 hook events (24 blocks), 142 lib modules across 16 subdirs (Clean Architecture 4-Layer with 7 Port↔Adapter pairs), 49 scripts, and 2 MCP servers with 16 tools. See [CHANGELOG.md](../../CHANGELOG.md) for version history.
 
 ---
 
@@ -46,7 +46,7 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 │  │  L3: Agent YAML ─→ PreToolUse, PostToolUse                            │  │
 │  │  L4: Triggers   ─→ 8-language keyword detection (EN/KO/JA/ZH/ES/FR/  │  │
 │  │                     DE/IT)                                             │  │
-│  │  L5: Scripts    ─→ 47 Node.js hook scripts (v2.1.10)                  │  │
+│  │  L5: Scripts    ─→ 49 Node.js hook scripts (v2.1.11)                  │  │
 │  │  L6: Team Orch. ─→ CTO-led phase routing                             │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
 │                                     │                                        │
@@ -86,7 +86,7 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 
 ---
 
-## Library Modules (128 files across 15 subdirectories — Clean Architecture 4-Layer, v2.1.10)
+## Library Modules (142 files across 16 subdirectories — Clean Architecture 4-Layer with 7 Port↔Adapter pairs, v2.1.11)
 
 | Module | Files | Exports | Purpose |
 |--------|:-----:|:-------:|---------|
@@ -120,11 +120,11 @@ bkit is a **practical implementation of Context Engineering**, providing a syste
 
 ---
 
-## Domain Knowledge Layer (39 Skills)
+## Domain Knowledge Layer (43 Skills)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    Domain Knowledge Layer (39 Skills)                    │
+│                    Domain Knowledge Layer (43 Skills)                    │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │
@@ -181,7 +181,7 @@ disallowedTools:      # restricted tools
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│               State Management Layer (v2.1.10 — 15 subdirs / Clean Arch)│
+│       State Management Layer (v2.1.11 — 16 subdirs / Clean Arch + 7 Ports)│
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐      │

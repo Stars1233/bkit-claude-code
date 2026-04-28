@@ -1,6 +1,6 @@
 # PDCA Methodology in bkit
 
-> Declarative state machine-driven PDCA with workflow engine, quality gates, and controllable automation. **Current: v2.1.10** (Sprint 7 3-Layer Orchestration, matchRate SSoT 90 via `bkit.config.json:pdca.matchRateThreshold`). Version history: see [CHANGELOG.md](../../CHANGELOG.md).
+> Declarative state machine-driven PDCA with workflow engine, quality gates, and controllable automation. **Current: v2.1.11** (4 Sprints × 20 FRs Integrated Enhancement; v2.1.10 Sprint 7 3-Layer Orchestration carried forward; matchRate SSoT 90 via `bkit.config.json:pdca.matchRateThreshold`; Application Layer pilot via `lib/application/pdca-lifecycle/`). Version history: see [CHANGELOG.md](../../CHANGELOG.md).
 
 ## PDCA Cycle (v2.0.0 State Machine)
 

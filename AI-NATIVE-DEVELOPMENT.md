@@ -14,7 +14,7 @@ flowchart TB
         subgraph ROW1[" "]
             direction LR
             SPEC["**1. SPEC**<br/>Plan Doc<br/>Design Doc"]
-            CONTEXT["**2. CONTEXT**<br/>CLAUDE.md<br/>39 Skills"]
+            CONTEXT["**2. CONTEXT**<br/>CLAUDE.md<br/>43 Skills"]
             AGENT["**3. AI AGENT**<br/>36 Agents<br/>Controllable Implementation"]
         end
 
@@ -140,20 +140,23 @@ Context Engineering is the **systematic design of information flow to LLMs**—g
 - Create adaptive triggers based on user intent (8-language, auto-detection)
 - Implement quality feedback loops with quality gates and metrics (M1-M10)
 
-**bkit v2.1.10 Implementation**:
+**bkit v2.1.11 Implementation**:
 ```
-Domain Knowledge (39 Skills) ────────┐
+Domain Knowledge (43 Skills) ────────┐
 Behavioral Rules (36 Agents) ────────┤
-State Management (128 modules / 15 subdirs, Clean Arch 4-Layer) ─┤
-3-Layer Orchestration (Sprint 7) ────┼─→ 21-Event Hook System (24 blocks, 47 scripts)
+State Management (142 modules / 16 subdirs, Clean Arch 4-Layer + Application pilot) ─┤
+3-Layer Orchestration ────┼─→ 21-Event Hook System (24 blocks, 49 scripts)
   ├─ intent-router (feature>skill>agent)                         │    ─→ Dynamic Context Injection
   ├─ next-action-engine (Stop-family)                           │
   ├─ team-protocol (PM/CTO/QA Lead)                             │
   └─ workflow-state-machine (matchRate SSoT 90)                 │
 Workflow Engine (3 presets) ─────────┤
-Controllable AI (L0-L4) ─────────────┤
+Controllable AI (L0-L4 + fast-track Daniel-mode) ────────────────┤
 Defense-in-Depth 4-Layer (CC→bkit→audit-logger→Token Ledger) ──┤
 Invocation Contract L1~L5 (226 CI-gated + L2 + L3 MCP + L5 E2E)┤
+7 Port↔Adapter pairs (cc-payload, state-store, regression-registry, audit-sink, token-meter, docs-code-index, mcp-tool) ──┤
+Quality Gates M1-M10 (catalog + check-quality-gates-m1-m10.js) ─┤
+i18n (KO/EN full + 6-lang fallback, error-friendly localization) ┤
 Audit System (JSONL traces, PII 7-key redaction) ──────────────┘
 ```
 
@@ -190,16 +193,16 @@ bkit implements **Context Engineering**—the systematic curation of context tok
 | **3 Project Levels** | Starter, Dynamic, Enterprise contexts |
 | **Convention Skill (Phase 2)** | Defines naming, structure, patterns |
 | **CLAUDE.md Files** | Project-specific AI instructions |
-| **Skill System (39 skills)** | Domain-specific knowledge |
-| **21-Event Hook System** | Centralized context injection via hooks.json (21 events / 24 blocks, 47 scripts); 3 attribution sites added in Sprint 7 (Stop/SessionEnd/SubagentStop) |
-| **lib/ (128 modules)** | 15 subdirectories Clean Architecture 4-Layer: audit, cc-regression, context, control, core, **domain** (Sprint 0~2), **infra** (Sprint 2+), intent, **orchestrator** (Sprint 7), pdca, qa, quality, task, team, ui |
+| **Skill System (43 skills)** | Domain-specific knowledge (v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track) |
+| **21-Event Hook System** | Centralized context injection via hooks.json (21 events / 24 blocks, 49 scripts); 3 attribution sites (Stop/SessionEnd/SubagentStop) |
+| **lib/ (142 modules)** | 16 subdirectories Clean Architecture 4-Layer with 7 Port↔Adapter pairs: audit, **application** (v2.1.11 γ2 pilot), cc-regression, context, control, core, **dashboard** (v2.1.11 β4), **discovery** (v2.1.11 β1), **domain**, **evals** (v2.1.11 β2), **i18n** (v2.1.11 β3/β6), **infra**, intent, **orchestrator**, pdca, qa, quality, task, team, ui |
 
-**Context Engineering Architecture (v2.1.10)**:
+**Context Engineering Architecture (v2.1.11)**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              bkit v2.1.10 Context Engineering Layers             │
+│              bkit v2.1.11 Context Engineering Layers             │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer 1: Domain Knowledge   │ 39 Skills (structured knowledge)  │
+│  Layer 1: Domain Knowledge   │ 43 Skills (structured knowledge)  │
 │  Layer 2: Behavioral Rules   │ 36 Agents (role + constraints)    │
 │  Layer 3: State Management   │ State machine, workflow engine    │
 │  Layer 4: Dynamic Injection  │ Intent detection, 8-lang triggers │
