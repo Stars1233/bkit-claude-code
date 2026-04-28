@@ -194,6 +194,19 @@ if (dashboardSections.length > 0) {
   additionalContext = dashboardSections.join('\n\n') + '\n\n' + additionalContext;
 }
 
+// --- v2.1.11 Sprint α (FR-α4 + FR-α5): Preflight checks ---
+// Surface Agent Teams env + CC version warnings near the top of context so the
+// user sees them before deeper PDCA detail. Fail-open via the module itself.
+try {
+  const preflight = require('./startup/preflight');
+  const preflightSection = preflight.run();
+  if (preflightSection) {
+    additionalContext = preflightSection + '\n' + additionalContext;
+  }
+} catch (e) {
+  debugLog('SessionStart', 'Preflight module failed', { error: e.message });
+}
+
 // --- 9. v2.0.0 Stale Feature Detection: Warn about idle features ---
 try {
   const { detectStaleFeatures } = require('../lib/pdca/lifecycle');
