@@ -1,0 +1,42 @@
+{
+  "version": "2.1.11",
+  "language": "ko",
+  "categories": {
+    "OWASP_A03_INJECTION": {
+      "technical": "OWASP A03: Injection detected",
+      "default": "주입(injection) 시도가 감지되었습니다. 사용자 입력값이 정제(sanitize) 없이 민감한 위치로 흘러들었습니다. 입력 검증 경로를 점검하고 파라미터 바인딩 또는 출력 인코딩을 적용하세요."
+    },
+    "ZOD_VALIDATION_FAILED": {
+      "technical": "Zod schema validation failed",
+      "default": "입력값이 예상된 스키마와 다릅니다. 검증 에러에 표시된 필드 타입을 확인해 페이로드를 수정하거나, 의도된 변경이라면 스키마를 갱신하세요."
+    },
+    "AUTH_REQUIRED": {
+      "technical": "Authentication required",
+      "default": "이 작업은 로그인 상태에서만 가능합니다. `claude login`(또는 해당 프로젝트의 로그인 명령)을 실행한 뒤 다시 시도하세요."
+    },
+    "FILE_NOT_FOUND": {
+      "technical": "ENOENT: file or directory not found",
+      "default": "대상 파일이 존재하지 않습니다. 경로가 올바른지, 파일이 이동되거나 삭제되지 않았는지 확인하세요."
+    },
+    "PERMISSION_DENIED": {
+      "technical": "EACCES: permission denied",
+      "default": "현재 사용자에게 이 리소스 접근 권한이 없습니다. 파일 권한을 조정하거나 적절한 권한으로 다시 실행하세요."
+    },
+    "NETWORK_TIMEOUT": {
+      "technical": "Network request timed out",
+      "default": "원격 엔드포인트가 시간 안에 응답하지 않았습니다. 네트워크 연결을 점검하고 재시도하세요. 반복되면 외부 서비스 장애일 수 있습니다."
+    },
+    "PARSE_ERROR": {
+      "technical": "Parse error",
+      "default": "내용을 파싱하지 못했습니다. 형식(JSON/YAML/TOML)을 확인하고 마지막 콤마, 닫지 않은 따옴표, 잘못된 들여쓰기가 없는지 살펴보세요."
+    },
+    "CC_VERSION_MISMATCH": {
+      "technical": "Claude Code version below recommended",
+      "default": "설치된 Claude Code 버전이 bkit 권장 버전보다 낮습니다. Claude Code 마켓플레이스에서 업데이트해 경고에 표시된 비활성 기능을 사용해 보세요."
+    },
+    "UNKNOWN_ERROR": {
+      "technical": "Unrecognized error",
+      "default": "예상하지 못한 오류가 발생했습니다. 위에 표시된 기술 메시지를 확인하고, 반복되면 주변 로그를 캡처해서 이슈로 남겨 주세요."
+    }
+  }
+}

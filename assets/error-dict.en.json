@@ -1,0 +1,42 @@
+{
+  "version": "2.1.11",
+  "language": "en",
+  "categories": {
+    "OWASP_A03_INJECTION": {
+      "technical": "OWASP A03: Injection detected",
+      "default": "An injection attempt was detected. User-supplied input flowed into a sensitive sink without sanitization. Review your input validation path and apply parameterized queries or output encoding."
+    },
+    "ZOD_VALIDATION_FAILED": {
+      "technical": "Zod schema validation failed",
+      "default": "Input did not match the expected schema. Check the field types listed in the validation error and adjust the payload, or update the schema if the new shape is intentional."
+    },
+    "AUTH_REQUIRED": {
+      "technical": "Authentication required",
+      "default": "This action requires you to be signed in. Run `claude login` (or your project's equivalent) and retry."
+    },
+    "FILE_NOT_FOUND": {
+      "technical": "ENOENT: file or directory not found",
+      "default": "The target file does not exist. Verify the path is correct and that the file has not been moved or deleted."
+    },
+    "PERMISSION_DENIED": {
+      "technical": "EACCES: permission denied",
+      "default": "The current user lacks permission to access this resource. Adjust file permissions or run with appropriate privileges."
+    },
+    "NETWORK_TIMEOUT": {
+      "technical": "Network request timed out",
+      "default": "The remote endpoint did not respond in time. Check your network connection, then retry. If the problem persists the upstream service may be degraded."
+    },
+    "PARSE_ERROR": {
+      "technical": "Parse error",
+      "default": "The content could not be parsed. Verify the format (JSON / YAML / TOML) and check for trailing commas, unescaped quotes, or wrong indentation."
+    },
+    "CC_VERSION_MISMATCH": {
+      "technical": "Claude Code version below recommended",
+      "default": "Your installed Claude Code is older than bkit recommends. Update via the Claude Code marketplace to unlock the gated features listed in the warning."
+    },
+    "UNKNOWN_ERROR": {
+      "technical": "Unrecognized error",
+      "default": "An unexpected error occurred. Check the underlying technical message above; if it persists, capture the surrounding logs and open an issue."
+    }
+  }
+}
