@@ -5,15 +5,8 @@ classification-reason: Discovery surface — independent of bkit's PDCA workflow
 deprecation-risk: none
 effort: low
 description: |
-  Browse installed bkit skills, agents, and evals by category, level, or evals scope. Backed by lib/discovery/explorer.js (no subprocess, pure filesystem scan).
-  Triggers: bkit explore, explore skills, list skills, skill discovery, what skills, browse skills,
-  bkit 탐색, 스킬 탐색, 스킬 목록, 어떤 스킬, 스킬 찾기,
-  bkit探索, スキル探索, スキル一覧, スキル発見,
-  bkit探索, 技能探索, 技能列表, 技能发现,
-  bkit explorar, explorar habilidades, lista de habilidades,
-  bkit explorer, explorer competences, liste competences,
-  bkit erkunden, Faehigkeiten erkunden, Faehigkeitsliste,
-  bkit esplorare, esplora competenze, elenco competenze.
+  Browse installed bkit skills, agents, and evals via lib/discovery/explorer.js (filesystem scan, no subprocess).
+  Triggers: bkit explore, list skills, skill discovery, browse skills, 스킬 탐색, スキル探索, 技能探索, explorar, explorer.
 argument-hint: "[category] | evals | --level <Starter|Dynamic|Enterprise>"
 user-invocable: true
 allowed-tools:

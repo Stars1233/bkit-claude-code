@@ -33,6 +33,12 @@ const PROD_ROOTS = ['lib', 'scripts', 'hooks', 'servers'];
 //   4. bkit QA subsystem helpers (lib/qa/scanner-base, test-plan-builder,
 //      test-runner): loaded via qa-monitor/qa-strategist agent context,
 //      not direct require. Same debt category.
+//   5. v2.1.11 Sprint β/γ/δ skill-driven dynamic loads. These modules are
+//      invoked through SKILL.md instructions (LLM reads the markdown,
+//      then runs `node -e require(...)` or spawns a script). Static
+//      require-graph traversal cannot see the link. Each entry is paired
+//      with the SKILL.md/file that drives invocation so reviewers can
+//      verify the wire-up still exists.
 //
 // Sprint 4.5 goal: prevent NEW dead code in v2.1.10 neighbors
 // (lib/cc-regression, lib/domain, lib/infra) while acknowledging legacy debt.
@@ -42,6 +48,17 @@ const EXEMPT_PATTERNS = [
   /^lib\/pdca\/status\.js$/, // Facade
   /^lib\/team\//, // Agent Teams — dynamic runtime load (technical debt)
   /^lib\/qa\/(scanner-base|test-plan-builder|test-runner)\.js$/, // QA subsystem dynamic load
+  // v2.1.11 Sprint β: discoverability + control surfaces (skill-driven)
+  /^lib\/discovery\/explorer\.js$/, // skills/bkit-explore
+  /^lib\/evals\/runner-wrapper\.js$/, // skills/bkit-evals
+  /^lib\/dashboard\/watch\.js$/, // skills/pdca-watch (CC /loop)
+  /^lib\/control\/fast-track\.js$/, // skills/pdca-fast-track
+  /^lib\/i18n\/(detector|translator)\.js$/, // user-prompt-handler dynamic dispatch
+  // v2.1.11 Sprint γ: Application Layer pilot (ADR 0005)
+  /^lib\/application\/pdca-lifecycle\//, // pdca skill — invoked via skill body
+  // v2.1.11 Sprint δ: Port + governance surfaces
+  /^lib\/infra\/mcp-port-registry\.js$/, // servers/* MCP runtime dynamic load
+  /^lib\/pdca\/token-report\.js$/, // skills/pdca token-report subcommand
 ];
 
 // v2.1.10 Sprint 6: legacy 3 modules removed (ops-metrics 150, hook-io 10,

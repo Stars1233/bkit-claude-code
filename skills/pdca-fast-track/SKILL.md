@@ -5,15 +5,8 @@ classification-reason: PDCA flow modifier — bypasses Checkpoint 1-8 user gates
 deprecation-risk: none
 effort: low
 description: |
-  Daniel-mode fast-track that auto-approves Checkpoint 1-8 when Trust ≥ 80, fastTrack enabled, and Design doc exists. Falls back to L2 + manual gates when any precondition fails. Decisions logged to .bkit/runtime/fast-track-log.json.
-  Triggers: pdca fast-track, fast track, skip checkpoints, auto approve, daniel mode,
-  pdca 패스트 트랙, 체크포인트 스킵, 자동 승인, 다니엘 모드,
-  pdca ファストトラック, チェックポイント省略,
-  pdca 快速通道, 跳过检查点,
-  pdca via rapida, omitir puntos de control,
-  pdca voie rapide, ignorer points de controle,
-  pdca Schnellspur, Checkpoints uberspringen,
-  pdca corsia veloce, salta i checkpoint.
+  Daniel-mode fast-track auto-approves Checkpoint 1-8 when Trust ≥ 80, fastTrack on, Design doc exists. Else L2 + manual gates.
+  Triggers: pdca fast-track, skip checkpoints, auto approve, 패스트 트랙, ファストトラック, 快速通道, vía rápida.
 argument-hint: "<feature>"
 user-invocable: true
 allowed-tools:

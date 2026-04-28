@@ -5,15 +5,8 @@ classification-reason: Live PDCA dashboard tied to bkit's state machine + token 
 deprecation-risk: none
 effort: low
 description: |
-  Live dashboard that ticks every 30s while a PDCA feature is in flight. Reads .bkit/state/pdca-status.json + .bkit/runtime/token-ledger.ndjson tail and renders a fixed-width panel via CC `/loop` (v2.1.71+).
-  Triggers: pdca watch, watch progress, live dashboard, watch feature, pdca tick,
-  pdca 감시, 실시간 대시보드, 라이브 보드,
-  pdca監視, ライブダッシュボード,
-  pdca监视, 实时仪表板,
-  pdca observar, panel en vivo,
-  pdca surveiller, tableau de bord,
-  pdca beobachten, Live-Dashboard,
-  pdca osservare, dashboard live.
+  Live PDCA dashboard ticking every 30s — reads pdca-status.json + token-ledger.ndjson tail, renders fixed-width panel via CC /loop.
+  Triggers: pdca watch, live dashboard, watch progress, 실시간 대시보드, ライブダッシュボード, 实时仪表板, panel en vivo, tableau de bord.
 argument-hint: "[feature]"
 user-invocable: true
 allowed-tools:

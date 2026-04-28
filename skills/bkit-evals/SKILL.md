@@ -5,15 +5,8 @@ classification-reason: Eval runner is a development-time quality tool, not a wor
 deprecation-risk: none
 effort: low
 description: |
-  Run skill evaluations via evals/runner.js — a safe wrapper that validates skill names, captures stdout/stderr, and persists JSON results to .bkit/runtime/evals-{skill}-{timestamp}.json.
-  Triggers: bkit evals, evals run, run skill eval, skill quality, eval runner,
-  bkit 평가, 평가 실행, 스킬 평가, 품질 평가,
-  bkit評価, 評価実行, スキル評価,
-  bkit评估, 评估运行, 技能评估,
-  bkit evaluacion, ejecutar evaluacion,
-  bkit evaluation, executer evaluation,
-  bkit Evaluation, Auswertung ausfuhren,
-  bkit valutazione, esegui valutazione.
+  Run skill evals via evals/runner.js — wrapper validates skill names, captures stdout/stderr, persists JSON results.
+  Triggers: bkit evals, evals run, skill quality, eval runner, 스킬 평가, 評価実行, 评估运行, evaluación, évaluation.
 argument-hint: "run <skill> | list"
 user-invocable: true
 allowed-tools:
