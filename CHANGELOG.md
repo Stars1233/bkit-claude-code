@@ -5,6 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.12] - 2026-04-28 (branch: `hotfix/v2112-evals-wrapper-argv`)
+
+> **Status**: Silent hotfix. Drop-in patch on top of v2.1.11. Zero breaking changes.
+> **One-Liner (EN)**: The only Claude Code plugin that verifies AI-generated code against its own design specs.
+> **One-Liner (KO)**: AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
+
+### Fixed
+
+- **B1 — `lib/evals/runner-wrapper.js:93` argv mismatch (P0).** The wrapper
+  invoked `spawnSync('node', [runnerPath, skill])`, but `evals/runner.js`
+  parses only the documented `--skill <name>` flag form (line 409-414).
+  Every `/bkit-evals run <skill>` therefore printed the Usage banner, exited
+  0, and the wrapper falsely reported `ok: true`. Fixed to
+  `spawnSync('node', [runnerPath, '--skill', skill])`. Locked by L3 contract
+  test `test/contract/v2112-evals-wrapper.contract.test.js`.
+- **B2 — `lib/evals/runner-wrapper.js` false-positive defense (P0).** Exit
+  code 0 alone no longer implies `ok: true`. The wrapper classifies a
+  missing parsed JSON block: `reason: 'argv_format_mismatch'` when stdout
+  contains `Usage:`, otherwise `reason: 'parsed_null'`. The `reason` field
+  is also persisted in `.bkit/runtime/evals-{skill}-{ts}.json`.
+- **B3 — `lib/evals/runner-wrapper.js` JSON parse robustness (P0, FR-13).**
+  v2.1.11 used `stdout.lastIndexOf('{')` which selected a **nested**
+  object's opening brace (e.g., `details: {`), causing the outer `}` to
+  become trailing data and `JSON.parse` to fail on otherwise valid runner
+  output. Replaced with a 2-strategy extractor (`_extractTrailingJson`):
+  (1) parse the whole trimmed stdout, (2) fall back to a string-aware
+  balanced-brace scan from the last `}`. Module exports the helper for
+  unit testing.
+- **D1 — `skills/bkit-evals/SKILL.md:45` doc accuracy.** Spec now matches
+  implementation: `node evals/runner.js --skill <skill>` instead of the
+  positional `<skill>` form. Defense and parse-robustness behavior also
+  documented.
+- **L1 stale baseline — `tests/qa/bkit-deep-system.test.js:854` `A9-2`.**
+  Bumped expected skills count 39 → 43 to match v2.1.11 Sprint β additions
+  (bkit-explore, bkit-evals, pdca-watch, pdca-fast-track). Local-only file
+  (`tests/` is gitignored).
+- **L3 contract baseline — `test/contract/docs-code-sync.test.js`,
+  `test/contract/extended-scenarios.test.js`.** Bumped EXPECTED_COUNTS.skills
+  39 → 43 across diffCounts/synthetic-drift/correct-doc fixtures. The
+  invariant module `lib/domain/rules/docs-code-invariants.js` was already
+  43 — the contract tests were the lagging surface from v2.1.11.
+
+### Added
+
+- **L1 unit + L2 integration tests** —
+  `tests/qa/v2112-evals-wrapper.test.js` (260 LOC, 18 TC) covering
+  isValidSkillName boundary cases, `_extractTrailingJson` happy /
+  log-prefixed / null / string-aware paths, every `invokeEvals` defense
+  reason, fake-runner contract for happy and pass:false outcomes,
+  persisted result file with `reason` field, and real-runner integration
+  against `pdca` (workflow), `starter` (capability), `qa-phase` (workflow).
+- **L3 contract test** — `test/contract/v2112-evals-wrapper.contract.test.js`
+  (2 TC) locks (a) the wrapper-emitted argv `['--skill', skill]` via
+  PATH-injected node shim, and (b) the runner.js Usage banner spec byte-
+  exact. Tracked in `test/contract/` so CI catches future drift.
+
+### Internal
+
+- **BKIT_VERSION 5-loc bump 2.1.11 → 2.1.12** — `bkit.config.json`
+  (canonical), `.claude-plugin/plugin.json`, `README.md` badge,
+  `CHANGELOG.md` (this entry), `hooks/hooks.json`.
+  `scripts/docs-code-sync.js` invariant 5/5 enforced.
+- **One-Liner SSoT 5/5 unchanged** — `lib/infra/branding.js` text identical
+  across plugin.json + README + README-FULL + session-context.js +
+  CHANGELOG.
+- **`lib/evals/runner-wrapper.js` `@version 2.1.12`** (`@since 2.1.11`
+  preserved for module-introduction history).
+- **`.claude-plugin/marketplace.json`** version 2.1.11 → 2.1.12 (root +
+  bkit plugin entry).
+- **`AI-NATIVE-DEVELOPMENT.md`, `README-FULL.md`, `CUSTOMIZATION-GUIDE.md`,
+  `bkit-system/README.md`, `bkit-system/_GRAPH-INDEX.md`,
+  `bkit-system/triggers/priority-rules.md`, `hooks/session-start.js`** —
+  active "v2.1.11" labels rolled to "v2.1.12"; historical "v2.1.11 added X"
+  facts preserved.
+
+### Carryovers (unchanged from v2.1.11)
+
+- ENH-277 P0, ENH-278 P2, ENH-280 P1 — see v2.1.11 release notes.
+
+---
+
 ## [2.1.11] - 2026-04-28 (branch: `feat/v2111-integrated-enhancement`)
 
 > **Status**: All 4 Sprints complete (α/β/γ/δ). 20 FRs implemented; gap-detector ≥ 92% per Sprint, average ~95%.

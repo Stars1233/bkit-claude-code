@@ -42,12 +42,18 @@ If no argument is provided, render the same output as `list`.
 
 1. Validate `skill` against `/^[a-z][a-z0-9-]{0,63}$/`. Reject anything else
    (no shell metacharacters, no slashes, no spaces) — see Security below.
-2. Spawn `node evals/runner.js <skill>` via `child_process.spawnSync` (argv
-   form, no shell). Default timeout 30 s, max 120 s.
-3. Capture stdout / stderr. Best-effort parse the last `{` block as JSON.
-4. Persist the structured result to
+2. Spawn `node evals/runner.js --skill <skill>` via `child_process.spawnSync`
+   (argv form, no shell). Default timeout 30 s, max 120 s. The `--skill` flag
+   form is mandated by the runner CLI and locked by L3 contract test.
+3. Capture stdout / stderr. Parse the trailing JSON block via
+   balanced-brace fallback (string-aware).
+4. Apply fail-closed defense: if `parsed === null` and stdout includes
+   `Usage:`, return `reason: 'argv_format_mismatch'`; if `parsed === null`
+   otherwise, return `reason: 'parsed_null'`. Exit code 0 alone NEVER
+   implies success — the parsed JSON must be present.
+5. Persist the structured result to
    `.bkit/runtime/evals-{skill}-{ISO timestamp}.json` with stdout/stderr
-   tails (2000 chars each) and `parsed` payload.
+   tails (2000 chars each), `parsed` payload, and `reason` field.
 5. Render a one-line summary in the chat:
    - exit code
    - parsed pass/fail counts (if available)
