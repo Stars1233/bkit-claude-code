@@ -120,7 +120,7 @@ After:  Regression guard + metrics collector → Cross-session learning
 
 ```
 Before: "Setting up config files is tedious"
-After:  39 skills auto-detected by keywords → Zero config needed
+After:  43 skills auto-detected by keywords → Zero config needed
 
 Before: "Writing design docs is annoying"
 After:  Templates + PM Agent Team → Design doc in 5 minutes
@@ -133,7 +133,7 @@ After:  gap-detector + pdca-iterator → Auto gap analysis and fix
 
 ```
 Before: "Each team member uses Claude differently"
-After:  CTO-led Agent Teams (36 agents) → Standardized PDCA workflow
+After:  CTO-led Agent Teams (36 agents, 43 skills) → Standardized PDCA workflow
 
 Before: "AI decisions are opaque"
 After:  Audit logger + decision tracer → Full visibility and traceability
@@ -148,13 +148,13 @@ After:  L0-L4 levels + trust score + emergency stop → Controllable AI
 
 > **v2.1.1**: AI Native Development OS — Declarative PDCA state machine, YAML workflow DSL,
 > L0-L4 controllable AI, CLI dashboard, audit logging, quality gates, MCP servers,
-> checkpoint/rollback, destructive operation detection, 39 Skills, 36 Agents, 21 Hook Events (24 blocks), 128 Lib modules (15 subdirs Clean Architecture 4-Layer), 47 Scripts, 2 MCP Servers (16 tools). BKIT_VERSION SSoT: `bkit.config.json`.
+> checkpoint/rollback, destructive operation detection, 43 Skills, 36 Agents, 21 Hook Events (24 blocks), 142 Lib modules (16 subdirs Clean Architecture 4-Layer with 7 Port↔Adapter pairs), 49 Scripts, 2 MCP Servers (16 tools). BKIT_VERSION SSoT: `bkit.config.json`.
 
 ### Component Counts
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Skills | 38 (18 Workflow / 18 Capability / 1 Hybrid) | `skills/*/SKILL.md` |
+| Skills | 43 (Workflow / Capability / Hybrid; v2.1.11 added 4: bkit-evals, bkit-explore, pdca-watch, pdca-fast-track) | `skills/*/SKILL.md` |
 | Agents | 36 | `agents/*.md` |
 | Hook Events | 21 | `hooks/hooks.json` |
 | Hook Scripts | 42 | `hooks/`, `scripts/` |

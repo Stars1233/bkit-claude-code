@@ -1,7 +1,8 @@
 # Agents Overview
 
-> List of 36 Agents defined in bkit and their roles (v2.1.10)
+> List of 36 Agents defined in bkit and their roles (v2.1.11)
 >
+> **v2.1.11**: 4 Sprints × 20 FRs Integrated Enhancement — Agents unchanged (36); Sprint γ adds `lib/application/pdca-lifecycle/` pilot referenced by `pdca-iterator` and `gap-detector` workflows. CC recommended: v2.1.118+ (79 consecutive compatible releases).
 > **v2.1.10**: Sprint 5a~7 complete — `cto-lead` body expanded (5 Task spawn blocks + `Task(pm-lead)` / `Task(qa-lead)` / `Task(pdca-iterator)` added to frontmatter, G-T-01/02). Enterprise teammates 5→6 (G-T-03). Bulk `@version 2.0.0 → 2.1.10` refresh across 79 files (66 lib + 13 scripts). CC recommended: v2.1.117+ (75 consecutive compatible releases).
 > **v2.1.9**: CC v2.1.116 response — ENH-253/254/259/263 (zero-script-qa fork verification, defense-in-depth security docs, custom skill warning, Docs=Code 15-file correction). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).
 > **v2.1.8**: Issue #81 hotfix - agents unchanged. Hook/lib layer focus (`lib/core/context-budget.js`, `session-ctx-fp.js`). CC recommended: v2.1.111+ (72 consecutive compatible).

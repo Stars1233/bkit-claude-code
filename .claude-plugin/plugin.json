@@ -1,8 +1,8 @@
 {
   "name": "bkit",
-  "version": "2.1.10",
+  "version": "2.1.11",
   "displayName": "bkit — AI Native Development OS",
-  "description": "bkit: Claude Code vibecoding plugin — PDCA-driven development automation with CTO-Led Agent Teams. Clean Architecture 4-Layer + Defense-in-Depth + Invocation Contract (226 assertions). 39 Skills, 36 Agents, 21 Hook Events (24 blocks), 16 MCP Tools. Living Context System, 5-level controllable AI (L0-L4), CLI dashboard, quality gates, audit logging. See docs/ for details.",
+  "description": "The only Claude Code plugin that verifies AI-generated code against its own design specs.",
   "author": {
     "name": "POPUP STUDIO PTE. LTD.",
     "email": "contact@popupstudio.ai",

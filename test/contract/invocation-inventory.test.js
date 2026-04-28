@@ -2,7 +2,10 @@
  * Invocation Inventory Sanity Tests — file-level cross-check of Addendum counts.
  *
  * Design Ref: bkit-v2110-invocation-contract-addendum.plan.md §3
- * Plan SC: 39 skills / 36 agents / 16 MCP tools / 21 hook events / 24 blocks.
+ * Plan SC: 43 skills / 36 agents / 16 MCP tools / 21 hook events / 24 blocks.
+ *
+ * v2.1.11 update: 39 → 43 skills (Sprint β added bkit-evals, bkit-explore,
+ * pdca-fast-track, pdca-watch).
  */
 
 const assert = require('node:assert');
@@ -29,13 +32,15 @@ test('servers/bkit-analysis-server/index.js exists', () => assert.ok(fs.existsSy
 
 // ==================== Skills Count ====================
 const skillDirs = fs.readdirSync(skillsDir).filter((d) => fs.statSync(path.join(skillsDir, d)).isDirectory());
-test('Skills count exactly 39', () => assert.strictEqual(skillDirs.length, 39));
+test('Skills count exactly 43', () => assert.strictEqual(skillDirs.length, 43));
 
 const EXPECTED_SKILLS = [
   'audit', 'bkend-auth', 'bkend-cookbook', 'bkend-data', 'bkend-quickstart', 'bkend-storage',
-  'bkit', 'bkit-rules', 'bkit-templates', 'btw', 'cc-version-analysis', 'claude-code-learning',
+  'bkit', 'bkit-evals', 'bkit-explore', 'bkit-rules', 'bkit-templates', 'btw',
+  'cc-version-analysis', 'claude-code-learning',
   'code-review', 'control', 'deploy', 'desktop-app', 'development-pipeline', 'dynamic',
-  'enterprise', 'mobile-app', 'pdca', 'pdca-batch', 'phase-1-schema', 'phase-2-convention',
+  'enterprise', 'mobile-app', 'pdca', 'pdca-batch', 'pdca-fast-track', 'pdca-watch',
+  'phase-1-schema', 'phase-2-convention',
   'phase-3-mockup', 'phase-4-api', 'phase-5-design-system', 'phase-6-ui-integration',
   'phase-7-seo-security', 'phase-8-review', 'phase-9-deployment', 'plan-plus', 'pm-discovery',
   'qa-phase', 'rollback', 'skill-create', 'skill-status', 'starter', 'zero-script-qa',

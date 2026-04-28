@@ -71,16 +71,36 @@ async function main() {
   // v2.1.10 Sprint 6 NEW 6-6 (ENH-276): BKIT_VERSION invariant cross-check
   const versionReport = await scanner.scanVersions();
 
+  // v2.1.11 Sprint α NEW (FR-α2-f): One-Liner SSoT cross-check
+  const oneLinerReport = await scanner.scanOneLiner();
+
+  // Incremental rollout: only `plugin.json` is enforced today. As FR-α1
+  // (Task #7), FR-α2-e (Task #6), FR-α3 etc. land their respective sync,
+  // uncomment the matching entries to widen the CI gate. Sprint α DoD
+  // (Task #10) requires all 5 entries enforced.
+  const ONE_LINER_ENFORCE = new Set([
+    'plugin.json',           // FR-α2-b
+    'CHANGELOG.md',          // FR-α2-e
+    'README.md',             // FR-α1 + FR-α2-c
+    'README-FULL.md',        // FR-α1 + FR-α2-d
+    'session-context.js',    // FR-α2-c (SessionStart intro literal)
+  ]);
+  const fatalOneLinerMismatches    = oneLinerReport.mismatches.filter((m) => ONE_LINER_ENFORCE.has(m.name));
+  const advisoryOneLinerMismatches = oneLinerReport.mismatches.filter((m) => !ONE_LINER_ENFORCE.has(m.name));
+
   const report = {
     measured,
     expected: EXPECTED_COUNTS,
     invariantDiffs,
     docDiffs: allDocDiffs,
     version: versionReport,
+    oneLiner: oneLinerReport,
+    oneLinerEnforce: Array.from(ONE_LINER_ENFORCE),
     passed:
       invariantDiffs.length === 0 &&
       allDocDiffs.length === 0 &&
-      versionReport.mismatches.length === 0,
+      versionReport.mismatches.length === 0 &&
+      fatalOneLinerMismatches.length === 0,
   };
 
   if (isJsonFlag()) {
@@ -139,13 +159,42 @@ async function main() {
       }
     }
 
+    // v2.1.11 Sprint α NEW (FR-α2-f): One-Liner SSoT report
+    // eslint-disable-next-line no-console
+    console.log(`\n[docs-code-sync] One-Liner SSoT (${oneLinerReport.syncCount}/${oneLinerReport.results.length} synchronised):`);
+    for (const r of oneLinerReport.results) {
+      const sym = r.status === 'sync' ? '✓' : r.status === 'drift' ? '✗' : '…';
+      // eslint-disable-next-line no-console
+      console.log(`  ${sym} ${r.name} (${r.path}): ${r.status}`);
+    }
+    if (fatalOneLinerMismatches.length > 0) {
+      // eslint-disable-next-line no-console
+      console.error('\n[docs-code-sync] ✗ One-Liner drift in enforced location(s) — must sync verbatim:');
+      for (const m of fatalOneLinerMismatches) {
+        // eslint-disable-next-line no-console
+        console.error(`  ✗ ${m.path} — expected verbatim One-Liner from lib/infra/branding.js`);
+      }
+    }
+    if (advisoryOneLinerMismatches.length > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(`\n[docs-code-sync] ⚠ One-Liner advisory drift (not yet enforced — pending FR-α1/α2-c/d/e/3):`);
+      for (const m of advisoryOneLinerMismatches) {
+        // eslint-disable-next-line no-console
+        console.warn(`  ⚠ ${m.path} — will be enforced once corresponding FR ships`);
+      }
+    }
+    if (oneLinerReport.pending.length > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(`\n[docs-code-sync] ⚠ One-Liner pending sync (file not yet created): ${oneLinerReport.pending.length} location(s)`);
+    }
+
     if (report.passed) {
       // eslint-disable-next-line no-console
       console.log('\n[docs-code-sync] ✓ PASSED — all counts consistent across code + docs');
     } else {
       // eslint-disable-next-line no-console
       console.error(
-        `\n[docs-code-sync] ✗ FAILED — ${invariantDiffs.length} invariant + ${allDocDiffs.length} doc drift + ${versionReport.mismatches.length} version drift`
+        `\n[docs-code-sync] ✗ FAILED — ${invariantDiffs.length} invariant + ${allDocDiffs.length} doc drift + ${versionReport.mismatches.length} version drift + ${fatalOneLinerMismatches.length} one-liner drift (enforced)`
       );
     }
   }

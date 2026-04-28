@@ -1,0 +1,17 @@
+{
+  "language": "ja",
+  "version": "2.1.11",
+  "description": "FR-δ3 trigger accuracy baseline — Japanese prompts",
+  "prompts": [
+    { "text": "この機能のギャップ分析を実行して", "expectedLang": "ja" },
+    { "text": "現在のPDCAステータスは？", "expectedLang": "ja" },
+    { "text": "v2.1.11リリースの完了レポートを生成", "expectedLang": "ja" },
+    { "text": "新しい機能を/pdca pm my-featureで開始", "expectedLang": "ja" },
+    { "text": "アクティブな機能リストを表示", "expectedLang": "ja" },
+    { "text": "QA L1-L3テストスイートを実行", "expectedLang": "ja" },
+    { "text": "マッチレートが90%になるまで反復", "expectedLang": "ja" },
+    { "text": "bkit-v2110機能を今すぐアーカイブ", "expectedLang": "ja" },
+    { "text": "信頼スコアの閾値を85に設定", "expectedLang": "ja" },
+    { "text": "インストール済みスキルとエージェント一覧", "expectedLang": "ja" }
+  ]
+}

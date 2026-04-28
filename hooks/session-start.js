@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.10, uses BKIT_VERSION from lib/core/version)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.11, uses BKIT_VERSION from lib/core/version)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -89,7 +89,8 @@ try {
 const dashboardSections = [];
 
 // ENH-226 (Issue #77 Phase A): dashboard opt-out gate
-// 사용자가 ui.dashboard.enabled=false 시 5종 박스(progress/workflow/impact/agent/control) 렌더링 전부 스킵.
+// When ui.dashboard.enabled=false, skip rendering all 5 boxes
+// (progress / workflow / impact / agent / control).
 let _uiDashboardEnabled = true;
 let _uiDashboardSections = ['progress', 'workflow', 'impact', 'agent', 'control'];
 try {
@@ -100,7 +101,7 @@ try {
     if (Array.isArray(_ui.dashboard.sections)) _uiDashboardSections = _ui.dashboard.sections;
   }
 } catch (_e) {
-  // 기본값(true) 유지
+  // keep default (true)
 }
 
 // Session Context is already in additionalContext (base content)
@@ -194,6 +195,19 @@ if (dashboardSections.length > 0) {
   additionalContext = dashboardSections.join('\n\n') + '\n\n' + additionalContext;
 }
 
+// --- v2.1.11 Sprint α (FR-α4 + FR-α5): Preflight checks ---
+// Surface Agent Teams env + CC version warnings near the top of context so the
+// user sees them before deeper PDCA detail. Fail-open via the module itself.
+try {
+  const preflight = require('./startup/preflight');
+  const preflightSection = preflight.run();
+  if (preflightSection) {
+    additionalContext = preflightSection + '\n' + additionalContext;
+  }
+} catch (e) {
+  debugLog('SessionStart', 'Preflight module failed', { error: e.message });
+}
+
 // --- 9. v2.0.0 Stale Feature Detection: Warn about idle features ---
 try {
   const { detectStaleFeatures } = require('../lib/pdca/lifecycle');
@@ -224,8 +238,9 @@ const sessionTitle = generateSessionTitle({
 });
 
 // ENH-239 (Issue #81 Phase B): SHA-256 fingerprint dedup lock
-// PreCompact/PostCompact 재발화로 인한 동일 payload 중복 주입 차단.
-// TTL 1시간, multi-session 격리, fail-open 설계.
+// Prevents duplicate injection of identical payloads caused by
+// PreCompact/PostCompact re-fires. 1-hour TTL, multi-session
+// isolation, fail-open design.
 try {
   const { computeFingerprint, shouldDedup, record } = require('../lib/core/session-ctx-fp');
   const fp = computeFingerprint(additionalContext);
@@ -237,7 +252,7 @@ try {
   }
 } catch (e) {
   debugLog('SessionStart', 'ENH-239 fingerprint failed', { error: e.message });
-  // fail-open: 기존 동작 유지
+  // fail-open: keep prior behavior
 }
 
 // Sprint 4.5 Integration: cc-regression lifecycle reconcile.
@@ -262,6 +277,19 @@ try {
 
 const { BKIT_VERSION } = require('../lib/core/version');
 
+// --- v2.1.11 Sprint α (FR-α3-b/c): First-Run AUQ tutorial ---
+// On the very first session in a project, show a 3-option AUQ that introduces
+// bkit. The marker `.bkit/runtime/first-run-seen.json` is created on exposure
+// (idempotent). When this prompt is active it takes priority over the existing
+// onboarding userPrompt — first impression > resume.
+let firstRunPayload = null;
+try {
+  const firstRun = require('./startup/first-run');
+  firstRunPayload = firstRun.run();
+} catch (e) {
+  debugLog('SessionStart', 'first-run module failed', { error: e.message });
+}
+
 const response = {
   systemMessage: `bkit Vibecoding Kit v${BKIT_VERSION} activated (Claude Code)`,
   hookSpecificOutput: {
@@ -273,8 +301,10 @@ const response = {
     matchRate: onboardingContext.onboardingData.matchRate || null,
     additionalContext: additionalContext,
     sessionTitle,
-    // v2.1.1 H-01: Pass AskUserQuestion payload from onboarding
-    userPrompt: onboardingContext.onboardingData.userPrompt || undefined,
+    // v2.1.11 FR-α3 takes priority on first run; otherwise v2.1.1 H-01 onboarding prompt
+    userPrompt: (firstRunPayload && firstRunPayload.userPrompt)
+      || onboardingContext.onboardingData.userPrompt
+      || undefined,
   }
 };
 

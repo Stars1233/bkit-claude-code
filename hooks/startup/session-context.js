@@ -13,8 +13,10 @@ const { debugLog } = require('../../lib/core/debug');
 const { getPdcaStatusFull } = require('../../lib/pdca/status');
 const { getUIConfig } = require('../../lib/core/config');
 const { applyBudget } = require('../../lib/core/context-budget');
-// v2.1.10 (ENH-167 완결): 하드코딩된 "v2.1.9" 제거 — BKIT_VERSION 중앙화 사용
+// v2.1.10 (ENH-167 final): removed hard-coded "v2.1.9" — uses centralized BKIT_VERSION
 const { BKIT_VERSION } = require('../../lib/core/version');
+// v2.1.11 (FR-α2-c): One-Liner SSoT — surfaces bkit identity in SessionStart intro
+const { ONE_LINER_EN } = require('../../lib/infra/branding');
 
 /**
  * Build onboarding context section.
@@ -232,10 +234,10 @@ function buildVersionEnhancementsContext(detectedLevel) {
   let ctx = '';
 
   // v2.1.1: Consolidated version summary (reduced from 4 blocks to 1)
-  // v2.1.10 (ENH-167): 하드코딩 문자열 제거, BKIT_VERSION 사용
+  // v2.1.10 (ENH-167): removed hard-coded strings, uses BKIT_VERSION
   ctx += `\n## bkit v${BKIT_VERSION} (Current)\n`;
-  ctx += `- CC recommended: v2.1.116+ | 74 consecutive compatible releases (v2.1.115 skipped)\n`;
-  ctx += `- Architecture: 39 Skills, 36 Agents, 21 Hook Events, 2 MCP Servers\n`;
+  ctx += `- CC recommended: v2.1.118+ | 79 consecutive compatible releases (v2.1.34~v2.1.121, v2.1.115/120 release-tag gaps)\n`;
+  ctx += `- Architecture: 43 Skills, 36 Agents, 21 Hook Events (24 blocks), 142 Lib Modules (16 subdirs, 7 Port↔Adapter pairs), 2 MCP Servers (16 tools)\n`;
   // ENH-265: ENABLE_PROMPT_CACHING_1H hint (CC v2.1.108+, 30-40% token savings on long sessions)
   const _caching1h = process.env.ENABLE_PROMPT_CACHING_1H === '1' || process.env.ENABLE_PROMPT_CACHING_1H === 'true';
   if (_caching1h) {
@@ -388,11 +390,12 @@ function build(_input, context) {
       }
     }
   } catch (_e) {
-    // fail-open: 기본값 유지 → 기존 동작 보존
+    // fail-open: keep defaults → preserve prior behavior
   }
 
-  // v2.1.10 (ENH-167): 하드코딩 제거, BKIT_VERSION 사용
-  const header = `# bkit Vibecoding Kit v${BKIT_VERSION} - Session Startup\n\n`;
+  // v2.1.10 (ENH-167): removed hard-coded strings, uses BKIT_VERSION
+  // v2.1.11 (FR-α2-c): + One-Liner verbatim for SSoT compliance and first-run identity
+  const header = `# bkit Vibecoding Kit v${BKIT_VERSION} - Session Startup\n\n> ${ONE_LINER_EN}\n\n`;
 
   if (!_ciEnabled) {
     return header;
@@ -416,7 +419,7 @@ function build(_input, context) {
     if (_ciPriorityPreserve) budgetOpts.priorityPreserve = _ciPriorityPreserve;
     additionalContext = applyBudget(additionalContext, budgetOpts);
   } catch (_e) {
-    // fail-open: 원본 반환
+    // fail-open: return original
   }
 
   return additionalContext;

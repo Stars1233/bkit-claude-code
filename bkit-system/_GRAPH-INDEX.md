@@ -1,14 +1,18 @@
 # bkit Graph Index
 
-> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.10 (Sprint 0~7 Integrated Enhancement)**.
+> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.11 (4 Sprints × 20 FRs Integrated Enhancement)**.
 >
 > **Version history is maintained in [CHANGELOG.md](../CHANGELOG.md) (single source of truth).** This file focuses on the current component graph; do not embed historical release notes here.
 >
 > Current release highlights:
-> - Clean Architecture 4-Layer (Domain ports 6 + guards 4, 0 forbidden imports CI-enforced)
+> - 4 Sprints × 20 FRs (α Onboarding, β Discoverability, γ Trust Foundation, δ Port + Governance)
+> - Clean Architecture 4-Layer with 7 Port↔Adapter pairs (Domain ports 7 + guards 4, 0 forbidden imports CI-enforced)
 > - Defense-in-Depth 4-Layer (CC Built-in → bkit PreToolUse → audit-logger → Token Ledger)
 > - Invocation Contract L1~L5 (226 CI-gated assertions + L2 smoke + L3 MCP stdio + L5 E2E shell)
-> - Sprint 7 3-Layer Orchestration (`lib/orchestrator/` 5 modules)
+> - 3-Layer Orchestration (`lib/orchestrator/` 5 modules)
+> - One-Liner SSoT 5/5 (`lib/infra/branding.js`)
+> - Quality Gates M1-M10 catalog + invariant
+> - i18n KO/EN full + 6-lang fallback
 > - BKIT_VERSION 5-location invariant (`bkit.config.json` SSoT)
 
 ## Philosophy (4)
@@ -21,9 +25,9 @@ bkit is a practical implementation of **Context Engineering**:
 ┌─────────────────────────────────────────────────────────────────┐
 │              bkit Context Engineering Components                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  Domain Knowledge (39 Skills)  → Structured domain knowledge     │
+│  Domain Knowledge (43 Skills)  → Structured domain knowledge     │
 │  Behavioral Rules (36 Agents)  → Role-based behavioral rules     │
-│  State Management (lib/)       → 128 modules, 15 subdirectories  │
+│  State Management (lib/)       → 142 modules, 16 subdirectories  │
 │  6-Layer Hook System           → 21 events, 24 blocks            │
 │  Clean Architecture 4-Layer    → Domain / App / Infra / Pres     │
 │  Dynamic Injection             → Conditional context selection   │
@@ -165,11 +169,11 @@ The following skills were consolidated:
 - [[components/hooks/_hooks-overview|PreToolUse]] - Before Write/Edit operations (defined in SKILL.md)
 - [[components/hooks/_hooks-overview|PostToolUse]] - After Write operations (defined in SKILL.md)
 
-## Scripts (47)
+## Scripts (49)
 
 > **Note**: All scripts converted to Node.js (.js) in v1.3.1 for cross-platform compatibility
 >
-> **v2.1.10**: Sprint 0~7 additions (defense-coordinator, check-guards, docs-code-sync, check-deadcode, check-domain-purity, l3-mcp-runtime runners)
+> **v2.1.11**: Sprint α/β/γ/δ additions (check-trust-score-reconcile, check-quality-gates-m1-m10, release-plugin-tag.sh)
 
 ### Core Scripts (3)
 - `scripts/pre-write.js` - Unified PreToolUse hook (PDCA + classification + convention)
@@ -331,16 +335,17 @@ bkit supports languages and frameworks organized by tier:
 
 > **v1.5.0**: bkit is now Claude Code exclusive. Gemini CLI support was removed for simplified architecture.
 
-**Components (v2.1.10 Final, 2026-04-22)**:
-- `skills/` - 39 skills
+**Components (v2.1.11 Final, 2026-04-28)**:
+- `skills/` - 43 skills (v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track)
 - `agents/` - 36 agents (13 opus / 21 sonnet / 2 haiku)
-- `scripts/` - 47 scripts (Node.js)
-- `lib/` - 15 subdirectories, 128 modules (~27,085 LOC) — Clean Architecture 4-Layer
+- `scripts/` - 49 scripts (Node.js)
+- `lib/` - 16 subdirectories, 142 modules — Clean Architecture 4-Layer with 7 Port↔Adapter pairs
 - `templates/` - 18 templates
 - `output-styles/` - 4 styles
-- `servers/` - 2 MCP servers (bkit-pdca, bkit-analysis; 16 tools)
-- Test files - 113 (qa-aggregate scope), 3,762 TC (3,760 PASS / 0 FAIL / 2 expected)
-- BKIT_VERSION - 2.1.10 (`bkit.config.json` SSoT; 5-location invariant)
+- `servers/` - 2 MCP servers (bkit-pdca, bkit-analysis; 16 tools registered via `lib/infra/mcp-port-registry.js`)
+- Test files - 117+ (qa-aggregate scope), 4,000+ TC (3,762 baseline + 261 v2.1.11)
+- BKIT_VERSION - 2.1.11 (`bkit.config.json` SSoT; 5-location invariant)
+- One-Liner - `lib/infra/branding.js` SSoT; 5-location invariant
 
 ## Templates (18)
 

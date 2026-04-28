@@ -1,0 +1,17 @@
+{
+  "language": "en",
+  "version": "2.1.11",
+  "description": "FR-δ3 trigger accuracy baseline — English prompts",
+  "prompts": [
+    { "text": "Run the gap analysis for this feature", "expectedLang": "en" },
+    { "text": "What's the current PDCA status?", "expectedLang": "en" },
+    { "text": "Generate a completion report for the v2.1.11 release", "expectedLang": "en" },
+    { "text": "Start a new feature with /pdca pm my-feature", "expectedLang": "en" },
+    { "text": "Show me the active feature list", "expectedLang": "en" },
+    { "text": "Run the QA L1-L3 test suite", "expectedLang": "en" },
+    { "text": "Iterate on the implementation until match rate hits 90%", "expectedLang": "en" },
+    { "text": "Archive the bkit-v2110 feature now", "expectedLang": "en" },
+    { "text": "Configure trust score threshold to 85", "expectedLang": "en" },
+    { "text": "List all installed skills and agents", "expectedLang": "en" }
+  ]
+}

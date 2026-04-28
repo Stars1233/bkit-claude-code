@@ -1,0 +1,17 @@
+{
+  "language": "es",
+  "version": "2.1.11",
+  "description": "FR-δ3 trigger accuracy baseline — Spanish prompts",
+  "prompts": [
+    { "text": "Ejecuta el análisis de brechas para esta característica", "expectedLang": "es" },
+    { "text": "¿Cuál es el estado actual del PDCA?", "expectedLang": "es" },
+    { "text": "Genera un informe de finalización para la versión v2.1.11", "expectedLang": "es" },
+    { "text": "Inicia una nueva característica con /pdca pm mi-caracteristica", "expectedLang": "es" },
+    { "text": "Muéstrame la lista de características activas", "expectedLang": "es" },
+    { "text": "Ejecuta la suite de pruebas QA L1-L3", "expectedLang": "es" },
+    { "text": "Itera la implementación hasta que la tasa de coincidencia alcance el 90%", "expectedLang": "es" },
+    { "text": "Archiva la característica bkit-v2110 ahora", "expectedLang": "es" },
+    { "text": "Configura el umbral de puntuación de confianza a 85", "expectedLang": "es" },
+    { "text": "Lista todas las habilidades y agentes instalados", "expectedLang": "es" }
+  ]
+}
