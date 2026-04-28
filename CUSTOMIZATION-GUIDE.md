@@ -177,7 +177,7 @@ For deeper understanding, explore the `bkit-system/` folder:
 
 bkit is not just a collection of prompts—it's a **production-grade plugin architecture** with carefully designed components that work together as a cohesive system.
 
-### Component Inventory (v2.1.11 — runtime-measured 2026-04-28)
+### Component Inventory (v2.1.12 — runtime-measured 2026-04-28)
 
 | Component | Count | Purpose |
 |-----------|-------|---------|
@@ -191,9 +191,9 @@ bkit is not just a collection of prompts—it's a **production-grade plugin arch
 | **Output Styles** | 4 | Level-based response formatting (bkit-learning, bkit-pdca-guide, bkit-enterprise, bkit-pdca-enterprise) |
 | **MCP Servers** | 2 | `bkit-pdca-server`, `bkit-analysis-server` (16 tools total, registered via `lib/infra/mcp-port-registry.js` per FR-δ1) |
 | **Test Files** | 117+ (qa-aggregate scope) | 4,000+ TC total (3,762 baseline + 261 v2.1.11) |
-| **BKIT_VERSION** | 2.1.11 | `bkit.config.json` single source of truth; 5-location invariant enforced by `scripts/docs-code-sync.js` |
+| **BKIT_VERSION** | 2.1.12 | `bkit.config.json` single source of truth; 5-location invariant enforced by `scripts/docs-code-sync.js` |
 
-**Total: 700+ components** working in harmony across **Clean Architecture 4-Layer + Defense-in-Depth 4-Layer + Invocation Contract L1~L5 + 3-Layer Orchestration + v2.1.11 Application Layer pilot**.
+**Total: 700+ components** working in harmony across **Clean Architecture 4-Layer + Defense-in-Depth 4-Layer + Invocation Contract L1~L5 + 3-Layer Orchestration + Application Layer pilot (v2.1.11 γ2 introduction; v2.1.12 hardens the evals path that exercises this layer)**.
 
 ### v2.1.11 Integrated Enhancement Features (4 Sprints × 20 FRs)
 

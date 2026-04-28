@@ -1,6 +1,6 @@
 # bkit Graph Index
 
-> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.11 (4 Sprints × 20 FRs Integrated Enhancement)**.
+> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.12 (silent hotfix on top of v2.1.11 4 Sprints × 20 FRs Integrated Enhancement)**.
 >
 > **Version history is maintained in [CHANGELOG.md](../CHANGELOG.md) (single source of truth).** This file focuses on the current component graph; do not embed historical release notes here.
 >
@@ -335,7 +335,7 @@ bkit supports languages and frameworks organized by tier:
 
 > **v1.5.0**: bkit is now Claude Code exclusive. Gemini CLI support was removed for simplified architecture.
 
-**Components (v2.1.11 Final, 2026-04-28)**:
+**Components (v2.1.12 Final, 2026-04-28)**:
 - `skills/` - 43 skills (v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track)
 - `agents/` - 36 agents (13 opus / 21 sonnet / 2 haiku)
 - `scripts/` - 49 scripts (Node.js)
@@ -344,7 +344,7 @@ bkit supports languages and frameworks organized by tier:
 - `output-styles/` - 4 styles
 - `servers/` - 2 MCP servers (bkit-pdca, bkit-analysis; 16 tools registered via `lib/infra/mcp-port-registry.js`)
 - Test files - 117+ (qa-aggregate scope), 4,000+ TC (3,762 baseline + 261 v2.1.11)
-- BKIT_VERSION - 2.1.11 (`bkit.config.json` SSoT; 5-location invariant)
+- BKIT_VERSION - 2.1.12 (`bkit.config.json` SSoT; 5-location invariant)
 - One-Liner - `lib/infra/branding.js` SSoT; 5-location invariant
 
 ## Templates (18)

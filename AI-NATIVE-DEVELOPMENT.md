@@ -140,7 +140,7 @@ Context Engineering is the **systematic design of information flow to LLMs**—g
 - Create adaptive triggers based on user intent (8-language, auto-detection)
 - Implement quality feedback loops with quality gates and metrics (M1-M10)
 
-**bkit v2.1.11 Implementation**:
+**bkit v2.1.12 Implementation**:
 ```
 Domain Knowledge (43 Skills) ────────┐
 Behavioral Rules (36 Agents) ────────┤
@@ -197,10 +197,10 @@ bkit implements **Context Engineering**—the systematic curation of context tok
 | **21-Event Hook System** | Centralized context injection via hooks.json (21 events / 24 blocks, 49 scripts); 3 attribution sites (Stop/SessionEnd/SubagentStop) |
 | **lib/ (142 modules)** | 16 subdirectories Clean Architecture 4-Layer with 7 Port↔Adapter pairs: audit, **application** (v2.1.11 γ2 pilot), cc-regression, context, control, core, **dashboard** (v2.1.11 β4), **discovery** (v2.1.11 β1), **domain**, **evals** (v2.1.11 β2), **i18n** (v2.1.11 β3/β6), **infra**, intent, **orchestrator**, pdca, qa, quality, task, team, ui |
 
-**Context Engineering Architecture (v2.1.11)**:
+**Context Engineering Architecture (v2.1.12)**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              bkit v2.1.11 Context Engineering Layers             │
+│              bkit v2.1.12 Context Engineering Layers             │
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 1: Domain Knowledge   │ 43 Skills (structured knowledge)  │
 │  Layer 2: Behavioral Rules   │ 36 Agents (role + constraints)    │
