@@ -35,7 +35,7 @@ test('scanner exports countScripts', () => assert.strictEqual(typeof scanner.cou
 // ============================================================
 // Scanner accuracy (live filesystem)
 // ============================================================
-test('countSkills = 39', () => assert.strictEqual(scanner.countSkills(), 39));
+test('countSkills = 43', () => assert.strictEqual(scanner.countSkills(), 43));
 test('countAgents = 36', () => assert.strictEqual(scanner.countAgents(), 36));
 test('countHooks.events = 21', () => assert.strictEqual(scanner.countHooks().events, 21));
 test('countHooks.blocks = 24', () => assert.strictEqual(scanner.countHooks().blocks, 24));
@@ -47,7 +47,7 @@ test('countScripts > 30', () => assert.ok(scanner.countScripts() > 30));
 // measure() returns full inventory
 await testAsync('measure() returns full inventory', async () => {
   const m = await scanner.measure();
-  assert.ok(m.skills >= 39);
+  assert.ok(m.skills >= 43);
   assert.ok(m.agents >= 36);
   assert.strictEqual(m.hookEvents, 21);
   assert.strictEqual(m.hookBlocks, 24);
@@ -75,29 +75,29 @@ await testAsync('EXPECTED_COUNTS aligned with measure()', async () => {
 // ============================================================
 test('diffCounts match → []', () => {
   const d = invariants.diffCounts({
-    skills: 39, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
+    skills: 43, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
   });
   assert.deepStrictEqual(d, []);
 });
 test('diffCounts skills drift +1 detected', () => {
   const d = invariants.diffCounts({
-    skills: 40, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
+    skills: 44, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
   });
   assert.strictEqual(d.length, 1);
   assert.strictEqual(d[0].field, 'skills');
-  assert.strictEqual(d[0].declared || d[0].expected, 39);
-  assert.strictEqual(d[0].actual, 40);
+  assert.strictEqual(d[0].declared || d[0].expected, 43);
+  assert.strictEqual(d[0].actual, 44);
 });
 test('diffCounts agents drift -1 detected', () => {
   const d = invariants.diffCounts({
-    skills: 39, agents: 35, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
+    skills: 43, agents: 35, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16,
   });
   assert.strictEqual(d.length, 1);
   assert.strictEqual(d[0].field, 'agents');
 });
 test('diffCounts multiple drifts', () => {
   const d = invariants.diffCounts({
-    skills: 40, agents: 35, hookEvents: 22, hookBlocks: 25, mcpServers: 3, mcpTools: 17,
+    skills: 44, agents: 35, hookEvents: 22, hookBlocks: 25, mcpServers: 3, mcpTools: 17,
   });
   assert.strictEqual(d.length, 6);
 });
@@ -138,7 +138,7 @@ await testAsync('crossCheck detects synthetic drift (42 skills)', async () => {
   const skillsDrift = d.find((x) => x.field === 'skills');
   assert.ok(skillsDrift);
   assert.strictEqual(skillsDrift.declared, 42);
-  assert.strictEqual(skillsDrift.actual, 39);
+  assert.strictEqual(skillsDrift.actual, 43);
 });
 await testAsync('crossCheck detects synthetic drift (99 agents)', async () => {
   const d = await scanner.crossCheck(tmpDoc);
@@ -147,7 +147,7 @@ await testAsync('crossCheck detects synthetic drift (99 agents)', async () => {
   assert.strictEqual(agentsDrift.declared, 99);
 });
 const tmpCorrect = path.join(tmpDir, 'correct.md');
-fs.writeFileSync(tmpCorrect, 'We have 39 Skills and 36 Agents and 21 Hook Events.\n', 'utf8');
+fs.writeFileSync(tmpCorrect, 'We have 43 Skills and 36 Agents and 21 Hook Events.\n', 'utf8');
 await testAsync('crossCheck correct counts → []', async () => {
   const d = await scanner.crossCheck(tmpCorrect);
   assert.deepStrictEqual(d, []);

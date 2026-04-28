@@ -305,18 +305,18 @@ const invariants = require('../../lib/domain/rules/docs-code-invariants');
 test('EXPECTED_COUNTS is frozen', () => {
   assert.ok(Object.isFrozen(invariants.EXPECTED_COUNTS));
 });
-test('EXPECTED_COUNTS.skills = 39', () => assert.strictEqual(invariants.EXPECTED_COUNTS.skills, 39));
+test('EXPECTED_COUNTS.skills = 43', () => assert.strictEqual(invariants.EXPECTED_COUNTS.skills, 43));
 test('EXPECTED_COUNTS.agents = 36', () => assert.strictEqual(invariants.EXPECTED_COUNTS.agents, 36));
 test('EXPECTED_COUNTS.hookEvents = 21', () => assert.strictEqual(invariants.EXPECTED_COUNTS.hookEvents, 21));
 test('EXPECTED_COUNTS.hookBlocks = 24', () => assert.strictEqual(invariants.EXPECTED_COUNTS.hookBlocks, 24));
 test('EXPECTED_COUNTS.mcpServers = 2', () => assert.strictEqual(invariants.EXPECTED_COUNTS.mcpServers, 2));
 test('EXPECTED_COUNTS.mcpTools = 16', () => assert.strictEqual(invariants.EXPECTED_COUNTS.mcpTools, 16));
 test('diffCounts with correct counts returns []', () => {
-  const d = invariants.diffCounts({ skills: 39, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16 });
+  const d = invariants.diffCounts({ skills: 43, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16 });
   assert.deepStrictEqual(d, []);
 });
 test('diffCounts detects skills drift', () => {
-  const d = invariants.diffCounts({ skills: 40, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16 });
+  const d = invariants.diffCounts({ skills: 44, agents: 36, hookEvents: 21, hookBlocks: 24, mcpServers: 2, mcpTools: 16 });
   assert.strictEqual(d.length, 1);
   assert.strictEqual(d[0].field, 'skills');
 });
