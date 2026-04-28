@@ -80,10 +80,10 @@ async function main() {
   // (Task #10) requires all 5 entries enforced.
   const ONE_LINER_ENFORCE = new Set([
     'plugin.json',
+    'CHANGELOG.md',          // unblocked by FR-α2-e (Task #6)
     // 'README.md',          // unblock with FR-α1 + FR-α2-c
     // 'README-FULL.md',     // unblock with FR-α1 + FR-α2-d
     // 'session-context.js', // unblock with FR-α2-c (intro literal)
-    // 'CHANGELOG.md',       // unblock with FR-α2-e
   ]);
   const fatalOneLinerMismatches    = oneLinerReport.mismatches.filter((m) => ONE_LINER_ENFORCE.has(m.name));
   const advisoryOneLinerMismatches = oneLinerReport.mismatches.filter((m) => !ONE_LINER_ENFORCE.has(m.name));

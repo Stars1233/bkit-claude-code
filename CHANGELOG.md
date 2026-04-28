@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.11] - In Progress (branch: `feat/v2111-integrated-enhancement`)
+
+> **Status**: Sprint α (Onboarding Revolution) in progress. Sprint β / γ / δ pending.
+> **One-Liner (EN)**: The only Claude Code plugin that verifies AI-generated code against its own design specs.
+> **One-Liner (KO)**: AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
+
+### 🎯 Sprint α — Onboarding Revolution (in progress)
+
+첫 5분 경험 재설계: One-Liner Single Source of Truth(5곳 동기화), Agent Teams env 자동 검출, CC 버전 체크, First-Run 튜토리얼(Pencil Design Anchor pilot). CC v2.1.118+ recommended (79 consecutive compatible).
+
+### Added
+
+- **FR-α2-a**: `lib/infra/branding.js` — One-Liner SSoT (`ONE_LINER_EN` / `ONE_LINER_KO` exports, default = EN). Commit `d348f24`.
+- **FR-α2-b**: `.claude-plugin/plugin.json:description` synced to `ONE_LINER_EN`. Commit `d348f24`.
+- **FR-α2-f**: `lib/infra/docs-code-scanner.scanOneLiner()` + `scripts/docs-code-sync.js` integration. Incremental rollout via `ONE_LINER_ENFORCE` Set (today: `plugin.json` only; widens as FR-α1/α2-c/d/e/3 ship). 8 unit TC. Commit `c986228`.
+- **FR-α4**: `hooks/startup/preflight.js:checkAgentTeamsEnv()` — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 미설정 시 SessionStart additionalContext에 ⚠️ 경고 prepend. Commit `724b05c`.
+- **FR-α5**: `lib/infra/cc-version-checker.js` — two-strategy CC CLI version detection (`spawnSync('claude --version', timeout=500ms)` → `~/.claude/claude/version.json` fallback). `FEATURE_VERSION_MAP` 8 entries (incl. v2.1.118 ENH-277/279/280: hookMcpToolDirect / pluginTagCommand / agentHookMultiEvent). `DISABLE_UPDATES=1` env honored (F5 mitigation). Commit `724b05c`.
+
+### Changed
+
+- `hooks/session-start.js` — Sprint α preflight wiring: `hooks/startup/preflight.run()` 결과를 dashboard 직후 prepend. Fail-open via `try/catch + debugLog`.
+- `scripts/docs-code-sync.js` — report payload `oneLiner` + `oneLinerEnforce` 필드 추가. Drift 분류: enforced (CI-fatal) vs advisory (warn-only) vs pending (file missing).
+
+### Compatibility
+
+- CC CLI **v2.1.118+ recommended** (79 consecutive compatible since v2.1.34); v2.1.78+ minimum (warned via FR-α5).
+- Baseline: v2.1.10 (commit `f2c17f3`). Zero breaking changes for v2.1.10 users on upgrade.
+
+### Pending in Sprint α (subsequent commits)
+
+- FR-α1 + FR-α2-c/d: `README.md` ≤ 100 lines split + `README-FULL.md` 신규
+- FR-α3: First-Run AUQ tutorial + `.bkit/runtime/first-run-seen.json` (Pencil Design Anchor pilot)
+- Sprint α DoD: L2 integration 15 TC + L4 perf < 50 ms + `gap-detector` Match Rate ≥ 90%
+
+### Pending Sprint β / γ / δ
+
+- β (Discoverability): `/bkit explore`, `/bkit evals run`, error translation, `/pdca watch`, `/pdca fast-track`, language auto-detect
+- γ (Trust Foundation): Trust Score E2E closeout, Application Layer ADR + lifecycle pilot, L5 9-scenario, agent-hook multi-event survey (ENH-280)
+- δ (Port + Governance): MCP Port abstraction, M1-M10 catalog, trigger accuracy baseline, `/pdca token-report` + CAND-004 OTEL 3 누적, CC upgrade policy ADR, release automation (ENH-279)
+
+---
+
 ## [2.1.10] - 2026-04-22 (branch: `feat/v2110-integrated-enhancement`, pre-main-merge)
 
 > **Release discipline**: 본 섹션은 `git tag v2.1.10` + main 머지 직전의 스냅샷입니다. 48h 관찰 후 최종 릴리스 시 섹션 재정리 예정.
