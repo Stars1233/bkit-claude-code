@@ -5,45 +5,86 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.11] - In Progress (branch: `feat/v2111-integrated-enhancement`)
+## [2.1.11] - 2026-04-28 (branch: `feat/v2111-integrated-enhancement`)
 
-> **Status**: Sprint α (Onboarding Revolution) in progress. Sprint β / γ / δ pending.
+> **Status**: All 4 Sprints complete (α/β/γ/δ). 20 FRs implemented; gap-detector ≥ 92% per Sprint, average ~95%.
 > **One-Liner (EN)**: The only Claude Code plugin that verifies AI-generated code against its own design specs.
 > **One-Liner (KO)**: AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
 
-### 🎯 Sprint α — Onboarding Revolution (in progress)
+### 🎯 Sprint α — Onboarding Revolution
 
-첫 5분 경험 재설계: One-Liner Single Source of Truth(5곳 동기화), Agent Teams env 자동 검출, CC 버전 체크, First-Run 튜토리얼(Pencil Design Anchor pilot). CC v2.1.118+ recommended (79 consecutive compatible).
+첫 5분 경험 재설계: One-Liner Single Source of Truth(5곳 동기화), Agent Teams env 자동 검출, CC 버전 체크, First-Run 튜토리얼(Pencil Design Anchor pilot).
+
+- **FR-α1+α2-c/d**: `README.md` 100-line restructure + `README-FULL.md` separation. One-Liner header on both (`681e8ed`).
+- **FR-α2-a/b**: `lib/infra/branding.js` (`ONE_LINER_EN` / `ONE_LINER_KO`); `.claude-plugin/plugin.json:description` synced (`d348f24`).
+- **FR-α2-e**: CHANGELOG v2.1.11 block + 5-location BKIT_VERSION sync (`9fa1707`).
+- **FR-α2-f**: `docs-code-scanner.scanOneLiner()` + 5-location enforced drift detection (`c986228`).
+- **FR-α3**: First-Run AUQ tutorial (`hooks/startup/first-run.js`) + `.bkit/runtime/first-run-seen.json` idempotent marker + Pencil Design Anchor pilot (`be691c6`).
+- **FR-α4**: `hooks/startup/preflight.js:checkAgentTeamsEnv()` SessionStart warning when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset (`724b05c`).
+- **FR-α5**: `lib/infra/cc-version-checker.js` — 2-strategy detection + `FEATURE_VERSION_MAP` 8 entries (`724b05c`).
+
+### 🔍 Sprint β — Discoverability
+
+설치된 39 skills + 36 agents + evals 시스템을 사용자가 발견·활용 가능하도록 하는 6 FR.
+
+- **FR-β1**: `/bkit-explore` — `lib/discovery/explorer.js` + `skills/bkit-explore/SKILL.md`. 5-category tree + Level filter + listEvals (`aef5e36`).
+- **FR-β2**: `/bkit-evals` — `lib/evals/runner-wrapper.js` 안전 wrapper (skill regex, argv-form spawn, 30s timeout, `.bkit/runtime/evals-{skill}-{ts}.json`) + `skills/bkit-evals/SKILL.md` (`81b9048`).
+- **FR-β3**: 친화 에러 메시지 — `lib/i18n/translator.js` + `assets/error-dict.{en,ko}.json` (RD-5 narrowed scope: 9 cat × 1 default style × KO+EN full + 6 lang fallback) (`237e071`).
+- **FR-β4**: `/pdca-watch` — `lib/dashboard/watch.js` (read-only state tap, 30s `/loop` v2.1.71+, fallback E-β4-01) + `skills/pdca-watch/SKILL.md` (`58906e0`).
+- **FR-β5**: `/pdca-fast-track` — `lib/control/fast-track.js` (3 preconditions, `.bkit/runtime/fast-track-log.json` audit trail) + `skills/pdca-fast-track/SKILL.md` (`0fb0e1e`). Config block added to `bkit.config.json#control.fastTrack` (`e2851aa`).
+- **FR-β6**: 8-language auto-detect — `lib/i18n/detector.js` (`detectFromPrompt`, `mergeWithEnv`) (`7058a41`).
+- **L2 integration**: `test/integration/sprint-beta.test.js` 17 TC cross-FR scenarios (`03f04fc`).
+
+### 🔒 Sprint γ — Trust Foundation
+
+v2.1.10 잔존 R1/R2 risk 완전 종결 + L5 E2E 확장.
+
+- **FR-γ1**: Trust Score `reconcile()` public API + dead-code invariant. `scripts/check-trust-score-reconcile.js` 4-check CI gate (`e6bfe4c`).
+- **FR-γ2**: Application Layer pilot — `lib/application/pdca-lifecycle/{index,phases,transitions}.js` (PHASES enum + 19 legal transitions) + ADR 0005 (`docs/adr/0005-application-layer-pilot.md`). `lib/pdca/lifecycle.js` 변경 없음 (v2.1.12 shim 전환 carryover).
+- **FR-γ3**: L5 E2E 9-scenario — `test/e2e/pdca-full-cycle-9scenario.test.js` (Agent Teams skip-policy: scenarios 1+7 skip-if-no-env) (`c557e2e`).
+- **FR-γ4**: Agent-Hook multi-event grep 조사 → ADR 0004 (`docs/adr/0004-agent-hook-multi-event-deferral.md`) — 0 agent-type matchers, defer to v2.1.12 ENH-280 (`4597e92`).
+
+### ⚙️ Sprint δ — Port Extension & Governance
+
+v2.2.x 확장 기반.
+
+- **FR-δ1**: MCP Port abstraction — `lib/domain/ports/mcp-tool.port.js` (type-only, ENH-277 `CALL_PATHS=['skill','slash','hook']`) + `lib/infra/mcp-port-registry.js` (16 tools = 10 pdca + 6 analysis frozen) + 21 contract TC (`7af7d5b`).
+- **FR-δ2**: M1-M10 Quality Gates catalog — `docs/reference/quality-gates-m1-m10.md` + `scripts/check-quality-gates-m1-m10.js` 3-way SSoT invariant (catalog ↔ `bkit.config.json` ↔ runtime) (`84fd118`).
+- **FR-δ3**: Trigger accuracy 8-language baseline — `test/i18n/fixtures/prompts-{en,ko,ja,zh,es,fr,de,it}.json` (80 prompts) + `trigger-accuracy-baseline.json` frozen regression guard. EN/KO/JA/ZH 100%, DE 70%, ES/FR 30%, IT 20%. Aggregate 68.75%.
+- **FR-δ4**: `/pdca token-report` aggregator — `lib/pdca/token-report.js` (summary + byPhase + byModel + Top 5 + CAND-004 OTEL 3 attributes: I4-121 byStopReason/byFinishReason + F8-119+I6-119 byTool). `lib/infra/telemetry.js#sanitizeForOtel` 2-gate AND-logic (`OTEL_REDACT` + `OTEL_LOG_USER_PROMPTS`) (`fe1eee9`).
+- **FR-δ5**: CC upgrade policy ADR — `docs/adr/0006-cc-upgrade-policy.md` (5-outcome matrix, skip criteria, empirical validation gate) (`84fd118`).
+- **FR-δ6**: Release automation — `scripts/release-plugin-tag.sh` (BKIT_VERSION SoT verify + CI invariants + `claude plugin tag` wrapper, ENH-279) (`98b06b3`).
 
 ### Added
 
-- **FR-α2-a**: `lib/infra/branding.js` — One-Liner SSoT (`ONE_LINER_EN` / `ONE_LINER_KO` exports, default = EN). Commit `d348f24`.
-- **FR-α2-b**: `.claude-plugin/plugin.json:description` synced to `ONE_LINER_EN`. Commit `d348f24`.
-- **FR-α2-f**: `lib/infra/docs-code-scanner.scanOneLiner()` + `scripts/docs-code-sync.js` integration. Incremental rollout via `ONE_LINER_ENFORCE` Set (today: `plugin.json` only; widens as FR-α1/α2-c/d/e/3 ship). 8 unit TC. Commit `c986228`.
-- **FR-α4**: `hooks/startup/preflight.js:checkAgentTeamsEnv()` — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 미설정 시 SessionStart additionalContext에 ⚠️ 경고 prepend. Commit `724b05c`.
-- **FR-α5**: `lib/infra/cc-version-checker.js` — two-strategy CC CLI version detection (`spawnSync('claude --version', timeout=500ms)` → `~/.claude/claude/version.json` fallback). `FEATURE_VERSION_MAP` 8 entries (incl. v2.1.118 ENH-277/279/280: hookMcpToolDirect / pluginTagCommand / agentHookMultiEvent). `DISABLE_UPDATES=1` env honored (F5 mitigation). Commit `724b05c`.
+- 4 new ADRs (0004 agent-hook defer, 0005 Application Layer pilot, 0006 CC upgrade policy)
+- 13 new lib modules (branding, cc-version-checker, discovery/explorer, evals/runner-wrapper, i18n/{translator,detector}, dashboard/watch, control/fast-track, application/pdca-lifecycle/×3, infra/mcp-port-registry, pdca/token-report)
+- 9 new domain Port (mcp-tool.port joins existing 6) — 7 Port↔Adapter mappings now complete
+- 3 new CI invariant scripts (check-trust-score-reconcile, check-quality-gates-m1-m10, release-plugin-tag)
+- 4 new skills (bkit-explore, bkit-evals, pdca-watch, pdca-fast-track)
+- 261 v2.1.11-specific tests (L1 unit + L2 integration + L3 contract + L5 E2E)
 
 ### Changed
 
-- `hooks/session-start.js` — Sprint α preflight wiring: `hooks/startup/preflight.run()` 결과를 dashboard 직후 prepend. Fail-open via `try/catch + debugLog`.
-- `scripts/docs-code-sync.js` — report payload `oneLiner` + `oneLinerEnforce` 필드 추가. Drift 분류: enforced (CI-fatal) vs advisory (warn-only) vs pending (file missing).
+- `lib/infra/telemetry.js#sanitizeForOtel` — 2-gate logic for CAND-004 OTEL user-prompt attribute
+- `lib/control/trust-engine.js` — adds `reconcile()` public API
+- `bkit.config.json` — `control.fastTrack` block + `version: 2.1.11` (5-loc sync)
+
+### Carryovers (v2.1.12)
+
+- ENH-277: hook → MCP tool direct invocation pilot (audit-logger candidate)
+- ENH-278: autoMode `$defaults` (bkit doesn't use autoMode)
+- ENH-280: Agent-Hook multi-event expansion
+- Translator scope expansion: 11 missing categories + 4-style fan-out + 6-language full-quality
+- Fast-track `reconcileHistory[]` append
+- `lib/pdca/lifecycle.js` → shim conversion + 30+ consumer migration
+- Romance language (es/fr/it) detector accuracy improvement
+- ADR numbering cleanup (design ref'd 0002 but next free was 0006)
 
 ### Compatibility
 
 - CC CLI **v2.1.118+ recommended** (79 consecutive compatible since v2.1.34); v2.1.78+ minimum (warned via FR-α5).
 - Baseline: v2.1.10 (commit `f2c17f3`). Zero breaking changes for v2.1.10 users on upgrade.
-
-### Pending in Sprint α (subsequent commits)
-
-- FR-α1 + FR-α2-c/d: `README.md` ≤ 100 lines split + `README-FULL.md` 신규
-- FR-α3: First-Run AUQ tutorial + `.bkit/runtime/first-run-seen.json` (Pencil Design Anchor pilot)
-- Sprint α DoD: L2 integration 15 TC + L4 perf < 50 ms + `gap-detector` Match Rate ≥ 90%
-
-### Pending Sprint β / γ / δ
-
-- β (Discoverability): `/bkit explore`, `/bkit evals run`, error translation, `/pdca watch`, `/pdca fast-track`, language auto-detect
-- γ (Trust Foundation): Trust Score E2E closeout, Application Layer ADR + lifecycle pilot, L5 9-scenario, agent-hook multi-event survey (ENH-280)
-- δ (Port + Governance): MCP Port abstraction, M1-M10 catalog, trigger accuracy baseline, `/pdca token-report` + CAND-004 OTEL 3 누적, CC upgrade policy ADR, release automation (ENH-279)
 
 ---
 
