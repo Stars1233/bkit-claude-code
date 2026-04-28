@@ -275,6 +275,19 @@ try {
 
 const { BKIT_VERSION } = require('../lib/core/version');
 
+// --- v2.1.11 Sprint α (FR-α3-b/c): First-Run AUQ tutorial ---
+// On the very first session in a project, show a 3-option AUQ that introduces
+// bkit. The marker `.bkit/runtime/first-run-seen.json` is created on exposure
+// (idempotent). When this prompt is active it takes priority over the existing
+// onboarding userPrompt — first impression > resume.
+let firstRunPayload = null;
+try {
+  const firstRun = require('./startup/first-run');
+  firstRunPayload = firstRun.run();
+} catch (e) {
+  debugLog('SessionStart', 'first-run module failed', { error: e.message });
+}
+
 const response = {
   systemMessage: `bkit Vibecoding Kit v${BKIT_VERSION} activated (Claude Code)`,
   hookSpecificOutput: {
@@ -286,8 +299,10 @@ const response = {
     matchRate: onboardingContext.onboardingData.matchRate || null,
     additionalContext: additionalContext,
     sessionTitle,
-    // v2.1.1 H-01: Pass AskUserQuestion payload from onboarding
-    userPrompt: onboardingContext.onboardingData.userPrompt || undefined,
+    // v2.1.11 FR-α3 takes priority on first run; otherwise v2.1.1 H-01 onboarding prompt
+    userPrompt: (firstRunPayload && firstRunPayload.userPrompt)
+      || onboardingContext.onboardingData.userPrompt
+      || undefined,
   }
 };
 
