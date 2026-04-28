@@ -15,6 +15,8 @@ const { getUIConfig } = require('../../lib/core/config');
 const { applyBudget } = require('../../lib/core/context-budget');
 // v2.1.10 (ENH-167 완결): 하드코딩된 "v2.1.9" 제거 — BKIT_VERSION 중앙화 사용
 const { BKIT_VERSION } = require('../../lib/core/version');
+// v2.1.11 (FR-α2-c): One-Liner SSoT — surfaces bkit identity in SessionStart intro
+const { ONE_LINER_EN } = require('../../lib/infra/branding');
 
 /**
  * Build onboarding context section.
@@ -392,7 +394,8 @@ function build(_input, context) {
   }
 
   // v2.1.10 (ENH-167): 하드코딩 제거, BKIT_VERSION 사용
-  const header = `# bkit Vibecoding Kit v${BKIT_VERSION} - Session Startup\n\n`;
+  // v2.1.11 (FR-α2-c): + One-Liner verbatim for SSoT compliance and first-run identity
+  const header = `# bkit Vibecoding Kit v${BKIT_VERSION} - Session Startup\n\n> ${ONE_LINER_EN}\n\n`;
 
   if (!_ciEnabled) {
     return header;

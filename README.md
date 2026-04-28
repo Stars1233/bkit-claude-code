@@ -1,633 +1,74 @@
-# bkit - Vibecoding Kit
+# bkit — AI Native Development OS
+
+> The only Claude Code plugin that verifies AI-generated code against its own design specs.
+>
+> AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.116+-purple.svg)](https://code.claude.com)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.118+-purple.svg)](https://code.claude.com)
 [![Version](https://img.shields.io/badge/Version-2.1.11-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
-> **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
-
-bkit is a Claude Code plugin that transforms how you build software with AI. It provides structured development workflows, automatic documentation, and intelligent code assistance through the PDCA (Plan-Do-Check-Act) methodology.
-
-![bkit Introduction](images/bkit-intro.png)
-
 ---
 
-## What is Context Engineering?
+## What bkit gives you
 
-**Context Engineering** is the systematic curation of context tokens for optimal LLM inference—going beyond simple prompt crafting to build entire systems that consistently guide AI behavior.
+bkit turns AI-driven coding into a verified PDCA workflow. You describe intent, bkit drives **Plan → Design → Do → Check → Act**, and `gap-detector` closes the loop by comparing the design back against the implementation.
 
-```
-Traditional Prompt Engineering:
-  "The art of writing good prompts"
+**Verified, not just generated**:
 
-Context Engineering:
-  "The art of designing systems that integrate prompts, tools, and state
-   to provide LLMs with optimal context for inference"
-```
+- **PDCA as a real state machine** — 20 transitions, L0-L4 automation, M1-M10 quality gates
+- **Match Rate ≥ 90%** between design specs and shipped code, enforced by `gap-detector`; sub-90 triggers `pdca-iterator` auto-improvement (max 5 cycles)
+- **CTO-Led Agent Teams** orchestrate `pm-lead` / `qa-lead` / `pdca-iterator` for non-trivial work
+- **Defense-in-Depth 4-layer** — CC sandbox → bkit PreToolUse hooks → audit-logger sanitizer (OWASP A03/A08) → Token Ledger NDJSON
+- **Docs=Code CI** keeps README · CHANGELOG · plugin manifest · hooks · session intro in lockstep, plus a 5-location One-Liner SSoT and a 5-location BKIT_VERSION invariant
+- **Invocation Contract L1~L5** — 226 assertions guarding skill/agent/hook surface across releases
 
-**bkit is a practical implementation of Context Engineering**, providing a systematic context management system for Claude Code.
-
-### bkit's Context Engineering Architecture
-
-![bkit Context Engineering Architecture](images/bkit-architecture.png)
-
-bkit implements Context Engineering through three interconnected layers:
-
-| Layer | Components | Purpose |
-|-------|------------|---------|
-| **Domain Knowledge** | 39 Skills | Structured expert knowledge (phases, levels, specialized domains) |
-| **Behavioral Rules** | 36 Agents | Role-based constraints with model selection (opus/sonnet/haiku) |
-| **State Management** | 128 Lib Modules (~27,085 LOC) across 15 subdirs | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination, 3-Layer Orchestration (Sprint 7), Clean Architecture 4-Layer (Domain/Application/Infrastructure/Presentation) |
-
-### 6-Layer Hook System
-
-Context injection occurs at six distinct layers:
-
-```
-Layer 1: hooks.json (Global)     → SessionStart, UserPromptSubmit, PreCompact, PostCompact, PreToolUse, PostToolUse, Stop, StopFailure + 13 more (21 events)
-Layer 2: Skill Frontmatter       → Domain-specific hooks (deprecated in v1.4.4, use hooks.json)
-Layer 3: Agent Frontmatter       → Task-specific hooks with constraints
-Layer 4: Description Triggers    → Semantic matching in 8 languages
-Layer 5: Scripts (42 modules)    → Actual Node.js execution logic with unified handlers
-Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state management
-```
-
-> **Learn more**: See [Context Engineering Principles](bkit-system/philosophy/context-engineering.md) for detailed implementation.
-
----
-
-## Features
-
-![bkit Features](images/bkit-features.png)
-
-- **Integrated Enhancement — Clean Architecture + Defense-in-Depth + Invocation Contract + 3-Layer Orchestration (v2.1.10)** — Sprint 0~7 complete. **Clean Architecture 4-Layer** (Domain: 11 modules = 6 ports + 4 guards + 1 rules, 0 forbidden imports CI-enforced; Application: cc-regression 8 modules + pdca + team; Infrastructure: cc-bridge + telemetry + docs-code-scanner + mcp-test-harness; Presentation: hooks + scripts). **Port↔Adapter mapping 6 complete** (cc-payload↔cc-bridge, state-store, regression-registry, audit-sink↔telemetry, token-meter, docs-code-index). **Guard Registry** 21 guards + `lifecycle.reconcile()` auto-release (`expectedFix` seed × 4). **Invocation Contract L1~L5**: 226 assertions (L1 + L4 CI-gated) + L2 hook attribution 13 TC + L3 MCP stdio runtime 42 TC (real spawn + tools/list) + L5 E2E shell smoke 5 scenarios. **Defense-in-Depth 4-Layer** formalized: Layer 1 (CC Built-in sandbox) → Layer 2 (bkit PreToolUse Hook: `pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 (audit-logger OWASP A03/A08 sanitizer, 7-key PII redaction) → Layer 4 (Token Ledger `.bkit/runtime/token-ledger.json` NDJSON). **Docs=Code CI** (`scripts/docs-code-sync.js`, 0 drift, 8 counts + **BKIT_VERSION 5-location invariant**). **Sprint 7 3-Layer Orchestration** (`lib/orchestrator/` 5 modules = intent-router + next-action-engine + team-protocol + workflow-state-machine + index, 19 exports): SKILL_TRIGGER_PATTERNS 4→15, matchRate SSoT 100→90, Enterprise teammates 5→6, Trust Score level auto-reflect restored, `cto-lead` body 5 Task spawn examples + `Task(pm-lead)` / `Task(qa-lead)` / `Task(pdca-iterator)` in frontmatter, 79 `@version` bulk refresh to 2.1.10. **BKIT_VERSION centralization complete** (ENH-167, `bkit.config.json` single SoT; 5-location invariant: plugin.json / hooks.json / session-start.js / README / CHANGELOG). **ENH-202** `context: fork` 1→9 skills. **Legacy 3 modules removed** (421 LOC). **audit-logger 682GB recursion** root-fixed (`createDualSink` avoidance + Integration Runtime TC permanent defense). **Critical Bug C1/C2 fix** (`startDate`→`date`, PII 6-key blacklist + 500-char cap). **Domain purity CI** (`check-domain-purity.js`, 11 files / 0 forbidden imports: fs/child_process/net/http/https/os). **PreCompact counter** (ENH-247/257, 2-week measurement). **Hook attribution** 3 sites (Stop/SessionEnd/SubagentStop). **6 Validator CLIs**: `check-guards` / `docs-code-sync` / `check-deadcode` / `check-domain-purity` / `l3-mcp-runtime` / `test/e2e/run-all.sh`. Architecture: **39 Skills, 36 Agents, 21 Hook Events (24 blocks), 16 MCP Tools, 2 MCP Servers, 128 Lib Modules (~27,085 LOC across 15 subdirs), 47 Scripts, 113 test files, 3,762 TC** (3,760 PASS / 0 FAIL / 2 expected legacy). CC recommended v2.1.117+ (**75 consecutive compatible releases**). Invocation Contract 100% preserved + Starter/Dynamic/Enterprise zero-action update. MEMORY.md 302→79 lines decomposed (detail: `cc_version_history_v21xx.md` / `enh_backlog.md` / `github_issues_monitor.md`).
-- **CC v2.1.116 Response + 4 ENH + Docs=Code 100% Sync (v2.1.9)** - 4 ENH shipping: **ENH-253** zero-script-qa `context: fork` macOS verification (Issue [#51165](https://github.com/anthropics/claude-code/issues/51165) non-reproduction on macOS, ENH-196/202 investment protected), **ENH-254** Defense-in-Depth security architecture formalization (Layer 1 CC runtime sandbox × Layer 2 bkit `DANGEROUS_PATTERNS` hook, `docs/03-analysis/security-architecture.md`), **ENH-259** Custom Skills data loss warning for Issue [#51234](https://github.com/anthropics/claude-code/issues/51234) (`CUSTOMIZATION-GUIDE.md` backup/restore/plugin-path guidance — bkit plugin itself unaffected at `${CLAUDE_PLUGIN_ROOT}/skills/`), **ENH-263** Docs=Code 15-file architectural correction (`@version 1.6.0` in lib/: **0 matches** — ENH-270 acceptance). Positive drift: **ENH-264** `lib/core/io.js` `outputBlockWithContext` infrastructure + 2 call sites in `unified-bash-pre.js` (deploy/QA phase paths), **ENH-265** `ENABLE_PROMPT_CACHING_1H` SessionStart branch + operational guide (`docs/03-analysis/prompt-caching-optimization.md`, 30-40% token savings on long PDCA sessions). Architecture: **39 Skills, 36 Agents, 43 Scripts, 101 Lib modules (11 subdirs), 21 Hook Events, 18 Templates, 4 Output Styles, 2 MCP Servers**. CC recommended v2.1.116+ (**74 consecutive compatible releases**, v2.1.115 skipped). Shipping QA: **Match Rate 100% / Coverage 90.3% / P0 Blocker 0 / Regression 0** (`docs/05-qa/cc-v2114-v2116-shipping-readiness.report.md`).
-- **Issue #81 Hotfix + Docs=Code Philosophy Restoration (v2.1.8)** - P0 `session-context.js` guard restored (ENH-238, ENH-226 Docs=Code violation fixed — `ui.contextInjection.enabled` + `sections[]` 3-way toggle mirrors `ui.dashboard` pattern), P0 compaction SHA-256 fingerprint dedup lock (ENH-239, `lib/core/session-ctx-fp.js` — prevents PreCompact re-fire duplicate injection, 1h TTL, GC 30d/LRU 100), P1 PersistedOutputGuard (ENH-240, `lib/core/context-budget.js` — CC 10,000-char cap defense with 8,000-char hard cap + priority-preserved truncation), P3 `hooks/hooks.json` `once: true` ADR documented in `docs/context-engineering.md` (ENH-244), Iterate-discovered `getUIConfig()` bug fixed (3 new fields exposed in `lib/core/config.js`), CC v2.1.111+ recommended (72 consecutive compatible releases), 11 files +641 LOC changed, 25 new TCs + 43 regression TCs = **74 PASS / 0 FAIL**, Match Rate **100%**. Additional: 16 bug fixes consolidated from 10-agent QA Discovery methodology (11 core bugs B1~B11 + 5 Q10-review findings B12~B16), 24 new QA TCs, 239 total PASS / 1 FAIL (pre-existing), ENH-167 partial (BKIT_VERSION centralization in paths.js + MCP servers)
-- **Issue #79 Hotfix + PDCA Workflow Stabilization (v2.1.7)** - P0 `updatePdcaStatus` argument order fix (`skill-post.js:229`), P0 full-auto chain completion (`generateAutoTrigger` report/completed phase added to `automation.js`), P1 phantom feature prevention (`pre-write.js` active feature guard), P2 gap-detector analysis document auto-generation (`gap-detector-stop.js`), `pdca-skill-stop.js` `[PDCA-COMPLETE]` directive for report phase, CC v2.1.110+ recommended (71 consecutive compatible releases), 5 files ~54 LOC changed
-- **Issue #77 Hotfix + v2.1.6 Maintenance Release (v2.1.6)** - P0 GitHub Issue #77 hotfix: Claude Code auto-session-title preservation through single-source `lib/pdca/session-title.js`, phase-change-only emission (6→1 per message, ≈83% reduction), 3-way UI opt-out (`ui.{sessionTitle,dashboard,contextInjection}.enabled` in bkit.config.json), stale feature TTL (24h default) auto-cleanup; PreCompact `decision:block` on PDCA `do/check/act` phases; output-styles audit script (CC v2.1.107 regression #47482 defense); BKIT_VERSION dynamic lookup (Docs=Code); **3268/3268 tests PASS (99.6%, 0 FAIL)**, 69 consecutive compatible releases (v2.1.34~v2.1.108)
-- **Comprehensive Test Strategy + CC v2.1.96 Compatibility (v2.1.0)** - 12-perspective test framework (unit/integration/e2e/behavioral/functional/API/security/UX/performance/contract + 2 new categories), 53 new test files (+658 TC, total ~4,028 TC), 100% export coverage (607/607), 4 critical security fixes (path traversal, symlink, null byte, checkpoint integrity), trust-engine/audit-logger bug fixes, 3 test helpers (hook-runner, mcp-client, temp-dir), ENH-188 frontmatter hooks dual-fire prevention (24 components), CC v2.1.96+ recommended, 61 consecutive compatible releases (v2.1.34~v2.1.96)
-- **CC v2.1.86 Compatibility + Skills Discoverability (v2.0.8)** - 34 skills description optimized for 250-char cap (/skills listing), Hook `if` conditional field documentation (CC v2.1.85+), Enterprise org policy documentation, CC v2.1.86+ recommended, 52 consecutive compatible releases (v2.1.34~v2.1.86)
-- **Living Context System + Self-Healing + PDCA Handoff Fix (v2.0.6)** - 4-Layer Living Context (`lib/context/` 7 modules), Self-Healing agent (opus) for automated error recovery, Deploy skill with 3-environment state machine, PDCA Handoff Loss Fix Phase 2+3 (PRD→Code context preservation 30-40% → 75-85%), 11 infrastructure templates (ArgoCD, Terraform, observability), 72 lib modules, 37 skills, 32 agents, 59 scripts
-- **PM Skills Integration + Interactive Checkpoints (v2.0.3)** - PM Agent Team expanded from 9→43 frameworks ([pm-skills](https://github.com/phuryn/pm-skills) MIT), PDCA Interactive Checkpoints 1~5 (AskUserQuestion-gated), code-analyzer Confidence-Based Filtering (≥80%), Design phase 3 Architecture Options (Minimal/Clean/Pragmatic), btw CTO Team Integration, pm-prd template v2.0 with Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Growth Loops)
-- **Cross-Project Isolation Fix (v2.0.1)** - PLUGIN_DATA backup/restore project identity guard via meta.json, globalCache project namespace, prevents cross-project PDCA state leakage ([#48](https://github.com/popup-studio-ai/bkit-claude-code/issues/48))
-- **AI Native Development OS (v2.0.0)** - Declarative PDCA state machine (20 transitions), YAML workflow DSL (3 presets), L0-L4 controllable AI automation, CLI dashboard (progress-bar, workflow-map, control-panel), audit logging + decision tracing, quality gates (7 stages), checkpoint/rollback, destructive operation detector (8 rules), MCP servers (bkit-pdca + bkit-analysis), 3,175+ TC, ~620+ exports, 88 lib modules, 37 skills, 32 agents, 20 hook events
-- **CC v2.1.78 Full Integration (v1.6.2)** - 14 ENH items (ENH-117~130), PostCompact/StopFailure hooks, ${CLAUDE_PLUGIN_DATA} persistent backup, agent effort/maxTurns, 1M context default, 128K output, 1186 TC (99.7%), 260+ exports, 54 scripts, CC v2.1.78 recommended
-- **CTO Orchestration Redesign + Quality Hardening (v1.6.1)** - Main Session as CTO pattern (CC v2.1.69+ compatibility), P0 bug fixes (4), Config-Code synchronization, 3-Tier Agent Security Model, 1073 TC comprehensive test (99.6% pass), CE Level 5 assessment (88/100), 72 files ~1,400 LOC
-- **Skills 2.0 Complete Integration (v1.6.0)** - 19 ENH items (ENH-85~103), Skill Evals framework with 28 eval definitions, Skill Classification (Workflow/Capability/Hybrid), A/B testing, template-validator, frontmatter hooks migration, context:fork deprecation, PM Agent Team integration
-- **Executive Summary & Preview UX (v1.5.9)** - Auto-generated 4-perspective summaries (Problem/Solution/Function & UX Effect/Core Value), AskUserQuestion with rich Markdown previews, ENH-74~81 CC v2.1.69 compatibility, 199 exports
-- **Studio Support & Path Registry (v1.5.8)** - Centralized state file path management (`lib/core/paths.js`), PDCA doc path registry, config cleanup (dead keys removed, missing keys added), state directory migration to `.bkit/{state,runtime,snapshots}/`, auto-migration with EXDEV fallback, 190 exports
-- **/simplify + /batch PDCA Integration (v1.5.7)** - CC built-in /simplify and /batch commands integrated into PDCA Check→Report flow, CC_COMMAND_PATTERNS 8-language awareness, HTTP Hooks documentation, English conversion for 3 stop scripts
-- **Auto-Memory Integration (v1.5.6)** - CC v2.1.59 auto-memory official support, /copy guidance, multi-agent memory optimization, ENH-48~51 enhancements, 186 exports
-- **Plan Plus Skill (v1.5.5)** - Brainstorming-enhanced PDCA planning with intent discovery, alternatives exploration, and YAGNI review
-- **bkend MCP Accuracy Fix (v1.5.4)** - MCP tool coverage 19→28+, accurate tool names, dynamic Base URL, search_docs workflow
-- **Team Visibility & State Writer (v1.5.3)** - Agent Teams state management with `.bkit/agent-state.json` for Studio IPC
-- **SubagentStart/SubagentStop Hooks (v1.5.3)** - 2 new hook events for agent lifecycle tracking (10 hook events total)
-- **Output Styles Auto-Discovery (v1.5.3)** - `outputStyles` in plugin.json + 4th style `bkit-pdca-enterprise`
-- **CTO-Led Agent Teams (v1.5.1)** - CTO agent orchestrates parallel PDCA execution with multi-agent teams (Dynamic: 3, Enterprise: 5 teammates)
-- **Output Styles (v1.5.1)** - Level-based response formatting (bkit-learning, bkit-pdca-guide, bkit-enterprise, bkit-pdca-enterprise)
-- **Agent Memory (v1.5.1)** - Cross-session context persistence for all 32 agents (auto-active)
-- **Natural Feature Discovery (v1.5.1)** - Auto-trigger integration aligned with "Automation First" philosophy
-- **Task Management + PDCA Integration (v1.4.7)** - Task Chain Auto-Creation, Task ID Persistence, Check↔Act Iteration
-- **Core Modularization (v1.4.7)** - lib/common.js split into 5 modules (lib/core/, lib/pdca/, lib/intent/, lib/task/, lib/team/)
-- **Context Engineering (v1.4.4)** - Systematic context curation with 7 library modules and unified hook system
-- **PDCA Methodology** - Structured development workflow with automatic documentation
-- **PDCA Skill Integration (v1.4.4)** - Unified `/pdca` skill with 8 actions (plan, design, do, analyze, iterate, report, status, next)
-- **Evaluator-Optimizer Pattern** - Automatic iteration cycles from Anthropic's agent architecture
-- **9-Stage Development Pipeline** - From schema design to deployment
-- **3 Project Levels** - Starter (static), Dynamic (fullstack), Enterprise (microservices)
-- **Multilingual Support** - 8 languages (EN, KO, JA, ZH, ES, FR, DE, IT)
-- **39 Skills** - Domain-specific knowledge (Workflow / Capability / Hybrid classification; see bkit-system for counts)
-- **36 Agents** - Specialized AI assistants (opus / sonnet / haiku; see bkit-system for model distribution) including CTO/PM Team + PDCA Eval agents
-- **113 Test Files** - 3,762 test cases (3,760 PASS / 0 FAIL / 2 expected legacy) across 12 categories with Invocation Contract L1-L5 (226 assertions CI-gated)
-- **47 Hook Scripts** - Hook execution with unified handlers across 21 event types (24 blocks)
-- **128 Lib Modules** - ~27,085 LOC across 15 subdirectories (audit, cc-regression, context, control, core, domain, infra, intent, orchestrator, pdca, qa, quality, task, team, ui) — Clean Architecture 4-Layer
-- **Check-Act Iteration Loop** - Automatic gap analysis and fix cycles with max 5 iterations (90% threshold)
-- **12-Category Test Suite** - Unit, integration, E2E, behavioral, contract, security, performance, UX, philosophy, architecture, controllable-AI, regression (113 files, 3,762 TC in qa-aggregate scope)
-
----
-
-## Skill Evals: Data-Driven Skill Quality Management
-
-Claude Code introduced **Skill Evals** in Skills 2.0—a framework for measuring skill quality through automated testing. bkit extends this concept into a **complete skill lifecycle management system** that answers a question no other plugin addresses: *"Are my skills still worth keeping?"*
-
-### What Are Skill Evals?
-
-Skill Evals run automated quality checks against skills by sending test prompts and comparing outputs against expected results. Think of them as **unit tests for AI skills**—they catch regressions when models update and measure whether a skill still adds value.
-
-### How bkit Enhances Skill Evals
-
-bkit builds three layers on top of Claude Code's native Evals:
-
-| Layer | Claude Code Native | bkit Enhancement |
-|-------|-------------------|------------------|
-| **Eval Execution** | Basic eval runner | `evals/runner.js` with benchmark mode, 29 pre-built eval definitions |
-| **A/B Testing** | Not available | `evals/ab-tester.js` compares skill performance across models (e.g., Sonnet 4.6 vs Opus 4.6) |
-| **Skill Classification** | Not available | All 39 skills classified as Workflow / Capability / Hybrid with deprecation-risk scoring (v2.1.10 scope) |
-
-```
-evals/
-├── config.json              # Global settings (thresholds, classifications)
-├── runner.js                # Eval execution engine (CLI + module)
-├── reporter.js              # Markdown/JSON result reporting
-├── ab-tester.js             # Model comparison + parity testing
-├── workflow/{10 skills}/     # Eval definitions for permanent skills
-├── capability/{18 skills}/  # Eval definitions for model-dependent skills
-└── hybrid/{1 skill}/        # Eval definitions for single dual-purpose skill
-```
-
-### Skill Classification & Lifecycle
-
-Not all skills age the same way. bkit classifies each skill to manage its lifecycle:
-
-| Classification | Count | Purpose | What Evals Measure |
-|---------------|:-----:|---------|-------------------|
-| **Workflow** | 17 | Process automation (PDCA, pipelines) | Quality regression only—these skills are permanent |
-| **Capability** | 18 | Model ability augmentation (mockups, APIs) | **Parity testing**—can the model match this skill's output without it? |
-| **Hybrid** | 1 | Both process + capability | Both regression and parity |
-
-When a model upgrade makes a Capability skill redundant, the **Model Parity Test** detects it:
+## Quick start
 
 ```bash
-# Does the model now produce equivalent results without this skill?
-node evals/ab-tester.js --parity phase-3-mockup --model claude-opus-4-6
+# 1. Install via Claude Code marketplace
+claude plugin install bkit
 
-# Compare skill performance between two models
-node evals/ab-tester.js --skill pdca --modelA claude-sonnet-4-6 --modelB claude-opus-4-6
+# 2. (Optional) Enable Agent Teams for the cto-lead orchestration
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
-# Run all 29 skill evaluations
-node evals/runner.js --benchmark
+# 3. In Claude Code, drive a feature end-to-end
+/pdca pm my-feature       # PM Discovery → PRD
+/pdca plan my-feature     # PDCA Plan
+/pdca design my-feature   # PDCA Design
+/pdca do my-feature       # Implementation
+/pdca check my-feature    # gap-detector → Match Rate
+/pdca act my-feature      # Completion report
 ```
 
-### What Changes for Users
-
-| Before (v1.5.9) | After (v1.6.1 with Evals) |
-|-----------------|--------------------------|
-| 28 skills, no quality measurement | 37 skills, 29 with automated eval definitions |
-| No way to know if a skill degraded after model update | Benchmark detects regression across all skills |
-| Manual judgment on skill usefulness | Data-driven deprecation recommendations |
-| Skills accumulate indefinitely | Skill lifecycle: create → eval → deprecate → remove |
-| "Does this skill help?" is a guess | Parity test gives a quantified answer |
-
-### Integration with PDCA
-
-Skill Evals connect directly to bkit's PDCA workflow:
-
-- **Skill Creator** (`skill-creator/`) generates new skills with eval templates pre-included
-- **Template Validator** ensures PDCA documents maintain required sections
-- **Classification metadata** in every SKILL.md frontmatter enables automated lifecycle decisions
-- **Quarterly benchmarks** track skill quality trends over time
-
-> **Philosophy**: bkit's third principle is *"No Guessing."* Skill Evals replace intuition with measurement—you never have to guess whether a skill is still earning its place in your workflow.
-
----
-
-### New to Claude Code?
-
-> **First time using Claude Code?**
->
-> Start with [bkit-starter](https://github.com/popup-studio-ai/bkit-starter)!
->
-> - Beginner-friendly guide
-> - No programming experience required
-> - Build your first project hands-on
->
-> ```bash
-> /plugin enable bkit-starter
-> ```
->
-> bkit is the advanced extension designed for users who have mastered bkit-starter.
-
----
-
-## Requirements
-
-| Requirement | Minimum Version | Notes |
-|-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.10 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events (24 blocks), 2 MCP servers + 16 tools, Clean Architecture Domain layer, and ${CLAUDE_PLUGIN_DATA}. Recommended: **v2.1.117+** (75 consecutive compatible releases, includes Defense-in-Depth 4-Layer + Invocation Contract 226 assertions). |
-| Node.js | v18+ | For hook script execution |
-| Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
-
-> **Troubleshooting**: If you see `"Failed to load hooks"` error after installation, update Claude Code to the latest version:
-> ```bash
-> claude update
-> ```
-
-> ⚠️ **CC v2.1.116 Users — Custom Skills Data Loss Warning**
->
-> On CC v2.1.113+ first-run, the `~/.claude/skills/` directory may be silently deleted ([#51234](https://github.com/anthropics/claude-code/issues/51234)).
-> - ✅ bkit plugin itself is unaffected (uses `${CLAUDE_PLUGIN_ROOT}/skills/`)
-> - ⚠️ If you keep user custom skills there, **back up before upgrading**:
->   ```bash
->   cp -R ~/.claude/skills ~/.claude/skills.backup.$(date +%Y%m%d)
->   ```
-> - Full guide: [CUSTOMIZATION-GUIDE.md — Custom Skills Data Loss Warning](./CUSTOMIZATION-GUIDE.md#custom-skills-data-loss-warning-cc-v21116-users)
-
----
-
-## Quick Start
-
-> **Note**: bkit is designed for **Claude Code**. For Gemini CLI, see [bkit-gemini](https://github.com/popup-studio-ai/bkit-gemini).
-
-### Option 1: Marketplace Installation (Recommended)
-
-The easiest way to install bkit is through the Claude Code marketplace.
-
-```bash
-# Step 1: Add bkit marketplace
-/plugin marketplace add popup-studio-ai/bkit-claude-code
-
-# Step 2: Install bkit plugin
-/plugin install bkit
-```
-
-#### Managing Marketplaces
-
-Use `/plugin` command and navigate to **Marketplaces** tab to manage your plugin sources:
-
-![bkit Marketplace](images/bkit-marketplace.png)
-
-- **bkit-marketplace**: Contains bkit and bkit-starter plugins
-- **claude-plugins-official**: Official Anthropic plugins
-
-#### Discovering Plugins
-
-Navigate to **Discover** tab to browse and install available plugins:
-
-![bkit Marketplace Plugins](images/bkit-marketplace-plugins.png)
-
-| Plugin | Description | Best For |
-|--------|-------------|----------|
-| **bkit** | Full PDCA methodology + Claude Code mastery | Experienced developers |
-| **bkit-starter** | Korean learning guide for beginners | First-time Claude Code users |
-
-#### Auto-Update Configuration
-
-Keep your plugins up-to-date automatically by configuring auto-update in your settings:
-
-```json
-// ~/.claude/settings.json
-{
-  "plugins": {
-    "autoUpdate": true
-  }
-}
-```
-
-**Update Commands:**
-- Press `u` in the Marketplaces view to update all plugins
-- Press `r` to remove a marketplace
-- Use `Space` to toggle plugin selection in Discover view
-
-### Plugin Structure
-
-```
-bkit-claude-code/
-├── .claude-plugin/
-│   ├── plugin.json          # Claude Code plugin manifest
-│   └── marketplace.json     # Marketplace registry
-├── agents/                  # Specialized AI agents
-├── commands/                # CLI command definitions
-├── skills/                  # Domain knowledge
-├── hooks/                   # Event hooks (hooks.json)
-├── evals/                   # Skill eval definitions & runner
-├── scripts/                 # Hook execution scripts
-├── servers/                 # MCP servers (bkit-pdca, bkit-analysis)
-├── lib/                     # Shared utilities (128 modules across 15 subdirs — Clean Architecture 4-Layer)
-├── output-styles/           # Level-based response formatting
-├── templates/               # Document templates
-└── bkit.config.json         # Centralized configuration
-```
-
----
-
-## Customization
-
-After installing bkit via the marketplace, you can customize any component by copying it to your project's `.claude/` folder.
-
-> **Comprehensive Guide**: See **[CUSTOMIZATION-GUIDE.md](CUSTOMIZATION-GUIDE.md)** for detailed instructions on customizing bkit for your organization, including platform-specific paths, component examples, and license attribution requirements.
-
-### How It Works
-
-Claude Code searches for configuration files in this priority order:
-1. **Project `.claude/`** (highest priority - your customizations)
-2. **User `~/.claude/`**
-3. **Plugin installation** (default)
-
-### Customization Steps
-
-```bash
-# Step 1: Find the plugin installation location
-ls ~/.claude/plugins/bkit/
-
-# Step 2: Copy only the files you want to customize
-mkdir -p .claude/skills/starter
-cp ~/.claude/plugins/bkit/skills/starter/SKILL.md .claude/skills/starter/
-
-# Step 3: Edit the copied file in your project
-# Your project's .claude/skills/starter/SKILL.md will override the plugin's version
-
-# Step 4: Commit to version control (optional)
-git add .claude/
-git commit -m "feat: customize bkit starter skill"
-```
-
-### Available Components for Customization
-
-| Component | Location | Description |
-|-----------|----------|-------------|
-| **Skills** | `~/.claude/plugins/bkit/skills/` | Domain knowledge, context and slash commands (e.g., `/pdca plan`) |
-| **Agents** | `~/.claude/plugins/bkit/agents/` | Specialized AI assistants |
-| **Templates** | `~/.claude/plugins/bkit/templates/` | Document templates |
-| **Scripts** | `~/.claude/plugins/bkit/scripts/` | Hook scripts |
-| **Config** | `~/.claude/plugins/bkit/bkit.config.json` | Central configuration |
-
-### Important Notes
-
-- **Customized files don't receive plugin updates.** When bkit is updated, your customized files remain unchanged while non-customized files are updated automatically.
-- **Check the [CHANGELOG](CHANGELOG.md)** periodically for updates that might affect your customizations.
-- **Delete a customized file** to revert to the plugin's default version.
-- **Attribution required**: When creating derivative plugins, follow the [License & Attribution](CUSTOMIZATION-GUIDE.md#license--attribution) guidelines.
-
----
-
-## Usage
-
-### Start Learning
-```bash
-/claude-code-learning
-```
-
-### Initialize a Project
-```bash
-/starter      # Static website (Starter level)
-/dynamic      # Fullstack with BaaS (Dynamic level)
-/enterprise   # Microservices with K8s (Enterprise level)
-```
-
-### PDCA Workflow (v2.0.3)
-
-> **v2.0.3**: Each phase now includes Interactive Checkpoints that pause for user confirmation before proceeding. Plan confirms requirements, Design presents 3 architecture options, Do confirms implementation scope, Check offers fix strategy choices.
-
-```bash
-/pdca pm {feature}       # PM analysis & PRD generation (43 frameworks)
-/pdca plan {feature}     # Create plan document (Checkpoint 1-2)
-/pdca design {feature}   # Create design document (Checkpoint 3: 3 architecture options)
-/pdca do {feature}       # Implementation guide
-/pdca analyze {feature}  # Run gap analysis
-/pdca iterate {feature}  # Auto-fix with Evaluator-Optimizer pattern
-/pdca report {feature}   # Generate completion report
-/pdca status             # Check current PDCA status
-/pdca next               # Guide to next PDCA step
-```
-
-### CTO-Led Agent Teams (v1.5.1)
-
-CTO-Led Agent Teams enable parallel PDCA execution with multiple AI agents orchestrated by a CTO lead agent.
-
-```bash
-# Start CTO Team for a feature
-/pdca team {feature}
-
-# Monitor team progress
-/pdca team status
-
-# Cleanup team resources
-/pdca team cleanup
-```
-
-**How it works:**
-1. CTO lead agent (opus) analyzes the feature and selects the optimal team composition
-2. Teammates are spawned in parallel (Dynamic: 3, Enterprise: 5 agents)
-3. Each teammate handles a specific area (QA, frontend, backend, security, etc.)
-4. CTO orchestrates task assignment, progress monitoring, and result aggregation
-5. Team is cleaned up after work is complete
-
-**Requirements:**
-- Set environment variable: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-- Claude Code v2.1.32+
-
-**Available Team Agents:**
-
-| Team | Agent | Model | Role |
-|------|-------|-------|------|
-| CTO | cto-lead | opus | Team orchestration, PDCA workflow management |
-| CTO | frontend-architect | sonnet | UI/UX design, component architecture |
-| CTO | product-manager | sonnet | Requirements analysis, feature prioritization |
-| CTO | qa-strategist | sonnet | Test strategy, quality metrics coordination |
-| CTO | security-architect | opus | Vulnerability analysis, auth design review |
-| PM | pm-lead | opus | PM Team orchestration, PRD synthesis |
-| PM | pm-discovery | sonnet | Opportunity Solution Tree analysis |
-| PM | pm-strategy | sonnet | Value Proposition, Lean Canvas |
-| PM | pm-research | sonnet | Personas, competitors, market sizing |
-| PM | pm-prd | sonnet | PRD document generation |
-
-### PM Agent Team (v1.6.0)
-
-PM Agent Team runs **before** the Plan phase to produce a comprehensive PRD (Product Requirements Document) through automated product discovery.
-
-```bash
-# Run PM analysis before planning
-/pdca pm user-authentication
-
-# Then proceed with PDCA planning (PRD auto-referenced)
-/pdca plan user-authentication
-```
-
-**How it works:**
-1. pm-lead (opus) collects project context and git history
-2. Three agents run in parallel with 43 frameworks:
-   - discovery: Opportunity Solution Tree + Brainstorm + Assumption Risk Assessment
-   - strategy: JTBD + Lean Canvas + SWOT + PESTLE + Porter's Five Forces + Growth Loops
-   - research: Personas + Competitors + TAM/SAM/SOM + Customer Journey Map + ICP
-3. pm-prd synthesizes all findings into a PRD with 6 sections + Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Battlecards) at `docs/00-pm/{feature}.prd.md`
-4. Plan phase automatically references the PRD for higher-quality planning
-
-**Frameworks**: Based on [pm-skills](https://github.com/phuryn/pm-skills) by Pawel Huryn (MIT License)
-
----
-
-## Project Levels
-
-| Level | Description | Stack |
-|-------|-------------|-------|
-| **Starter** | Static websites, portfolios | HTML, CSS, JS |
-| **Dynamic** | Fullstack applications | Next.js, BaaS |
-| **Enterprise** | Microservices architecture | K8s, Terraform, MSA |
-
----
-
-## Is bkit Only for Development?
-
-![bkit for Non-Development](images/to-use-non-development.png)
-
-bkit is **primarily designed for software development**. However, some components can inspire structured workflows beyond coding:
-
-| Component | Beyond Development Uses |
-|-----------|------------------------|
-| **PDCA Methodology** | Project management, process improvement |
-| **Document Templates** | Planning any structured project |
-| **Gap Analysis** | Comparing any plan vs. actual outcome |
-
-> **Note**: For general writing, research, or non-technical tasks, plain Claude Code (without bkit) is better suited.
-
----
+First-time users see an interactive 3-minute tutorial on the very first session. Recommended runtime: Claude Code **v2.1.118+** (79 consecutive compatible releases since v2.1.34); minimum **v2.1.78**.
+
+## Architecture (v2.1.11)
+
+| Surface | Count |
+|---|---|
+| Skills | 39 |
+| Agents | 36 |
+| Hook Events / blocks | 21 / 24 |
+| MCP Servers / Tools | 2 / 16 |
+| Lib modules / Scripts | 130 / 47 |
+| Test files / cases | 113 / 3,762 PASS · 0 FAIL |
+
+Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 6 Port↔Adapter pairs and a Sprint 7 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine).
 
 ## Documentation
 
-### Customization Guide
-
-- **[CUSTOMIZATION-GUIDE.md](CUSTOMIZATION-GUIDE.md)** - Complete guide to customizing bkit for your organization
-  - Platform-specific configuration paths (macOS, Linux, Windows, WSL)
-  - Component customization (agents, skills, commands, hooks, templates)
-  - License attribution requirements for derivative works
-  - bkit design philosophy and architecture decisions
-
-### Current Reference (bkit-system/)
-
-- **[System Architecture](bkit-system/README.md)** - Plugin structure and trigger system overview
-- **[Context Engineering](bkit-system/philosophy/context-engineering.md)** - LLM context curation principles (v1.4.2)
-- **[Core Mission & Philosophy](bkit-system/philosophy/core-mission.md)** - 3 core philosophies (Automation First, No Guessing, Docs=Code)
-- **[AI-Native Principles](bkit-system/philosophy/ai-native-principles.md)** - AI-Native development and 3 core competencies
-- **[PDCA Methodology](bkit-system/philosophy/pdca-methodology.md)** - PDCA cycle and 9-stage pipeline relationship
-- **[Graph Index](bkit-system/_GRAPH-INDEX.md)** - Obsidian-optimized component graph
-
-### Component Reference
-
-- [Development Pipeline](skills/development-pipeline/SKILL.md) - 9-stage pipeline skill
-- [Skills Reference](skills/) - 38 domain skills (18 Workflow / 18 Capability / 1 Hybrid)
-- [Agents Reference](agents/) - 36 specialized agents (11 opus / 19 sonnet / 2 haiku)
-
-### PDCA Documents
-
-- [Active PDCA](docs/pdca/) - Current plan/design/analysis documents
-- [Archive](docs/archive/) - Completed PDCA + legacy documents
-
-### Other
-
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
-
-### Visualize with Obsidian
-
-The `bkit-system/` documentation is optimized for [Obsidian](https://obsidian.md/)'s Graph View:
-
-1. Open `bkit-system/` as an Obsidian vault
-2. Press `Ctrl/Cmd + G` to open Graph View
-3. Explore component relationships visually
-
-See **[bkit-system/README.md](bkit-system/README.md#viewing-with-obsidian)** for detailed instructions.
-
----
-
-## Language Support
-
-bkit automatically detects your language from trigger keywords:
-
-| Language | Trigger Keywords |
-|----------|-----------------|
-| English | static website, beginner, API design |
-| Korean | 정적 웹, 초보자, API 설계 |
-| Japanese | 静的サイト, 初心者, API設計 |
-| Chinese | 静态网站, 初学者, API设计 |
-| Spanish | sitio web estático, principiante |
-| French | site web statique, débutant |
-| German | statische Webseite, Anfänger |
-| Italian | sito web statico, principiante |
-
-### Setting Response Language
-
-Claude Code supports configuring your preferred response language through the `language` setting in your settings file.
-
-#### Configuration Files (Priority Order)
-
-| File | Scope | Git Tracked |
-|------|-------|-------------|
-| `.claude/settings.local.json` | Project (personal) | No (gitignored) |
-| `.claude/settings.json` | Project (shared) | Yes |
-| `~/.claude/settings.json` | User (global) | N/A |
-
-#### How to Configure
-
-Add the `language` key to any settings file:
-
-```json
-{
-  "language": "korean"
-}
-```
-
-#### Supported Languages
-
-| Language | Setting Value |
-|----------|---------------|
-| English | `"english"` (default) |
-| Korean | `"korean"` |
-| Japanese | `"japanese"` |
-| Chinese | `"chinese"` |
-| Spanish | `"spanish"` |
-| French | `"french"` |
-| German | `"german"` |
-| Italian | `"italian"` |
-
-> **Note**: Trigger keywords work in any language. The `language` setting only affects Claude's response language.
-
----
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Branch Protection
-
-- Only `admin` team members can merge to `main`
-- All changes require pull request review
-- Version releases are managed through Git tags
-
----
-
-## Design Philosophy
-
-bkit is not a productivity hack. It is an attempt to bring **engineering discipline** to AI-native development.
-
-The software industry has spent decades refining how humans write code—version control, code review, CI/CD, testing pyramids. But when AI enters the development loop, most of that discipline evaporates. Developers prompt, accept, and ship. The feedback loop disappears. Documentation becomes an afterthought. Quality becomes a matter of luck.
-
-**bkit exists because we believe AI-assisted development deserves the same rigor as traditional engineering.**
-
-### What we optimize for
-
-- **Process over output.** A single feature built through proper planning, design, implementation, and verification is worth more than ten features hacked together. The PDCA cycle is not overhead—it is the product.
-
-- **Verification over trust.** AI generates plausible code. Plausible is not correct. Every implementation goes through gap analysis against its design document. If the match rate falls below 90%, the system iterates automatically. We do not ship hope.
-
-- **Context over prompts.** A well-structured prompt helps once. A well-structured context system helps every time. bkit's 128 lib modules (15 subdirs, Clean Architecture 4-Layer), 39 skills, and 36 agents exist to ensure the AI receives the right context at the right moment—not through clever prompting, but through systematic engineering.
-
-- **Constraints over features.** We intentionally limit what bkit does. Three project levels, not infinite configuration. A fixed 9-stage pipeline, not a customizable workflow builder. Opinionated defaults, not a framework for frameworks. Constraints eliminate decision fatigue and make the system learnable.
-
-### What this means in practice
-
-When you use bkit, you will write a plan document before writing code. You will generate a design specification before implementation. You will run gap analysis after every feature. You will produce a completion report that captures what was built, what was verified, and what was learned.
-
-This is slower than prompting and shipping. It is also how software that lasts gets built.
-
-> *"We do not offer a hundred features. We engineer each one through proper design and verification. That is the difference between a tool and a discipline."*
-
----
+- [README-FULL.md](README-FULL.md) — full feature list, complete version history, deep architecture
+- [CHANGELOG.md](CHANGELOG.md) — release history
+- `docs/01-plan/` — PDCA Plan documents (Korean)
+- `docs/02-design/` — design specs + ADRs
+- `docs/03-analysis/` — analysis evidence
+- `docs/04-report/` — completion reports
+- `docs/05-qa/` — QA outputs
 
 ## License
 
-Copyright 2024-2026 POPUP STUDIO PTE. LTD.
+Apache 2.0 — see [LICENSE](LICENSE).
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
-
-You must include the [NOTICE](NOTICE) file in any redistribution.
-
----
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/popup-studio-ai/bkit-claude-code/issues)
-- **Email**: contact@popupstudio.ai
-
----
-
-Made with AI by [POPUP STUDIO](https://popupstudio.ai)
+POPUP STUDIO PTE. LTD. · `kay@popupstudio.ai`
