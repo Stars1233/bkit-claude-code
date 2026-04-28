@@ -40,6 +40,9 @@ bkit-system/.obsidian/plugins/
 
 # Local Claude Code settings (plugin elements are at root level)
 .claude/
+# v2.1.11: project-level CLAUDE.md is part of the plugin contract
+# (referenced by test/contract/invocation-inventory.test.js)
+!.claude/CLAUDE.md
 
 # Docs folder (too large for plugin distribution)
 docs/.pdca-snapshots/
