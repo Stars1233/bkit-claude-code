@@ -681,32 +681,46 @@ if (!handled) {
   outputAllow(`Stop event processed.${trustInfo}${auditInfo}${copyTip}${nextActionHint}`, 'Stop');
 }
 
-// Sprint 4.5 Integration: Record turn marker for ENH-264 per-turn tracking.
-// Best-effort — never blocks Stop flow. stdin has already been consumed higher up
-// in this script; we record a turn marker with env-sourced metadata. When CC
-// provides usage via env vars or context files, this captures it; otherwise the
-// ledger still tracks turn count/agent/model which is useful for ENH-264
-// "session Sonnet share" policy decisions.
+// v2.1.12 Sprint A-1 (defect #17 fix): Record turn marker for ENH-264 per-turn
+// tracking. CC v2.1.x Stop hook does NOT inject CLAUDE_* env vars — all data is
+// in the stdin JSON payload (parsed into `hookContext` at line 244). Reading
+// from env vars produced 472/472 zero entries (CARRY-5 P0). Switched to
+// hookContext payload extraction per CC hook payload schema:
+//   { session_id, message: { model, usage: { input_tokens, output_tokens,
+//     cache_read_input_tokens, cache_creation_input_tokens } } }
+// Best-effort — never blocks Stop flow.
 try {
   const ccRegression = require('../lib/cc-regression');
+  const usage = (hookContext && hookContext.message && hookContext.message.usage) || {};
+  const ccVersionResolved = ccRegression.detectCCVersion() || process.env.CLAUDE_CODE_VERSION || 'unknown';
   ccRegression.recordTurn({
-    sessionId: process.env.CLAUDE_SESSION_ID || '',
+    // From stdin payload — fallback to env for parity with future CC versions
+    sessionId: hookContext.session_id || process.env.CLAUDE_SESSION_ID || '',
     agent: activeAgent || 'main',
-    model: process.env.CLAUDE_MODEL || 'unknown',
-    ccVersion: process.env.CLAUDE_CODE_VERSION || 'unknown',
-    turnIndex: parseInt(process.env.CLAUDE_TURN_INDEX || '0', 10),
-    inputTokens: parseInt(process.env.CLAUDE_INPUT_TOKENS || '0', 10),
-    outputTokens: parseInt(process.env.CLAUDE_OUTPUT_TOKENS || '0', 10),
+    model: (hookContext.message && hookContext.message.model)
+      || process.env.CLAUDE_MODEL
+      || 'unknown',
+    ccVersion: ccVersionResolved,
+    turnIndex: Number.isFinite(hookContext.turn_index)
+      ? hookContext.turn_index
+      : parseInt(process.env.CLAUDE_TURN_INDEX || '0', 10),
+    inputTokens: Number.isFinite(usage.input_tokens) ? usage.input_tokens : 0,
+    outputTokens: Number.isFinite(usage.output_tokens) ? usage.output_tokens : 0,
+    cacheReadInputTokens: Number.isFinite(usage.cache_read_input_tokens) ? usage.cache_read_input_tokens : 0,
+    cacheCreationInputTokens: Number.isFinite(usage.cache_creation_input_tokens) ? usage.cache_creation_input_tokens : 0,
     overheadDelta: parseInt(process.env.CLAUDE_OVERHEAD_DELTA || '0', 10),
+    parseStatus: (hookContext && hookContext.message) ? 'ok' : 'no_payload',
+    parseWarnings: (hookContext && hookContext.message)
+      ? null
+      : 'no message field in hookContext (env-fallback)',
   });
 
   // v2.1.10 Sprint 5.5: cc-regression attribution (NDJSON event log)
-  const ccVersionForAttr = ccRegression.detectCCVersion();
-  if (ccVersionForAttr) {
+  if (ccVersionResolved && ccVersionResolved !== 'unknown') {
     ccRegression.recordEvent({
       hookEvent: 'Stop',
-      ccVersion: ccVersionForAttr,
-      sessionId: process.env.CLAUDE_SESSION_ID || null,
+      ccVersion: ccVersionResolved,
+      sessionId: hookContext.session_id || process.env.CLAUDE_SESSION_ID || null,
       timestamp: new Date().toISOString(),
       context: { agent: activeAgent || 'main', skill: activeSkill || null },
     });

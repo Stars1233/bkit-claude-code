@@ -2,11 +2,11 @@
 
 > The only Claude Code plugin that verifies AI-generated code against its own design specs.
 
-> **Quick start lives in [README.md](README.md).** This file preserves the complete v2.1.11 feature inventory, version history, and deep architecture for contributors and audit consumers.
+> **Quick start lives in [README.md](README.md).** This file preserves the complete v2.1.12 feature inventory, version history, and deep architecture for contributors and audit consumers (v2.1.12 is a silent hotfix on top of v2.1.11; the v2.1.11 4-Sprint feature set remains the active inventory).
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.118+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.1.11-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.1.12-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 > **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**

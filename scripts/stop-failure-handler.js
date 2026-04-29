@@ -21,16 +21,52 @@ try {
   process.exit(0);
 }
 
-const errorType = input.error_type || input.errorType || 'unknown';
-const errorMessage = input.error_message || input.errorMessage || input.message || '';
-const agentId = input.agent_id || null;
-const agentType = input.agent_type || null;
+// v2.1.12 Sprint A-2 (defect #14 fix): enrich error context capture.
+// Previously, all 13+ entries had errorType/category/agentId all 'unknown' or
+// null because CC StopFailure payload schema does not always include
+// error_type / error_message / agent_id at top-level. We now:
+//   (1) Try multiple field paths (top-level + nested message.*)
+//   (2) Capture parseStatus + parseWarnings to surface fallback usage
+//   (3) Use sessionHash fallback when agentId absent
+const errorType = input.error_type || input.errorType
+  || (input.message && input.message.error_type)
+  || (input.error && input.error.type)
+  || 'unknown';
+let errorMessage = input.error_message || input.errorMessage;
+if (!errorMessage && typeof input.message === 'string') errorMessage = input.message;
+if (!errorMessage && input.message && typeof input.message === 'object') {
+  // Anthropic API error format: input.message.content[0].text or input.error.message
+  const msgContent = input.message.content;
+  if (Array.isArray(msgContent) && msgContent[0] && typeof msgContent[0].text === 'string') {
+    errorMessage = msgContent[0].text;
+  } else if (input.error && typeof input.error.message === 'string') {
+    errorMessage = input.error.message;
+  }
+}
+errorMessage = errorMessage || '';
+const agentId = input.agent_id || (input.message && input.message.agent_id) || null;
+const agentType = input.agent_type || (input.message && input.message.agent_type) || null;
+const sessionId = input.session_id || (input.message && input.message.session_id) || null;
+
+// parseStatus: surface payload health for downstream postmortem
+const hasUsefulFields = (errorType !== 'unknown') || errorMessage.length > 0 || agentId || agentType;
+const parseStatus = !input || Object.keys(input).length === 0
+  ? 'no_input'
+  : hasUsefulFields ? 'ok' : 'partial';
+const parseWarnings = parseStatus === 'no_input'
+  ? 'StopFailure hook invoked with empty stdin payload'
+  : (parseStatus === 'partial'
+      ? `StopFailure payload missing useful fields (keys: ${Object.keys(input).join(',')})`
+      : null);
 
 debugLog('StopFailure', 'Hook started', {
   errorType,
   errorMessage: errorMessage.substring(0, 200),
   agentId,
-  agentType
+  agentType,
+  parseStatus,
+  parseWarnings,
+  sessionId,
 });
 
 // Step 1: Classify error
@@ -114,6 +150,8 @@ try {
     }
   }
 
+  // v2.1.12 Sprint A-2 (#14): include parseStatus + parseWarnings + sessionId
+  // for downstream postmortem (silent garbage-in surface).
   errorLog.push({
     timestamp: new Date().toISOString(),
     errorType,
@@ -121,7 +159,10 @@ try {
     severity: classification.severity,
     agentId,
     agentType,
-    message: errorMessage.substring(0, 500)
+    sessionId,
+    message: errorMessage.substring(0, 500),
+    parseStatus,
+    parseWarnings,
   });
 
   if (errorLog.length > 50) {

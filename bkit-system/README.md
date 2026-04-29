@@ -1,10 +1,10 @@
 # bkit System Architecture
 
-> Architecture guide documenting bkit plugin's internal structure and trigger system — **v2.1.11 (4 Sprints × 20 FRs Integrated Enhancement)**.
+> Architecture guide documenting bkit plugin's internal structure and trigger system — **v2.1.12 (silent hotfix on top of v2.1.11 4 Sprints × 20 FRs Integrated Enhancement)**.
 >
-> **Version history is maintained in a single source of truth**: see [CHANGELOG.md](../CHANGELOG.md) for the full release history (v1.0.0 → v2.1.11).
+> **Version history is maintained in a single source of truth**: see [CHANGELOG.md](../CHANGELOG.md) for the full release history (v1.0.0 → v2.1.12).
 >
-> Current release highlights (v2.1.11):
+> Current release highlights (v2.1.12 over v2.1.11):
 > - **4 Sprints × 20 FRs**: α Onboarding Revolution, β Discoverability, γ Trust Foundation, δ Port + Governance
 > - **Clean Architecture 4-Layer with 7 Port↔Adapter pairs**: Domain (ports 7 + guards 4 + rules) / Application (cc-regression + pdca + pdca-lifecycle pilot + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-port-registry + mcp-test-harness + cc-version-checker + branding) / Presentation (hooks + scripts)
 > - **Defense-in-Depth 4-Layer**: CC Built-in → bkit PreToolUse → audit-logger sanitizer → Token Ledger NDJSON
@@ -175,7 +175,7 @@ lib/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                bkit Trigger System (v2.1.11)                     │
+│                bkit Trigger System (v2.1.12)                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │

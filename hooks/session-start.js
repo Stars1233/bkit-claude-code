@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bkit Vibecoding Kit - SessionStart Hook (v2.1.11, uses BKIT_VERSION from lib/core/version)
+ * bkit Vibecoding Kit - SessionStart Hook (v2.1.12, uses BKIT_VERSION from lib/core/version)
  *
  * Thin orchestrator that delegates to startup modules:
  *   1. migration   - Legacy path migration (docs/ -> .bkit/)
@@ -121,6 +121,54 @@ try {
   const agentStatePath = require('path').resolve(process.cwd(), '.bkit/runtime/agent-state.json');
   if (fs.existsSync(agentStatePath)) {
     agentState = JSON.parse(fs.readFileSync(agentStatePath, 'utf-8'));
+
+    // v2.1.12 Sprint C-1 (#15 fix): reset stale agent-state when last update
+    // is older than `staleFeatureTimeoutDays` (default 7 days from
+    // control-state.json guardrails). Previous behaviour: agent-state kept
+    // referencing a 13-days-idle feature ("cc-version-issue-response") with
+    // an empty sessionId — every new session started by inheriting that
+    // stale lifecycle. We now zero the lifecycle fields while preserving
+    // the file shape so downstream code that reads it stays safe.
+    try {
+      const stalePath = require('path').resolve(process.cwd(), '.bkit/runtime/control-state.json');
+      let staleDays = 7;
+      if (fs.existsSync(stalePath)) {
+        const cs = JSON.parse(fs.readFileSync(stalePath, 'utf8'));
+        if (cs && cs.guardrails && Number.isFinite(cs.guardrails.staleFeatureTimeoutDays)) {
+          staleDays = cs.guardrails.staleFeatureTimeoutDays;
+        }
+      }
+      const lastUpdated = agentState.lastUpdated ? Date.parse(agentState.lastUpdated) : 0;
+      const ageDays = lastUpdated > 0 ? (Date.now() - lastUpdated) / (24 * 60 * 60 * 1000) : Infinity;
+      if (ageDays > staleDays && agentState.feature) {
+        debugLog('SessionStart', 'Stale agent-state detected — resetting lifecycle', {
+          feature: agentState.feature,
+          ageDays: Math.round(ageDays),
+          threshold: staleDays,
+        });
+        const resetState = {
+          ...agentState,
+          enabled: false,
+          feature: '',
+          pdcaPhase: 'idle',
+          orchestrationPattern: 'leader',
+          ctoAgent: agentState.ctoAgent || 'opus',
+          startedAt: null,
+          lastUpdated: new Date().toISOString(),
+          teammates: [],
+          progress: { totalTasks: 0, completedTasks: 0, inProgressTasks: 0, failedTasks: 0, pendingTasks: 0 },
+          recentMessages: [],
+          sessionId: '',
+          // Trace why the reset happened so postmortem can audit
+          _resetReason: `stale > ${staleDays} days (was: ${agentState.feature})`,
+          _resetAt: new Date().toISOString(),
+        };
+        fs.writeFileSync(agentStatePath, JSON.stringify(resetState, null, 2) + '\n', 'utf8');
+        agentState = resetState;
+      }
+    } catch (e) {
+      debugLog('SessionStart', 'Stale agent-state reset failed', { error: e.message });
+    }
   }
 } catch (_) { /* non-critical */ }
 

@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.118+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.1.11-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-2.1.12-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
 ---
@@ -42,7 +42,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 First-time users see an interactive 3-minute tutorial on the very first session. Recommended runtime: Claude Code **v2.1.118+** (79 consecutive compatible releases since v2.1.34); minimum **v2.1.78**.
 
-## Architecture (v2.1.11)
+## Architecture (v2.1.12)
 
 | Surface | Count |
 |---|---|
@@ -53,7 +53,7 @@ First-time users see an interactive 3-minute tutorial on the very first session.
 | Lib modules / Scripts | 142 / 49 |
 | Test files / cases | 117+ / 4,000+ PASS · 0 FAIL |
 
-Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 7 Port↔Adapter pairs (cc-payload · state-store · regression-registry · audit-sink · token-meter · docs-code-index · mcp-tool) and a 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine). v2.1.11 adds 4 Sprints (α Onboarding · β Discoverability · γ Trust · δ Port + Governance) covering 20 FRs.
+Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 7 Port↔Adapter pairs (cc-payload · state-store · regression-registry · audit-sink · token-meter · docs-code-index · mcp-tool) and a 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine). v2.1.11 added 4 Sprints (α Onboarding · β Discoverability · γ Trust · δ Port + Governance) covering 20 FRs; v2.1.12 hotfix patches the `lib/evals/runner-wrapper.js` argv mismatch (silent failure of `/bkit-evals run`) plus false-positive defense and JSON-parse robustness.
 
 ## Documentation
 
