@@ -11,6 +11,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > **One-Liner (EN)**: The only Claude Code plugin that verifies AI-generated code against its own design specs.
 > **One-Liner (KO)**: AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
 
+### Deep Functional QA Fixes (2026-04-29)
+
+A second-pass deep audit (`docs/04-report/bkit-v2112-deep-functional-qa-issues.report.md`)
+discovered 23 latent defects spanning observability, lifecycle, control state,
+rollback integrity, multilingual routing and API symmetry. The 19 actionable
+items below were folded into v2.1.12; the remaining 4 are documented as
+v2.1.13 carries (CARRY-7~12 in MEMORY.md).
+
+#### P0 — Observability & Multilingual
+
+- **#17 — token-meter Adapter completely broken.** `scripts/unified-stop.js:692-701`
+  read `process.env.CLAUDE_*` (env vars CC v2.1.x never injects), so 472/472
+  ledger entries had `inputTokens=0 / outputTokens=0 / model='unknown'`. Fixed
+  to read from the parsed stdin payload (`hookContext.session_id`,
+  `hookContext.message.model`, `hookContext.message.usage.{input_tokens,
+  output_tokens, cache_read_input_tokens, cache_creation_input_tokens}`).
+  Added `cacheReadInputTokens` / `cacheCreationInputTokens` / `parseStatus` /
+  `parseWarnings` fields to `lib/cc-regression/token-accountant.js` recordTurn
+  signature and `lib/domain/ports/token-meter.port.js` TurnMetadata typedef.
+- **#21 — intent-router multilingual routing failed.**
+  `lib/intent/trigger.js` produced `confidence = 0.7999999999999999` (FP error)
+  which the intent-router rejected at the `>= 0.8` gate. Computed via
+  `Number((threshold + 0.1).toFixed(2))` so the value is exactly 0.8.
+  Also broadened `bkend-expert.{ko,ja,zh,...}` patterns in
+  `lib/intent/language.js` so natural utterances ("회원가입 만들어줘",
+  "会員登録 機能", "注册功能") match without requiring exact phrasing.
+
+#### CRITICAL — Reliability
+
+- **#1 + #11 — control-state.json self-contradiction.**
+  `setLevel(n)` only updated `currentLevel`, leaving `level` (string) and
+  `levelCode` (int) stale. A trust-score auto-downgrade then silently
+  overrode user-explicit choices. Fixed `setLevel` to atomically write all
+  three canonical fields plus a `setBy` sentinel; trust-engine now refuses
+  to downgrade when `setBy === 'user-explicit-request'` and records
+  `lastAutoTransitionReason: 'trust-downgrade-blocked-user-explicit'`.
+- **#12 — verifyCheckpoint always false.**
+  `createCheckpoint` hashed only the `pdcaStatus` snapshot but
+  `verifyCheckpoint` recomputed over the full checkpoint object minus the
+  hash fields, guaranteeing mismatch. Aligned `verifyCheckpoint` to recompute
+  `sha256(JSON.stringify(cp.pdcaStatus))` and compare against
+  `cp.pdcaStatusHash`. Returns `hashType: 'pdcaStatusHash' | 'hash' | 'none'`.
+- **#14 — error-log all "unknown / null / empty".**
+  `scripts/stop-failure-handler.js` only checked top-level `error_type`,
+  `error_message`, `agent_id`, `agent_type`. Now also probes
+  `input.message.{error_type, agent_id, agent_type, content[0].text}` and
+  `input.error.{type, message}`, captures `parseStatus`
+  (`'ok' | 'no_input' | 'partial'`) plus a free-form `parseWarnings`.
+
+#### IMPORTANT — API symmetry / Lifecycle
+
+- **#13 — state-machine API asymmetry.**
+  `getAvailableEvents` returned `[{event, target, guard}]` objects but
+  `canTransition` and `transition` accepted only string event names, so
+  the natural pattern `getAvailableEvents(s).filter(e => canTransition(s, e))`
+  silently failed. Both functions now accept either form (centralised in a
+  private `_normaliseEvent()` helper); `transition()` always returns the
+  normalised string event in its result. Defensively defaults `context`
+  to `{}` when omitted.
+- **#15 — agent-state stale across sessions.** SessionStart now detects
+  agent-state lastUpdated older than `staleFeatureTimeoutDays` (default 7
+  from control-state guardrails) and resets the lifecycle fields with a
+  `_resetReason` audit trail.
+- **#16 — agent-state enabled:false ghost fields.** `writeAgentState` now
+  zeros `teammates / progress / sessionId / recentMessages` when
+  `enabled === false` so disk state is always coherent. `feature` is
+  intentionally retained as audit trail.
+- **#9 + #10 + #8 — bare-require side effects.** Added
+  `if (require.main !== module) { module.exports = {}; return; }` guard to
+  9 critical hook handlers (`gap-detector-stop`, `pdca-skill-stop`,
+  `iterator-stop`, `plan-plus-stop`, `subagent-{start,stop}-handler`,
+  `team-idle-handler`, `pdca-task-completed`, `sync-folders`). Tests, smoke
+  checks, and accidental imports no longer emit stale stdout
+  (decisions, advisory messages) without a real hook payload. The
+  remaining 38 scripts are tracked as v2.1.13 CARRY.
+- **#19 — destructive-detector missed SQL/DB destruction.** Added rules
+  G-009 (`DROP TABLE/DATABASE/SCHEMA/...`), G-010 (`TRUNCATE TABLE` /
+  `ALTER TABLE … DROP COLUMN`), G-010b (`DELETE FROM` without `WHERE`),
+  G-011 (NoSQL `db.<col>.drop()`, `dropDatabase()`, Redis `FLUSHALL/FLUSHDB`).
+- **#20 — explorer.listAll opaque shape.** Added `listSkills()` and
+  `listAgents()` flat-array helpers. JSDoc on `listAll()` clarified.
+- **#22 — formatSuggestion("undefined: undefined —").** Now returns `''`
+  for null / non-object / partial suggestions.
+- **#23 — slash-command syntax not routed.** `route()` recognises
+  `^/(\w[\w-]*)(?:\s+(.+))?$` as `type:'command'` with confidence 0.95
+  and short-circuits downstream pattern matching.
+- **#2 — telemetry "missing" was docs drift.** `cc-event-log.ndjson` and
+  `session-ctx-fp.json` (note: `.json`, not `.ndjson` as memory had) are
+  created lazily on first hook event / fingerprint write — verified live.
+  Memory/docs corrected; no code change required.
+
+#### P3 — Hygiene
+
+- **#6 — 39 lib modules missing `@version` JSDoc.** Bulk-added `@version 2.1.12`
+  to every lib/.js module. Now 142/142.
+- **operational hygiene** — Removed stale runtime artifacts: `evals-pdca-13:45/14:01*.json`
+  (4 files left from B1 / B3 BUG state) and the deprecated v1
+  `v2112-skill-smoke.js` checker.
+
+#### Reclassified / Deferred
+
+- **#18 — L4 returns 'auto' for `bash_destructive`.** Reclassified P3 (was P2).
+  At L4 (Full-Auto, "All auto, post-review only") this is by-design per
+  `LEVEL_DEFINITIONS[4]`. The L5 tests still pin level explicitly to confirm
+  L3/L2 boundary behaviour.
+- **#7 — 121/142 lib modules in `legacy` layer.** Deferred to v2.1.13+
+  Sprint F-1; tracked as a Clean-Architecture floor invariant goal
+  (≥30% by v2.1.14).
+
 ### Fixed
 
 - **B1 — `lib/evals/runner-wrapper.js:93` argv mismatch (P0).** The wrapper

@@ -14,6 +14,14 @@
  * Converted from: scripts/iterator-stop.sh
  */
 
+
+// v2.1.12 Sprint C-2 (#9/#10/#8): bare-require guard — when this script
+// is require()-d instead of executed as a hook entrypoint, return
+// immediately so no stale stdout (decisions, advisory messages) is emitted
+// without a real hook payload. CommonJS module body is implicitly an IIFE,
+// so top-level return is valid.
+if (require.main !== module) { module.exports = {}; return; }
+
 const { readStdinSync } = require('../lib/core/io');
 const { debugLog } = require('../lib/core/debug');
 const { getBkitConfig } = require('../lib/core/config');
