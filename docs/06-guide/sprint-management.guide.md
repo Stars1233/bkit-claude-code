@@ -210,7 +210,7 @@ S1 `100%` 통과 = 모든 hop PASS.
 | Domain (Sprint 1) | `lib/domain/sprint/` | Sprint entity + frozen enum + validators |
 | Application (Sprint 2) | `lib/application/sprint-lifecycle/` | 8 use cases + DI deps interface |
 | Infrastructure (Sprint 3+5) | `lib/infra/sprint/` | 7 adapters (4 baseline + 3 production scaffold) |
-| Presentation (Sprint 4) | `skills/sprint/`, `agents/sprint-*.md`, `templates/sprint/`, `scripts/sprint-handler.js` | 사용자 표면 (15 actions) |
+| Presentation (Sprint 4) | `skills/sprint/`, `agents/sprint-*.md`, `templates/sprint/`, `scripts/sprint-handler.js` | 사용자 표면 (16 actions, S2-UX `master-plan` 포함) |
 
 L3 Contract test (`tests/contract/v2113-sprint-contracts.test.js`) 가 이 4-layer 통합 무결성을 CI gate 로 자동 검증합니다.
 
@@ -435,7 +435,7 @@ lib/
 skills/sprint/                  # Sprint 4 — Presentation (skill)
 agents/sprint-*.md              # Sprint 4 — 4 agents
 templates/sprint/               # Sprint 4 — 7 Korean templates
-scripts/sprint-handler.js       # Sprint 4 — 15-action dispatcher
+scripts/sprint-handler.js       # Sprint 4 — 16-action dispatcher (S2-UX master-plan 포함)
 
 tests/contract/                 # Sprint 5 — L3 Contract test (tracked, CI gate)
 └── v2113-sprint-contracts.test.js

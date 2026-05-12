@@ -497,7 +497,7 @@ function handleHelp() {
     helpText: [
       'bkit:sprint — Sprint Management',
       '',
-      'Actions (15):',
+      'Actions (16):',
       '  init     /sprint init <id> --name <name> [--trust L0-L4]',
       '  start    /sprint start <id> [--trust L0-L4]',
       '  status   /sprint status <id>',
@@ -601,6 +601,18 @@ if (require.main === module) {
     const positionalId = (argv[1] && !argv[1].startsWith('--')) ? argv[1] : undefined;
     const flags = parseFlags(argv.slice(positionalId ? 2 : 1));
     if (positionalId && !flags.id) flags.id = positionalId;
+    // Deep-QA fix: normalize `--features=a,b,c` CSV → array for ALL actions
+    // (previously only master-plan parsed via parseFeaturesFlag; init/fork/etc
+    // received raw string → validator rejected with `invalid_features_not_array`).
+    if (typeof flags.features === 'string' && flags.features.length > 0) {
+      flags.features = parseFeaturesFlag(flags.features);
+    }
+    // Same normalization for `--newId` vs `--new` shorthand (fork action)
+    if (action === 'fork' && flags.new && !flags.newId) flags.newId = flags.new;
+    // Same for `--feature` vs `--featureName` shorthand (feature action)
+    if ((action === 'feature' || action === 'qa') && flags.feature && !flags.featureName) {
+      flags.featureName = flags.feature;
+    }
     handleSprintAction(action, flags, {})
       .then((result) => {
         process.stdout.write(JSON.stringify(result, null, 2) + '\n');

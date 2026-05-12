@@ -150,7 +150,7 @@ See:
 ## 10. Skill Invocation Contract (for LLM Dispatchers)
 
 This contract specifies how an LLM dispatcher should construct the `args`
-object for each of the 15 sub-actions when invoking the underlying handler
+object for each of the 16 sub-actions when invoking the underlying handler
 via `scripts/sprint-handler.js`.
 
 ### 10.1 Args Object Schema (per action)
