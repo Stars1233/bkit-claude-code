@@ -236,8 +236,8 @@ function buildVersionEnhancementsContext(detectedLevel) {
   // v2.1.1: Consolidated version summary (reduced from 4 blocks to 1)
   // v2.1.10 (ENH-167): removed hard-coded strings, uses BKIT_VERSION
   ctx += `\n## bkit v${BKIT_VERSION} (Current)\n`;
-  ctx += `- CC recommended: v2.1.118+ | 79 consecutive compatible releases (v2.1.34~v2.1.121, v2.1.115/120 release-tag gaps)\n`;
-  ctx += `- Architecture: 43 Skills, 36 Agents, 21 Hook Events (24 blocks), 142 Lib Modules (16 subdirs, 7 Port↔Adapter pairs), 2 MCP Servers (16 tools)\n`;
+  ctx += `- CC recommended: v2.1.123+ (conservative) | v2.1.139 (balanced) | 94 consecutive compatible releases (v2.1.34~v2.1.139, R-2 v2.1.134/135 skip excluded)\n`;
+  ctx += `- Architecture: 44 Skills, 34 Agents, 21 Hook Events (24 blocks), 163 Lib Modules (19 subdirs, 7 Port↔Adapter pairs), 2 MCP Servers (19 tools), Sprint Management (v2.1.13 GA)\n`;
   // ENH-265: ENABLE_PROMPT_CACHING_1H hint (CC v2.1.108+, 30-40% token savings on long sessions)
   const _caching1h = process.env.ENABLE_PROMPT_CACHING_1H === '1' || process.env.ENABLE_PROMPT_CACHING_1H === 'true';
   if (_caching1h) {

@@ -5,6 +5,118 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.13] - 2026-05-12 (branch: `feature/v2113-sprint-management`)
+
+> **Status**: GA — Sprint Management feature release + tech debt cleanup.
+> **One-Liner (EN)**: The only Claude Code plugin that verifies AI-generated code against its own design specs.
+> **One-Liner (KO)**: AI가 만든 코드를 AI가 만든 설계로 검증하는 유일한 Claude Code 플러그인.
+
+### Added — Sprint Management (Major Feature)
+
+A new **meta-container** that groups one or more features under shared scope,
+budget, and timeline. Sprint runs an 8-phase lifecycle independent of (and
+orthogonal to) the per-feature PDCA 9-phase cycle.
+
+- **Sprint 8-phase lifecycle**: `prd → plan → design → do → iterate → qa → report → archived`
+- **16 sub-actions**: `/sprint init / start / status / list / watch / phase / iterate / qa / report / archive / pause / resume / fork / feature / help / master-plan`
+- **4 Auto-Pause Triggers**: `QUALITY_GATE_FAIL` / `ITERATION_EXHAUSTED` / `BUDGET_EXCEEDED` / `PHASE_TIMEOUT` — instant pause on detection
+- **Trust Level scope L0-L4** via `SPRINT_AUTORUN_SCOPE` (L0 stop-after-plan / L1 design / L2 do / L3 qa / L4 archived = full-auto)
+- **7-Layer S1 dataFlowIntegrity QA** — `UI → Client → API → Validation → DB → Response → Client → UI` hop traversal via `sprint-qa-flow` agent
+- **3 new MCP tools** in `bkit-pdca-server`: `bkit_sprint_list` / `bkit_sprint_status` / `bkit_master_plan_read`
+- **4 new agents**: `sprint-master-planner` (Context-Anchor-driven plan generation) / `sprint-orchestrator` (Sequential dispatch ENH-292 pattern) / `sprint-qa-flow` (S1 verification) / `sprint-report-writer` (cumulative KPI aggregation)
+- **1 new skill**: `skills/sprint/SKILL.md` (327 LOC) + `PHASES.md` (83 LOC) + 3 examples (`basic-sprint.md` / `multi-feature-sprint.md` / `archive-and-carry.md`)
+- **7 new templates**: `templates/sprint/{master-plan, prd, plan, design, iterate, qa, report}.template.md`
+- **2 new infrastructure adapters**: `lib/infra/sprint/sprint-state-store.adapter.js` (181 LOC) + `lib/infra/sprint/sprint-telemetry.adapter.js` (200 LOC)
+- **9 application-layer modules** in `lib/application/sprint-lifecycle/`: `phases.js` (frozen 8-phase enum + `SPRINT_PHASE_ORDER` + `isValidSprintPhase` + `nextSprintPhase` helpers) + `transitions.js` + `start-sprint.usecase.js` + `advance-phase.usecase.js` + `iterate-sprint.usecase.js` + `verify-data-flow.usecase.js` + `generate-report.usecase.js` + `archive-sprint.usecase.js` + `master-plan.usecase.js` + `auto-pause.js` + `quality-gates.js` + `context-sizer.js` + `index.js` (19 barrel exports)
+- **5 sprint infrastructure adapters** beyond state-store/telemetry: `gap-detector.adapter.js` + `auto-fixer.adapter.js` + `data-flow-validator.adapter.js` (no-op baseline + agentTaskRunner-injected real impl path) + `matrix-sync.adapter.js` + `sprint-doc-scanner.adapter.js`
+- **1 new L3 contract test**: `tests/contract/v2113-sprint-contracts.test.js` (366 LOC, 8 cross-sprint contracts SC-01 ~ SC-08): entity shape · deps interface · infra adapters · handler signature · 4-layer chain · ACTION_TYPES 20 · SPRINT_AUTORUN_SCOPE mirror · hooks 21:24 invariant
+- **2 Korean user guides**: `docs/06-guide/sprint-management.guide.md` (~330 lines, 8 sections) + `sprint-migration.guide.md` (~200 lines, PDCA ↔ Sprint orthogonal coexistence)
+- **2 new ADRs**: `docs/adr/0006-cc-upgrade-policy.md` (CC version compatibility policy, 79+ consecutive baseline) + `docs/adr/0007-sprint-as-meta-container.md` (Sprint = PDCA 위 메타 컨테이너, backward-compat invariant)
+- **Context Sizer** (S3-UX) — Kahn topological sort + greedy bin-packing for sprint feature size estimation (`lib/application/sprint-lifecycle/context-sizer.js`, max 100K tokens/sprint, 25% safety margin, dependency-aware)
+- **Sprint Master Plan Generator** (S2-UX) — `sprint-master-planner` agent that produces Context-Anchor-driven sprint planning documents from the 7 Sprint 4 templates
+
+### Added — Sprint UX Improvement (4 sub-sprints S1-UX ~ S4-UX)
+
+Sub-sprints iteratively hardened Sprint Management UX:
+
+- **S1-UX** — P0 phase reset + P1 trust/CLI/skill args fixes (Phase 4 Do)
+- **S2-UX** — Master Plan Generator implementation (`sprint-master-planner` agent body + frontmatter)
+- **S3-UX** — Context Sizer with Kahn topological sort + greedy bin-packing
+- **S4-UX** — Integration + L3 contract test 10/10 PASS + 16-cycle iteration verification
+
+### Changed — Skill Cross-References (14 skills)
+
+The following skills received minor edits to document Sprint coexistence:
+
+`audit` · `bkit-rules` · `bkit-templates` · `bkit` · `control` · `deploy` ·
+`development-pipeline` · `enterprise` · `pdca-batch` · `pdca` · `plan-plus` ·
+`pm-discovery` · `qa-phase` · `rollback`
+
+Each surfaces a one-line note clarifying the orthogonal coexistence model (PDCA 9-phase per-feature ↔ Sprint 8-phase meta-container).
+
+### Changed — Architecture
+
+- `ACTION_TYPES` 16 → **20** (added `sprint_paused` + `sprint_resumed` + `master_plan_created` + `task_created` for DEEP-4 fix)
+- `CATEGORIES` 10 → **11** (added `'sprint'` category)
+- `lib/orchestrator/next-action-engine.js` +48 LOC — sprint phase transition integration (Stop-family hook routing)
+- `lib/orchestrator/team-protocol.js` +36 LOC — sprint Task spawn coordination
+- `lib/intent/language.js` +58 LOC — sprint trigger pattern expansion (`/sprint` 16 sub-actions + master-plan)
+- `scripts/sprint-handler.js` — new (660 LOC) — sprint sub-action router with idempotent resume
+- `scripts/sprint-memory-writer.js` — new (138 LOC) — sprint state persistence
+- `servers/bkit-pdca-server/index.js` +170 LOC — 3 new MCP tools registered
+
+### Removed — Tech Debt Cleanup (net −2,333 LOC)
+
+Legacy infrastructure templates removed (superseded by `/enterprise` skill guidance + bkend.ai BaaS integration):
+
+- `templates/infra/argocd/application.yaml.template`
+- `templates/infra/deploy-dynamic.yml`
+- `templates/infra/deploy-enterprise.yml`
+- `templates/infra/staging-eks-ondemand.yml`
+- `templates/infra/observability/kube-prometheus-stack.values.yaml`
+- `templates/infra/observability/loki-stack.values.yaml`
+- `templates/infra/observability/otel-tempo.values.yaml`
+- `templates/infra/security/security-layer.yaml.template`
+- `templates/infra/terraform/main.tf.template`
+
+### Fixed — Inline Root Fixes (Final QA, commit `5edae8f`)
+
+- **Intent ordering** — `lib/intent/language.js` trigger pattern conflict between `/sprint` and `/pdca` sub-actions resolved (sprint pattern priority + early-return on exact match)
+- **Audit category migration** — `ACTION_TYPES.master_plan_created` and `task_created` routing path corrected in `lib/audit/audit-logger.js` (sprint events now correctly emit under the `sprint` category, not generic `pdca` category)
+
+### Fixed — v2.1.12 Carryovers Closed
+
+- **CARRY-7**: `handleStart` idempotent resume (sprint resume after pause did not restore state correctly — fixed in `scripts/sprint-handler.js` + E2E sprint/pdca/control verification, commit `a33af52`)
+- **CARRY-8 ~ CARRY-12**: sprint integration gaps closed (MCP tool registration / audit category routing / config defaults) via deep-sweep v2 (commit `65cc0f3`, full-surface sprint integration + MCP/audit/config gaps)
+- **38 scripts bare-require guard** (deferred from v2.1.12): the remaining `if (require.main !== module)` guards completed across the remaining hook handlers
+
+### Verified — CC v2.1.139 Compatibility
+
+- **94 consecutive compatible releases** (v2.1.34 → v2.1.139, R-2 v2.1.134/135 skip excluded)
+- **ADR 0003 8th application** (single-pair small-batch scenario second occurrence: v2.1.138 1 bullet + v2.1.139 30 bullets — robust under all observed scenarios)
+- **F9-120 closure 9-streak** — `claude plugin validate .` Exit 0 across v2.1.120 / 121 / 123 / 129 / 132 / 133 / 137 / 139 (carryover monitoring closed)
+- bkit's **conservative recommendation**: Claude Code v2.1.123+ (79 consecutive compatible at recommendation point)
+- bkit's **balanced recommendation**: Claude Code v2.1.139 (94 consecutive compatible)
+
+### Documentation
+
+- README.md badge + architecture section + Sprint Management section + recommended runtime (`v2.1.123+` conservative · `v2.1.139` balanced) updated to v2.1.13
+- README-FULL.md v2.1.13 inventory section added (Sprint Management deliverables + 4 UX sub-sprints + tech debt cleanup)
+- CUSTOMIZATION-GUIDE.md Component Inventory bumped to v2.1.13 (44 Skills · 34 Agents · 51 Scripts · 163 Lib Modules / 19 subdirs · 39 Templates · 19 MCP Tools)
+- AI-NATIVE-DEVELOPMENT.md Context Engineering Layers updated to v2.1.13 + Sprint Management positioned as **AI-Native Principle 6** (Meta-Container for Multi-Feature Initiatives)
+- `bkit-system/_GRAPH-INDEX.md` current release v2.1.13 + Sprint Skill (1) + Sprint Agents (4) + Sprint Templates (7) categories added
+- `scripts/docs-code-sync.js` `EXPECTED_COUNTS` invariant updated (`skills: 44, agents: 34, mcpTools: 19`)
+- 89+ legacy docs archived to `docs/archive/2026-05/` (v2.1.10 / v2.1.11 / v2.1.12 cycles + cc-v2110~v2137 + stale features)
+- Real working example sprint: `docs/01-plan/features/v2113-docs-sync.master-plan.md` (this very release's documentation sync sprint, used to dogfood `/sprint`)
+
+### Dogfooded
+
+The v2.1.13 documentation synchronization itself was driven as a Sprint:
+`/sprint init v2113-docs-sync --trust L4 --features f0-baseline,f1-version-bump,
+f2-changelog,f3-readme,f4-readme-full,f5-customization,f6-bkit-system,
+f7-hooks-commands,f8-archive-cleanup,f9-real-use-validation`. The final report
+lives at `docs/04-report/features/v2113-docs-sync.report.md`.
+
 ## [2.1.12] - 2026-04-28 (branch: `hotfix/v2112-evals-wrapper-argv`)
 
 > **Status**: Silent hotfix. Drop-in patch on top of v2.1.11. Zero breaking changes.

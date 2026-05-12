@@ -140,7 +140,7 @@ Context Engineering is the **systematic design of information flow to LLMs**—g
 - Create adaptive triggers based on user intent (8-language, auto-detection)
 - Implement quality feedback loops with quality gates and metrics (M1-M10)
 
-**bkit v2.1.12 Implementation**:
+**bkit v2.1.13 Implementation**:
 ```
 Domain Knowledge (43 Skills) ────────┐
 Behavioral Rules (36 Agents) ────────┤
@@ -197,18 +197,19 @@ bkit implements **Context Engineering**—the systematic curation of context tok
 | **21-Event Hook System** | Centralized context injection via hooks.json (21 events / 24 blocks, 49 scripts); 3 attribution sites (Stop/SessionEnd/SubagentStop) |
 | **lib/ (142 modules)** | 16 subdirectories Clean Architecture 4-Layer with 7 Port↔Adapter pairs: audit, **application** (v2.1.11 γ2 pilot), cc-regression, context, control, core, **dashboard** (v2.1.11 β4), **discovery** (v2.1.11 β1), **domain**, **evals** (v2.1.11 β2), **i18n** (v2.1.11 β3/β6), **infra**, intent, **orchestrator**, pdca, qa, quality, task, team, ui |
 
-**Context Engineering Architecture (v2.1.12)**:
+**Context Engineering Architecture (v2.1.13)**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              bkit v2.1.12 Context Engineering Layers             │
+│              bkit v2.1.13 Context Engineering Layers             │
 ├─────────────────────────────────────────────────────────────────┤
-│  Layer 1: Domain Knowledge   │ 43 Skills (structured knowledge)  │
-│  Layer 2: Behavioral Rules   │ 36 Agents (role + constraints)    │
+│  Layer 1: Domain Knowledge   │ 44 Skills (structured knowledge)  │
+│  Layer 2: Behavioral Rules   │ 34 Agents (role + constraints)    │
 │  Layer 3: State Management   │ State machine, workflow engine    │
 │  Layer 4: Dynamic Injection  │ Intent detection, 8-lang triggers │
 │  Layer 5: Controllable AI    │ L0-L4 automation, trust score     │
 │  Layer 6: Quality & Audit    │ 7 gates, M1-M10 metrics, audit   │
 │  Layer 7: Feedback Loop      │ Match Rate → Iteration (max 5)   │
+│  Layer 8: Meta-Container     │ Sprint (8-phase, 4 auto-pause)    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -282,6 +283,39 @@ idle → [PM Gate] → Plan [CP1: Requirements] [CP2: Questions]
 | Enterprise | 5 | architect, developer, qa, reviewer, security |
 
 **Requirements**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + Claude Code v2.1.32+
+
+### Principle 6: Sprint as Meta-Container (v2.1.13)
+
+**Principle**: For multi-feature initiatives that share scope, budget, or timeline, bkit groups features under a Sprint meta-container with its own 8-phase lifecycle and 4 auto-pause triggers — providing release-level orchestration on top of per-feature PDCA.
+
+| bkit Feature | Implementation |
+|--------------|----------------|
+| **Sprint 8-phase lifecycle** | `prd → plan → design → do → iterate → qa → report → archived` (orthogonal to PDCA 9-phase) |
+| **16 sub-actions** | init / start / status / list / watch / phase / iterate / qa / report / archive / pause / resume / fork / feature / help / master-plan |
+| **4 Auto-Pause Triggers** | QUALITY_GATE_FAIL · ITERATION_EXHAUSTED · BUDGET_EXCEEDED · PHASE_TIMEOUT |
+| **Trust Level scope L0-L4** | `SPRINT_AUTORUN_SCOPE` controls auto-run boundary (L4 Full-Auto = orchestrator advances until any trigger fires) |
+| **7-Layer S1 dataFlowIntegrity QA** | UI → Client → API → Validation → DB → Response → Client → UI hop traversal |
+| **4 Sprint Agents** | `sprint-master-planner` (plan generation, Context-Anchor-driven) + `sprint-orchestrator` (lifecycle, Sequential dispatch ENH-292 pattern) + `sprint-qa-flow` (S1 verification) + `sprint-report-writer` (cumulative KPI aggregation) |
+| **Context Sizer** | Kahn topological sort + greedy bin-packing for sprint feature size estimation (max 100K tokens/sprint, 25% safety margin, dependency-aware) |
+| **3 new MCP Tools** | `bkit_sprint_list` / `bkit_sprint_status` / `bkit_master_plan_read` |
+| **7 new Templates** | `templates/sprint/{master-plan, prd, plan, design, iterate, qa, report}.template.md` |
+| **2 Korean Guides** | `docs/06-guide/sprint-management.guide.md` (~330 lines) + `sprint-migration.guide.md` (PDCA↔Sprint orthogonal coexistence) |
+| **2 ADRs** | ADR 0006 (CC Upgrade Policy) + ADR 0007 (Sprint as Meta-Container, backward-compat invariant) |
+
+**Sprint Workflow**:
+```
+/sprint init my-launch --features f1,f2,f3 --trust L3
+  → sprint-master-planner generates master plan + PRD + plan + design
+  → /sprint start advances phases auto-run scope=Trust Level
+  → 4 auto-pause triggers monitor in background
+  → /sprint qa runs 7-Layer S1 dataFlowIntegrity
+  → /sprint report aggregates KPI + lessons learned
+  → /sprint archive transitions to terminal state (forward-only)
+```
+
+**Coexistence Model**: Sprint and PDCA are **orthogonal** — both may track concurrently. PDCA 9-phase remains per-feature; Sprint 8-phase is the meta-container. Trust Level directly drives `SPRINT_AUTORUN_SCOPE`: L0 manual+stopAfter=prd / L1 design / L2 do / L3 qa / L4 archived (full-auto). Also gates PDCA phase transitions and destructive operations.
+
+See [skills/sprint/SKILL.md](skills/sprint/SKILL.md), [docs/06-guide/sprint-management.guide.md](docs/06-guide/sprint-management.guide.md), [docs/06-guide/sprint-migration.guide.md](docs/06-guide/sprint-migration.guide.md), and [docs/01-plan/features/v2113-docs-sync.master-plan.md](docs/01-plan/features/v2113-docs-sync.master-plan.md) (real working example — this release's own documentation sync sprint).
 
 ---
 

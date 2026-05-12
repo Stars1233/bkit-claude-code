@@ -112,7 +112,7 @@ Output Styles (v1.5.3)
 | Function | Description |
 |----------|-------------|
 | `/pdca` | PDCA cycle management (pm, plan, design, do, analyze, iterate, report, archive, cleanup, team, status, next) |
-| `/sprint` | **Sprint Management (v2.1.13)** — meta-container grouping 1+ features (15 sub-actions: init/start/status/list/watch/phase/iterate/qa/report/archive/pause/resume/fork/feature/help). Orthogonal coexistence with PDCA |
+| `/sprint` | **Sprint Management (v2.1.13)** — meta-container grouping 1+ features (16 sub-actions: init/start/status/list/watch/phase/iterate/qa/report/archive/pause/resume/fork/feature/help/master-plan). Orthogonal coexistence with PDCA |
 | `/starter` | Starter project (HTML/CSS/Next.js) |
 | `/dynamic` | Dynamic project (bkend.ai BaaS) |
 | `/enterprise` | Enterprise project (K8s/Terraform) |
@@ -232,7 +232,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 | Feature | Activation | Description |
 |---------|-----------|-------------|
-| Sprint Management | `/sprint <action>` | Meta-container grouping 1+ features under shared scope/budget/timeline. 8-phase lifecycle (prd→plan→design→do→iterate→qa→report→archived). 15 sub-actions. Orthogonal to PDCA 9-phase (both may coexist) |
+| Sprint Management | `/sprint <action>` | Meta-container grouping 1+ features under shared scope/budget/timeline. 8-phase lifecycle (prd→plan→design→do→iterate→qa→report→archived). 16 sub-actions. Orthogonal to PDCA 9-phase (both may coexist) |
 | Trust Level Scope L0-L4 | `--trust L0-L4` flag | `SPRINT_AUTORUN_SCOPE` controls auto-run boundary (L0 stop-after-plan / L1 design / L2 do / L3 qa / L4 archived = full-auto) |
 | 4 Auto-Pause Triggers | Automatic during auto-run | QUALITY_GATE_FAIL / ITERATION_EXHAUSTED / BUDGET_EXCEEDED / PHASE_TIMEOUT — instant pause on detection |
 | 7-Layer S1 dataFlow QA | `/sprint qa <id>` | H1-H7 hops (UI→Client→API→Validation→DB→Response→Client→UI) integrity check |

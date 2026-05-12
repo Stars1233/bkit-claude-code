@@ -1,21 +1,24 @@
 # bkit System Architecture
 
-> Architecture guide documenting bkit plugin's internal structure and trigger system — **v2.1.12 (silent hotfix on top of v2.1.11 4 Sprints × 20 FRs Integrated Enhancement)**.
+> Architecture guide documenting bkit plugin's internal structure and trigger system — **v2.1.13 GA (Sprint Management major feature + tech debt cleanup on top of v2.1.11 4 Sprints × 20 FRs Integrated Enhancement; v2.1.12 hotfix between)**.
 >
-> **Version history is maintained in a single source of truth**: see [CHANGELOG.md](../CHANGELOG.md) for the full release history (v1.0.0 → v2.1.12).
+> **Version history is maintained in a single source of truth**: see [CHANGELOG.md](../CHANGELOG.md) for the full release history (v1.0.0 → v2.1.13).
 >
-> Current release highlights (v2.1.12 over v2.1.11):
-> - **4 Sprints × 20 FRs**: α Onboarding Revolution, β Discoverability, γ Trust Foundation, δ Port + Governance
-> - **Clean Architecture 4-Layer with 7 Port↔Adapter pairs**: Domain (ports 7 + guards 4 + rules) / Application (cc-regression + pdca + pdca-lifecycle pilot + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-port-registry + mcp-test-harness + cc-version-checker + branding) / Presentation (hooks + scripts)
+> Current release highlights (v2.1.13 over v2.1.12):
+> - **Sprint Management (NEW v2.1.13 GA)**: 8-phase meta-container (`prd → plan → design → do → iterate → qa → report → archived`) — 16 sub-actions, 4 Auto-Pause Triggers (QUALITY_GATE_FAIL/ITERATION_EXHAUSTED/BUDGET_EXCEEDED/PHASE_TIMEOUT), Trust Level scope L0-L4 via `SPRINT_AUTORUN_SCOPE`, 7-Layer S1 dataFlowIntegrity QA, 4 sprint agents, 1 skill, 7 templates, 13 application-layer modules, 9 infrastructure adapters, 3 MCP tools, 1 L3 contract test (8 SC-01~08), 2 Korean guides, 2 ADRs (0006 + 0007)
+> - **Tech Debt Cleanup**: net −2,333 LOC removed (7 legacy `templates/infra/*` removed)
+> - **4 Sprints × 20 FRs** (v2.1.11 foundation): α Onboarding Revolution, β Discoverability, γ Trust Foundation, δ Port + Governance
+> - **Clean Architecture 4-Layer with 7 Port↔Adapter pairs**: Domain (ports 7 + guards 4 + rules) / Application (cc-regression + pdca + pdca-lifecycle + **sprint-lifecycle** v2.1.13 + team) / Infrastructure (cc-bridge + telemetry + docs-code-scanner + mcp-port-registry + mcp-test-harness + cc-version-checker + branding + **sprint** v2.1.13) / Presentation (hooks + scripts)
 > - **Defense-in-Depth 4-Layer**: CC Built-in → bkit PreToolUse → audit-logger sanitizer → Token Ledger NDJSON
-> - **Invocation Contract L1~L5**: 226 CI-gated assertions + L2 smoke + L3 MCP stdio + L5 E2E shell
-> - **3-Layer Orchestration**: `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index)
+> - **Invocation Contract L1~L5**: 226 CI-gated assertions + L2 smoke + L3 MCP stdio + L5 E2E shell + 8 v2.1.13 contract SC-01~08
+> - **3-Layer Orchestration**: `lib/orchestrator/` 5 modules (intent-router + next-action-engine + team-protocol + workflow-state-machine + index) — v2.1.13 extended with sprint phase transition routing
 > - **Guard Registry 21**: `lib/cc-regression/registry.js` with `expectedFix` auto-release via `lifecycle.reconcile()`
-> - **BKIT_VERSION 5-location invariant**: `bkit.config.json` single SoT → `plugin.json` + `hooks.json` + `session-start.js` + `README.md` + `CHANGELOG.md`
+> - **BKIT_VERSION 5-location invariant**: `bkit.config.json` single SoT → `plugin.json` + `hooks.json` + `session-start.js` + `README.md` + `CHANGELOG.md` (F9-120 closure 9-streak PASS)
 > - **One-Liner SSoT 5/5 (v2.1.11 α2)**: `lib/infra/branding.js` → `plugin.json` + `README.md` + `README-FULL.md` + `session-context.js` + `CHANGELOG.md`
-> - **Quality Gates M1-M10 (v2.1.11 δ2)**: catalog `docs/reference/quality-gates-m1-m10.md` + invariant `scripts/check-quality-gates-m1-m10.js`
+> - **Quality Gates M1-M10 (v2.1.11 δ2)** + **Sprint S1 (v2.1.13)**: catalog `docs/reference/quality-gates-m1-m10.md` + invariant `scripts/check-quality-gates-m1-m10.js`
 > - **i18n (v2.1.11 β3/β6)**: `lib/i18n/translator.js` + `detector.js` (KO/EN full + 6-lang fallback)
-> - **Docs=Code CI**: `scripts/docs-code-sync.js` — counts + 5-location version + One-Liner invariant, 0 drift enforced
+> - **Docs=Code CI**: `scripts/docs-code-sync.js` — counts (44 Skills · 34 Agents · 21:24 Hooks · 19 MCP Tools · 163 Lib · 51 Scripts) + 5-location version + One-Liner invariant, 0 drift enforced
+> - **ACTION_TYPES 20** (v2.1.13: +sprint_paused/sprint_resumed/master_plan_created/task_created) + **CATEGORIES 11** (+sprint)
 
 ## Purpose of This Document
 
@@ -175,12 +178,12 @@ lib/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                bkit Trigger System (v2.1.12)                     │
+│                bkit Trigger System (v2.1.13)                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
 │  │   Skills     │───▶│   Agents     │───▶│   Scripts    │      │
-│  │  (43)        │    │  (36)        │    │  (49)        │      │
+│  │  (44)        │    │  (34)        │    │  (51)        │      │
 │  └──────────────┘    └──────────────┘    └──────────────┘      │
 │         │                   │                   │               │
 │         ▼                   ▼                   ▼               │

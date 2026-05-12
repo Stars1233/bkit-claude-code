@@ -1,6 +1,32 @@
 # PDCA Methodology in bkit
 
-> Declarative state machine-driven PDCA with workflow engine, quality gates, and controllable automation. **Current: v2.1.11** (4 Sprints × 20 FRs Integrated Enhancement; v2.1.10 Sprint 7 3-Layer Orchestration carried forward; matchRate SSoT 90 via `bkit.config.json:pdca.matchRateThreshold`; Application Layer pilot via `lib/application/pdca-lifecycle/`). Version history: see [CHANGELOG.md](../../CHANGELOG.md).
+> Declarative state machine-driven PDCA with workflow engine, quality gates, and controllable automation. **Current: v2.1.13 GA** (Sprint Management major feature added as a **meta-container** orthogonal to per-feature PDCA — see [[../scenarios/scenario-sprint|scenario-sprint]] + [`docs/06-guide/sprint-management.guide.md`](../../docs/06-guide/sprint-management.guide.md); v2.1.11 4 Sprints × 20 FRs Integrated Enhancement foundation; v2.1.10 Sprint 7 3-Layer Orchestration carried forward; matchRate SSoT 90 via `bkit.config.json:pdca.matchRateThreshold`; Application Layer pilot via `lib/application/pdca-lifecycle/` + new `lib/application/sprint-lifecycle/` v2.1.13). Version history: see [CHANGELOG.md](../../CHANGELOG.md).
+
+## Sprint × PDCA Orthogonal Coexistence (v2.1.13)
+
+Starting v2.1.13, bkit has **two parallel workflow primitives**:
+
+| Aspect | PDCA (per-feature) | Sprint (meta-container) |
+|---|---|---|
+| **Scope** | Single feature | 1+ features sharing scope/budget/timeline |
+| **Phases** | 9 (`pm → plan → design → do → check → act → qa → report → archive`) | 8 (`prd → plan → design → do → iterate → qa → report → archived`) |
+| **State machine** | 20 transitions, 9 guards (`lib/application/pdca-lifecycle/`) | 8-phase frozen enum (`lib/application/sprint-lifecycle/phases.js`) |
+| **Trust scope** | `automationLevel` 0-4 | `SPRINT_AUTORUN_SCOPE` L0-L4 |
+| **Quality gates** | M1-M10 catalog | M1-M10 + S1 dataFlow integrity (7-Layer) |
+| **Iteration** | `pdca-iterator` Evaluator-Optimizer (max 5) | `iterate` phase with matchRate 100% target (max 5) |
+| **Skill** | `/pdca <action> <feature>` | `/sprint <action> <id>` |
+| **Templates** | `templates/{plan,design,analysis,report}.template.md` | `templates/sprint/{master-plan,prd,plan,design,iterate,qa,report}.template.md` |
+| **Orchestrator agent** | `cto-lead` | `sprint-orchestrator` (Sequential dispatch ENH-292 pattern) |
+| **QA agent** | `qa-monitor` (Zero Script QA) | `sprint-qa-flow` (7-Layer S1 dataFlow integrity) |
+| **Report agent** | `report-generator` | `sprint-report-writer` (cumulative KPI aggregation) |
+| **Terminal state** | `archived` (rollback available via `rollback` skill) | `archived` (forward-only; feature-level rollback still available) |
+| **Audit category** | `CATEGORIES.pdca` | `CATEGORIES.sprint` (added v2.1.13) |
+
+**Coexistence semantics**:
+- A Sprint contains N features. Each feature's PDCA 9-phase cycle runs **inside** a Sprint phase (typically `do`).
+- Sprint and PDCA state are persisted separately: `.bkit/state/sprints/{id}.json` vs `.bkit/state/pdca-status.json`.
+- A user may run PDCA alone (no enclosing Sprint) — Sprint is opt-in for multi-feature initiatives.
+- See [[../scenarios/scenario-sprint|scenario-sprint]] for the full Sprint workflow.
 
 ## PDCA Cycle (v2.0.0 State Machine)
 
