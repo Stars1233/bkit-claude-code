@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * sprint-handler.js — Sprint skill action dispatcher (v2.1.13 Sprint 4).
  *
@@ -42,6 +43,63 @@ const VALID_ACTIONS = Object.freeze([
   'iterate', 'qa', 'report', 'archive', 'list',
   'feature', 'pause', 'resume', 'fork', 'help',
 ]);
+
+/**
+ * Valid trust levels (L0-L4) per Master Plan §11.2 SPRINT_AUTORUN_SCOPE.
+ * @type {ReadonlyArray<'L0'|'L1'|'L2'|'L3'|'L4'>}
+ */
+const VALID_TRUST_LEVELS = Object.freeze(['L0', 'L1', 'L2', 'L3', 'L4']);
+
+/** @type {'L3'} */
+const DEFAULT_TRUST_LEVEL = 'L3';
+
+/**
+ * Normalize trust level from 3 user input forms to a single internal key.
+ *
+ * Precedence: trustLevel > trust > trustLevelAtStart > default.
+ * Case-insensitive (toUpperCase normalization). Invalid values fall back
+ * to DEFAULT_TRUST_LEVEL.
+ *
+ * @param {Object} args
+ * @returns {('L0'|'L1'|'L2'|'L3'|'L4')}
+ */
+function normalizeTrustLevel(args) {
+  if (!args) return DEFAULT_TRUST_LEVEL;
+  const raw = args.trustLevel || args.trust || args.trustLevelAtStart;
+  if (typeof raw !== 'string') return DEFAULT_TRUST_LEVEL;
+  const upper = raw.toUpperCase();
+  return VALID_TRUST_LEVELS.includes(upper) ? upper : DEFAULT_TRUST_LEVEL;
+}
+
+/**
+ * Parse `--key value` and `--key=value` flag patterns from an argv slice.
+ *
+ * Boolean flags: `--key` followed by another `--flag` or end of argv → true.
+ *
+ * @param {string[]} argv
+ * @returns {Object}
+ */
+function parseFlags(argv) {
+  const out = {};
+  for (let i = 0; i < argv.length; i++) {
+    const tok = argv[i];
+    if (typeof tok !== 'string' || !tok.startsWith('--')) continue;
+    const eq = tok.indexOf('=');
+    if (eq !== -1) {
+      out[tok.slice(2, eq)] = tok.slice(eq + 1);
+      continue;
+    }
+    const key = tok.slice(2);
+    const next = argv[i + 1];
+    if (next === undefined || (typeof next === 'string' && next.startsWith('--'))) {
+      out[key] = true;
+    } else {
+      out[key] = next;
+      i++;
+    }
+  }
+  return out;
+}
 
 /**
  * Build a fresh SprintInfra bundle bound to the given (or current) project
@@ -168,7 +226,7 @@ async function handleInit(args, infra) {
     phase: args.phase || 'prd',
     context: { ...defaultContext(), ...(args.context || {}) },
     features: Array.isArray(args.features) ? args.features : [],
-    trustLevelAtStart: args.trustLevel || 'L3',
+    trustLevelAtStart: normalizeTrustLevel(args),
   });
   await infra.stateStore.save(sprint);
   infra.eventEmitter.emit(domain.SprintEvents.SprintCreated({
@@ -188,7 +246,7 @@ async function handleStart(args, infra, deps) {
   return lifecycle.startSprint({
     id: args.id,
     name: args.name,
-    trustLevel: args.trustLevel || 'L3',
+    trustLevel: normalizeTrustLevel(args),
     phase: args.phase,
     context: { ...defaultContext(), ...(args.context || {}) },
     features: Array.isArray(args.features) ? args.features : [],
@@ -455,6 +513,42 @@ function handleHelp() {
       '  help     /sprint help',
     ].join('\n'),
   };
+}
+
+// =====================================================================
+// CLI mode (P1 §4.3) — invoked when run as `node scripts/sprint-handler.js`
+//   Examples:
+//     node scripts/sprint-handler.js status my-launch
+//     node scripts/sprint-handler.js start my-launch --trust L4
+//     node scripts/sprint-handler.js help
+//   Returns: JSON.stringify(result, null, 2) on stdout. exit code 0 (ok), 1 (handler error), 2 (exception).
+//   require() callers are unaffected (this block is gated by require.main check).
+// =====================================================================
+if (require.main === module) {
+  const argv = process.argv.slice(2);
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h' || argv[0] === 'help') {
+    Promise.resolve(handleHelp()).then((r) => {
+      process.stdout.write(r.helpText + '\n');
+      process.exit(0);
+    });
+  } else {
+    const action = argv[0];
+    const positionalId = (argv[1] && !argv[1].startsWith('--')) ? argv[1] : undefined;
+    const flags = parseFlags(argv.slice(positionalId ? 2 : 1));
+    if (positionalId && !flags.id) flags.id = positionalId;
+    handleSprintAction(action, flags, {})
+      .then((result) => {
+        process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+        process.exit(result && result.ok ? 0 : 1);
+      })
+      .catch((err) => {
+        process.stderr.write(JSON.stringify({
+          ok: false,
+          error: (err && err.message) || String(err),
+        }, null, 2) + '\n');
+        process.exit(2);
+      });
+  }
 }
 
 module.exports = {

@@ -137,3 +137,98 @@ See:
 - `bkit:sprint-master-planner` (agent) — plan/design generation
 - `bkit:sprint-qa-flow` (agent) — 7-Layer dataFlowIntegrity verifier
 - `bkit:sprint-report-writer` (agent) — KPI + lessons + carry items
+
+## 10. Skill Invocation Contract (for LLM Dispatchers)
+
+This contract specifies how an LLM dispatcher should construct the `args`
+object for each of the 15 sub-actions when invoking the underlying handler
+via `scripts/sprint-handler.js`.
+
+### 10.1 Args Object Schema (per action)
+
+| Action | Required | Optional | Example call |
+|--------|----------|----------|--------------|
+| `init` | `id`, `name` | `trust`/`trustLevel`, `phase`, `context`, `features` | `args = { id: "my-launch", name: "Q2 Launch", trust: "L3" }` |
+| `start` | `id`, `name` | `trust`/`trustLevel`, `phase`, `context`, `features` | `args = { id: "my-launch", name: "Q2 Launch" }` (resume preserves phase) |
+| `status` | `id` | — | `args = { id: "my-launch" }` |
+| `list` | — | — | `args = {}` |
+| `phase` | `id`, `to` | — | `args = { id: "my-launch", to: "qa" }` |
+| `iterate` | `id` | — | `args = { id: "my-launch" }` |
+| `qa` | `id`, `featureName` | — | `args = { id: "my-launch", featureName: "auth" }` |
+| `report` | `id` | — | `args = { id: "my-launch" }` |
+| `archive` | `id` | `projectRoot` | `args = { id: "my-launch" }` |
+| `pause` | `id` | `triggerId`, `severity`, `message` | `args = { id: "my-launch", triggerId: "USER_REQUEST" }` |
+| `resume` | `id` | — | `args = { id: "my-launch" }` |
+| `watch` | `id` | — | `args = { id: "my-launch" }` |
+| `feature` | `id`, `action` | `featureName` (required for add/remove) | `args = { id: "my-launch", action: "list" }` |
+| `fork` | `id`, `newId` | — | `args = { id: "my-launch", newId: "my-launch-v2" }` |
+| `help` | — | — | `args = {}` |
+
+### 10.2 Trust Level Acceptance
+
+All actions that accept a Trust Level recognize three input forms (handled
+by `normalizeTrustLevel` in `scripts/sprint-handler.js`):
+
+- `args.trustLevel` (preferred, explicit handler arg)
+- `args.trust` (CLI `--trust L3` natural mapping)
+- `args.trustLevelAtStart` (stored property leak; defensive only)
+
+Precedence: `trustLevel > trust > trustLevelAtStart`. Defaults to `L3` when
+none provided or value is invalid (case-insensitive match against L0-L4).
+
+### 10.3 Natural Language Mapping Rules
+
+When the user invokes the skill with mixed slash command + natural language
+(e.g., `/sprint start S1-UX Phase 1 PRD please proceed thoroughly`), the
+LLM dispatcher SHOULD:
+
+1. **Extract action**: first non-flag token after `/sprint` → `action`.
+2. **Extract id (kebab-case)**: scan remaining tokens for the first kebab-case
+   identifier (matches `/^[a-z][a-z0-9-]{1,62}[a-z0-9]$/`). Lowercase if
+   needed. Example: `S1-UX` → `s1-ux`.
+3. **Disambiguate via AskUserQuestion**: if multiple kebab-case candidates
+   or none, prompt the user to confirm the intended sprint id.
+4. **Load name from state**: for `start` action on an existing sprint, the
+   `name` field can be resolved by `handleStatus({ id })` first; otherwise
+   fall back to the id itself.
+
+### 10.4 Example — Resume Existing Sprint
+
+```text
+User: /sprint start s1-ux
+LLM dispatch:
+  1. action = "start", id = "s1-ux"
+  2. status = await handleSprintAction("status", { id: "s1-ux" })
+  3. name = status.sprint.name  // "S1-UX P0/P1 Quick Fixes"
+  4. await handleSprintAction("start", { id: "s1-ux", name })
+  5. Handler invokes load-then-resume path (P0 fix) — phase preserved
+```
+
+### 10.5 Example — Ambiguous Natural Language
+
+```text
+User: /sprint start S1-UX Phase 1 PRD proceed thoroughly
+LLM dispatch:
+  1. action = "start"
+  2. Candidates: ["s1-ux"]  (kebab-case extracted from "S1-UX")
+  3. AskUserQuestion: "Did you mean to start sprint 's1-ux' and continue
+     with Phase 1 (PRD)?" → user confirms
+  4. await handleSprintAction("start", { id: "s1-ux", ... })
+```
+
+### 10.6 Error Handling
+
+Handler returns `{ ok: false, error: <string>, ... }` on failure. LLM
+dispatcher SHOULD surface the error verbatim to the user and offer
+remediation (e.g., for `error: 'Sprint not found'`, suggest `/sprint list`).
+
+### 10.7 CLI Mode (P1 fix)
+
+The same handler is invokable as a standalone CLI when run as
+`node scripts/sprint-handler.js <action> [id] [--flags]`. Useful for
+headless tests, debugging, and CI integration. The CLI parser accepts
+`--key value` and `--key=value` forms, with the first positional argument
+after `action` treated as `id` if no `--id` flag is provided.
+
+Exit codes: `0` (success), `1` (handler returned `ok: false`), `2`
+(exception thrown).
