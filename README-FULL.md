@@ -81,38 +81,96 @@ The software industry refined how *humans* write code over decades — version c
 
 ## 3. The Autonomous Workflow
 
-bkit's value is the **integration of four axes** — not any single one alone.
+bkit integrates **five layers** — Sprint Management as the outer container, PDCA as the per-feature inner loop, Trust Level as the single autonomy knob for both, Quality Gates enforcing thresholds, and Auto-Iterate healing gaps.
 
-### 3.1 Four-Axis Integration
+### 3.1 Five-Layer Integration
 
 ```mermaid
 flowchart TB
-    subgraph A1["Axis 1: PDCA 9-phase"]
+    subgraph L5["L5 — Sprint Management (multi-feature container)"]
         direction LR
-        pm[pm] --> plan[plan] --> design[design] --> do[do/team] --> check[check] --> act[act] --> qa[qa] --> report[report] --> archive[archive]
+        SM["/sprint master-plan"] --> TASK["Task Management<br/>auto-register"] --> SS["/sprint start"]
+        SS --> SP["8-phase sprint:<br/>prd → plan → design → do → iterate → qa → report → archived"]
     end
-    subgraph A2["Axis 2: Trust Level dial"]
-        L0[L0 Manual] --- L1[L1 Guided] --- L2[L2 Semi-Auto] --- L3[L3 Auto] --- L4[L4 Full-Auto]
+    subgraph L4["L4 — PDCA 9-phase (per feature, runs inside sprint 'do')"]
+        direction LR
+        pm["pm"] --> plan["plan"] --> design["design"] --> do["do/team"] --> check["check"] --> act["act"] --> qa["qa"] --> report["report"] --> archive["archive"]
     end
-    subgraph A3["Axis 3: Quality Gates"]
-        M1["M1 matchRate ≥ 90%"]
+    subgraph L3["L3 — Trust Level dial (one knob for L4 + L5)"]
+        L0["L0 Manual"] --- L1["L1 Guided"] --- L2["L2 Semi-Auto"] --- LL3["L3 Auto"] --- LL4["L4 Full-Auto"]
+    end
+    subgraph L2["L2 — Quality Gates"]
+        M1["M1 matchRate &ge; 90%"]
         M3["M3 critical = 0"]
-        M8["M8 sprint match ≥ 85%"]
-        S1["S1 dataFlow ≥ 85%"]
+        M8["M8 sprint match &ge; 85%"]
+        S1["S1 dataFlow &ge; 85%"]
         more["M2 M4-M7 M9 M10"]
     end
-    subgraph A4["Axis 4: Auto-Iterate"]
-        detector[gap-detector] --> sub90{< 90%?}
-        sub90 -- yes --> iterator[pdca-iterator<br/>max 5 cycles]
+    subgraph L1["L1 — Auto-Iterate"]
+        detector["gap-detector"] --> sub90{"&lt; 90%?"}
+        sub90 -- "yes" --> iterator["pdca-iterator<br/>max 5 cycles"]
         iterator --> detector
-        sub90 -- no --> ok[OK advance]
+        sub90 -- "no" --> ok["OK advance"]
     end
-    A1 -. controlled by .-> A2
-    A1 -. gated by .-> A3
-    A1 -. healed by .-> A4
+    L5 ==> L4
+    L3 -.->|"scopes auto-run"| L5
+    L3 -.->|"scopes auto-run"| L4
+    L4 -.->|"gated by"| L2
+    check -.->|"triggers"| detector
 ```
 
-### 3.2 What Each PDCA Phase Does (without you)
+| Layer | Surface | What runs unattended |
+|---|---|---|
+| **L5 Sprint Management** | `/sprint master-plan` · `/sprint start` · `/sprint status` · `/sprint qa` · `/sprint report` · `/sprint archive` | Multi-feature release split into context-budgeted sprints (Kahn topological + greedy bin-packing), each sprint auto-registered in Task Management, then 8-phase auto-run scoped by Trust Level. 4 auto-pause triggers (QUALITY_GATE_FAIL / ITERATION_EXHAUSTED / BUDGET_EXCEEDED / PHASE_TIMEOUT) provide the safety net. |
+| **L4 PDCA 9-phase** | `/pdca pm` · `/pdca team` · `/pdca check` · `/pdca iterate` · `/pdca qa` · `/pdca report` | Per-feature loop. Inside a sprint, runs **once per feature** in the `do` phase. Standalone for single-feature work. |
+| **L3 Trust Level** | `/control level 0..4` | Single dial. Scopes how far both L5 sprint phases and L4 PDCA phases auto-advance. L2 default; L4 = fire-and-forget. |
+| **L2 Quality Gates** | `bkit.config.json` thresholds + audit log | M1–M10 + S1. Failed gate → phase pause + audit entry. |
+| **L1 Auto-Iterate** | `pdca.autoIterate = true` (default) | `gap-detector` sub-90 → `pdca-iterator` automatic max-5 cycle Evaluator-Optimizer. |
+
+### 3.2 Sprint User Journey — 4 Steps
+
+The v2.1.13 Sprint Management user experience is a four-step flow. The user explicitly described these four steps as the core UX:
+
+```mermaid
+flowchart TB
+    subgraph Step1["1. Master plan — user-driven, thorough"]
+        U1["User: /sprint master-plan my-project --name '...' --features a,b,c"]
+        --> SMP["sprint-master-planner agent"]
+        --> CS["Context Sizer<br/>(Kahn + bin-packing, &le; 75K tokens/sprint)"]
+        --> Plan["Master plan written:<br/>docs/01-plan/features/my-project.master-plan.md<br/>+ per-sprint plan/design templates"]
+    end
+    subgraph Step2["2. Task Management auto-registration"]
+        Plan --> Tasks["For each sprint in the master plan:<br/>TaskCreate(sprint-N) with Kahn-ordered dependencies"]
+    end
+    subgraph Step3["3. Sprint execution = bkit PDCA workflow"]
+        U2["User: /sprint start sprint-1"]
+        --> SO["sprint-orchestrator"]
+        --> SL["Sprint 8-phase: prd → plan → design → do → iterate → qa → report → archived"]
+        SL --> PerFeat["Inside 'do' phase, per feature:<br/>PDCA 9-phase auto-loop<br/>(pm → plan → design → do → check → act → qa → report → archive)"]
+    end
+    subgraph Step4["4. Autonomy control"]
+        U3["User: /control level 0..4 (anytime)"]
+        --> Scope["SPRINT_AUTORUN_SCOPE + automationLevel:<br/>scopes how far L5 sprint + L4 PDCA<br/>auto-advance before stopping"]
+    end
+    Tasks ==> U2
+    Step4 -.->|"applies to"| Step3
+
+    style Step1 fill:#fff8e1
+    style Step2 fill:#fff3e0
+    style Step3 fill:#fce4ec
+    style Step4 fill:#f3e5f5
+```
+
+| Step | User command | bkit auto-action | Output |
+|---|---|---|---|
+| **1. Master plan** | `/sprint master-plan my-project --name "Q2 Launch" --features auth,payment,reports` | `sprint-master-planner` agent writes a Context-Anchor-driven master plan. Context Sizer splits features into sprints honoring the 75K-tokens/sprint budget and dependency graph (Kahn topological sort + greedy bin-packing). | `docs/01-plan/features/my-project.master-plan.md` + per-sprint `prd` / `plan` / `design` templates; `.bkit/state/master-plans/<projectId>.json`; audit log entry `master_plan_created`. |
+| **2. Task registration** | _(automatic, happens during Step 1)_ | Every sprint in `plan.sprints[]` is registered in bkit's Task Management System with `TaskCreate` calls. Cross-sprint `dependsOn` edges become task-level `blockedBy` relationships. | One task per sprint, Kahn-ordered. Visible via `/sprint list` or `TaskList`. |
+| **3. Sprint execution** | `/sprint start sprint-1` | `sprint-orchestrator` runs the 8-phase sprint lifecycle (`prd → plan → design → do → iterate → qa → report → archived`). Inside the `do` phase, **bkit's PDCA 9-phase runs once per feature** in the sprint — pm-lead writes the PRD, cto-lead spawns the team, gap-detector measures, pdca-iterator self-repairs. | `.bkit/state/sprints/sprint-1.json` updates per phase; per-feature PDCA artifacts (`docs/00-pm/...`, `docs/01-plan/features/...`, `docs/02-design/features/...`, etc.); sprint S1 dataFlow QA report on `qa` phase. |
+| **4. Autonomy control** | `/control level 0..4` _(any time, before or during a sprint)_ | The dial scopes both L5 sprint and L4 PDCA phase auto-advancement. L2 default. L4 = fire-and-forget; auto-pauses only on one of the 4 sprint triggers or a quality gate fail. Trust Score also recommends a level based on track record. | `.bkit/state/trust-profile.json`; effective scope mirrored into `lib/control/automation-controller.js:SPRINT_AUTORUN_SCOPE` (L3 contract test SC-07 enforces 1:1 mirror). |
+
+This is the canonical UX. Single-feature work skips Step 1 + 2 and runs directly into Step 3's PDCA loop. Step 4 applies to both.
+
+### 3.3 What Each PDCA Phase Does (without you)
 
 | Phase | bkit auto-action |
 |---|---|
