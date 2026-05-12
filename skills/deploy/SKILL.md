@@ -105,8 +105,27 @@ Rollback triggers:
 - Manual: `/pdca deploy rollback` command
 - Auto: Error rate spike detected by ops-metrics (> 5% threshold)
 - Canary fail: Argo Rollouts auto-rollback on metrics failure
+- **Self-healing escalation**: When `self-healing` agent exhausts its 5-iteration auto-fix budget without restoring SLO, it triggers `/pdca deploy rollback` as final remediation (see Self-Healing Integration below).
 
 Rollback resets deploy state machine to `idle` and restores previous version.
+
+## Self-Healing Integration (v2.1.13)
+
+The `self-healing` agent (linked-from-skills: deploy) closes the deploy ⇄ recovery loop:
+
+| Stage | Trigger | Action |
+|-------|---------|--------|
+| **Detect** | Sentry/Slack error pattern matches deploy window | self-healing agent activated via 8-lang triggers ("자동 수정", "auto fix", etc.) |
+| **Diagnose** | 4-Layer Living Context loaded (Scenarios + Invariants + Impact + Incidents) | Identify deploy-introduced regression |
+| **Auto-fix** | Spawn code-analyzer + gap-detector via Task tool | Up to 5 iteration cycles with scenario runner verification |
+| **Verify** | Re-run feature scenarios | Pass → auto PR; Fail → escalate |
+| **Escalate** | Iteration budget exhausted or critical invariant violated | Trigger `/pdca deploy rollback` + alert human on-call |
+
+Invocation paths:
+- **Implicit**: Sentry webhook → self-healing agent (via plugin trigger registry)
+- **Explicit**: `/pdca deploy rollback` first checks for active self-healing session and aborts to wait for it; user can force-bypass with `--force-rollback`
+
+The self-healing → deploy contract is mediated by `lib/audit/audit-logger.js` ACTION_TYPES (`rollback_executed`, `agent_completed`, `gate_failed`) so all transitions remain audit-trail compliant.
 
 ## Hook Events
 

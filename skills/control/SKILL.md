@@ -5,7 +5,7 @@ classification-reason: Automation control persists regardless of model advanceme
 deprecation-risk: none
 effort: medium
 description: |
-  Control bkit automation level (L0-L4), view trust score, and manage guardrails.
+  Control bkit automation level (L0-L4), view trust score, and manage guardrails. Trust level directly drives SPRINT_AUTORUN_SCOPE (v2.1.13): L0 manual+stopAfter=prd, L4 full-auto+stopAfter=archived. Also gates PDCA phase transitions and destructive operations.
   Triggers: control, automation level, trust score, guardrail, 자동화 레벨, 제어.
 argument-hint: "[status|level|pause|resume|trust]"
 user-invocable: true

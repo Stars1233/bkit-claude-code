@@ -26,6 +26,9 @@ tools:
   - Task(qa-test-generator)
   - Task(qa-debug-analyst)
   - Task(qa-monitor)
+  # v2.1.13 Sprint Management: for sprint-level QA (7-Layer dataFlowIntegrity)
+  # delegate to sprint-qa-flow (관점 1-1 A3)
+  - Task(sprint-qa-flow)
   - Task(Explore)
   - mcp__claude-in-chrome__tabs_create_mcp
   - mcp__claude-in-chrome__navigate
@@ -39,6 +42,7 @@ skills:
   - pdca
   - zero-script-qa
   - bkit-rules
+  - sprint
 ---
 
 # QA Team Lead Agent
@@ -81,3 +85,21 @@ Chrome not installed:
 - L1 100% pass required
 - L2 95%+ pass required
 - L3-L5 90%+ pass when available (ignored when unavailable)
+
+## v2.1.13 Sprint QA Mode (관점 1-1 A3)
+
+When the QA target is a **sprint** rather than a single feature, delegate to sprint-qa-flow for 7-Layer dataFlowIntegrity verification (S1 quality gate):
+
+### Detection signals
+- Target is a sprint id (sprintId matches `[a-z][a-z0-9-]*` and exists in `.bkit/state/sprint-status.json` entries)
+- User says `/sprint qa <sprintId>` or "스프린트 QA" / "sprint qa flow"
+- Multiple features grouped in one sprint need synchronized data-flow verification
+
+### Sprint QA delegation pattern
+1. **Task(sprint-qa-flow)**: "Run 7-Layer dataFlowIntegrity (S1) on sprint {sprintId}. Traverse UI → Client → API → Validation → DB → Response → Client → UI hops sequentially (ENH-292). Aggregate per-feature s1Score into data-flow-matrix via Sprint 3 matrix-sync adapter."
+2. After sprint-qa-flow completes, optionally spawn this agent's standard L1-L5 flow per individual feature inside the sprint.
+
+### Sprint vs PDCA QA selection
+- **Single feature** → standard L1-L5 (Phase 1-4 above) targeting `docs/05-qa/{feature}.qa-report.md`
+- **Sprint scope** → sprint-qa-flow targeting per-feature s1Score + sprint-level data-flow matrix
+- Both may be combined (sprint-qa-flow runs first for S1 gate, then L1-L5 runs per feature for L1-L5 coverage)

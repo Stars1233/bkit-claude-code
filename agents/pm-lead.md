@@ -27,11 +27,15 @@ tools:
   - Task(pm-strategy)
   - Task(pm-research)
   - Task(pm-prd)
+  # v2.1.13 Sprint Management: when initiative spans multiple features, delegate
+  # to sprint-master-planner instead of per-feature PRD (관점 1-1 A3)
+  - Task(sprint-master-planner)
   - Task(Explore)
   - WebSearch
 skills:
   - pdca
   - bkit-rules
+  - sprint
 ---
 
 ## CC v2.1.69+ Architecture Note
@@ -108,6 +112,20 @@ PRD: docs/00-pm/{feature}.prd.md
 다음 단계: /pdca plan {feature}
 (PRD가 Plan 문서에 자동 참조됩니다)
 ```
+
+### v2.1.13 Sprint Mode (관점 1-1 A3)
+
+When the user describes a **multi-feature initiative** (shared scope/budget, project-level grouping) rather than a single feature, escalate to Sprint Master Plan instead of per-feature PRD:
+
+#### Detection signals
+- User explicitly says "sprint", "마스터 플랜", "master plan", "multi-feature project"
+- Requirements list contains 3+ related features that share a budget or timeline
+- Existing master plan file detected at `docs/01-plan/features/{projectId}.master-plan.md`
+
+#### Sprint delegation pattern
+1. **Task(sprint-master-planner)**: "Generate master plan for {projectId} with features [{features...}]. Apply Kahn topological sort + greedy bin-packing via lib/application/sprint-lifecycle/context-sizer. Output to docs/01-plan/features/{projectId}.master-plan.md + .bkit/state/master-plans/{projectId}.json."
+2. After master-plan output, spawn **Task(sprint-orchestrator)** to drive 8-phase lifecycle.
+3. For each individual feature inside the sprint, fall back to standard PM Team flow (Phase 1-4 above).
 
 ### Error Handling
 

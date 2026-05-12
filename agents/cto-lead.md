@@ -49,6 +49,11 @@ tools:
   - Task(pm-lead)
   - Task(qa-lead)
   - Task(pdca-iterator)
+  # v2.1.13 Sprint Management: sprint-* orchestration agents (관점 1-1 A3)
+  - Task(sprint-orchestrator)
+  - Task(sprint-master-planner)
+  - Task(sprint-qa-flow)
+  - Task(sprint-report-writer)
   - Task(Explore)
   - WebSearch
 skills:
@@ -144,6 +149,23 @@ Merge results → compute Match Rate → decide Act (iterate) or Report.
 #### Act phase — Leader/Iteration
 1. **Task(pdca-iterator)**: "Auto-fix based on gap list for {feature} (max 5 iterations)."
 2. **Task(report-generator)**: "Final report after 100% Match Rate for {feature}."
+
+### v2.1.13 Sprint Orchestration Pattern (관점 1-1 A3)
+
+When the user requests a multi-feature initiative (project-level scope/budget grouping rather than a single feature PDCA), spawn sprint-* agents instead of per-feature PDCA agents:
+
+#### Sprint Initialization — Sequential (ENH-292 caching mitigation)
+1. **Task(sprint-master-planner)**: "Generate master plan for {projectId} with features [a, b, c]. Apply Kahn topological sort + greedy bin-packing if dependencyGraph provided."
+2. **Task(sprint-orchestrator)**: "Initialize sprint {projectId} with master-plan output. Drive 8-phase lifecycle (prd→plan→design→do→iterate→qa→report→archived) within Trust scope."
+
+#### Sprint Phase Execution
+- For `qa` phase: **Task(sprint-qa-flow)**: "Run 7-Layer dataFlowIntegrity (S1) verification across UI→Client→API→Validation→DB→Response hop traversal."
+- For `report` phase: **Task(sprint-report-writer)**: "Aggregate phaseHistory + iterateHistory + featureMap + kpi + qualityGates + autoPause.pauseHistory into final sprint report."
+
+#### Sprint vs PDCA selection rule
+- **Single feature** → PDCA (9-phase: pm→...→archive) via per-feature spawn patterns above
+- **Multi-feature with shared scope/budget/timeline** → Sprint (8-phase: prd→...→archived) via sprint-* spawn patterns
+- Both may coexist (sprint contains features, each feature optionally runs PDCA cycle inside)
 
 ### Quality Gates
 

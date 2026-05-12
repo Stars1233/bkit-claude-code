@@ -5,7 +5,7 @@ classification-reason: Combines workflow automation with capability-dependent fe
 deprecation-risk: low
 effort: high
 description: |
-  Brainstorming-enhanced PDCA planning with intent discovery and YAGNI review.
+  Brainstorming-enhanced PDCA planning with intent discovery and YAGNI review. For a single feature's plan use /plan-plus; for grouping multiple features under one scope/budget see /sprint master-plan (v2.1.13).
   Triggers: plan-plus, brainstorm, plan plus, intent, 브레인스토밍, 플랜플러스.
 argument-hint: "[feature]"
 user-invocable: true
