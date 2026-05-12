@@ -130,12 +130,12 @@ function sc04() {
   assert.strictEqual(handlerMod.handleSprintAction.length, 3,
     'handleSprintAction must take (action, args, deps)');
   assert(Array.isArray(handlerMod.VALID_ACTIONS));
-  assert.strictEqual(handlerMod.VALID_ACTIONS.length, 15,
-    'VALID_ACTIONS must list 15 sub-actions');
-  // 15 expected actions
+  assert.strictEqual(handlerMod.VALID_ACTIONS.length, 16,
+    'VALID_ACTIONS must list 16 sub-actions');
+  // 16 expected actions (S2-UX v2.1.13 added master-plan)
   const expected = ['init', 'start', 'status', 'list', 'phase', 'iterate',
                     'qa', 'report', 'archive', 'pause', 'resume', 'fork',
-                    'feature', 'watch', 'help'];
+                    'feature', 'watch', 'help', 'master-plan'];
   expected.forEach(a => assert(handlerMod.VALID_ACTIONS.includes(a),
     'VALID_ACTIONS missing: ' + a));
 }
@@ -179,11 +179,12 @@ function sc06() {
   const match = src.match(/const\s+ACTION_TYPES\s*=\s*\[([\s\S]*?)\];/);
   assert(match, 'ACTION_TYPES array literal not found');
   const entries = match[1].match(/'[^']+'/g) || [];
-  assert.strictEqual(entries.length, 18,
-    'ACTION_TYPES expected 18 entries, got ' + entries.length);
+  assert.strictEqual(entries.length, 19,
+    'ACTION_TYPES expected 19 entries, got ' + entries.length);
   const flat = entries.join(',');
   assert(flat.includes('sprint_paused'), 'sprint_paused missing from ACTION_TYPES');
   assert(flat.includes('sprint_resumed'), 'sprint_resumed missing from ACTION_TYPES');
+  assert(flat.includes('master_plan_created'), 'master_plan_created missing from ACTION_TYPES (S2-UX v2.1.13)');
 }
 
 // === SC-07: SPRINT_AUTORUN_SCOPE mirror (Sprint 2 inline ↔ Sprint 4 lib/control) ===
@@ -232,17 +233,127 @@ function sc08() {
     'hooks blocks expected 24, got ' + blockCount);
 }
 
+// === SC-09: master-plan invocation 4-layer chain (S4-UX v2.1.13) ===
+async function sc09() {
+  const handler = require(path.join(projectRoot, 'scripts/sprint-handler'));
+
+  // Unique test id with timestamp to avoid collision with real master plans
+  const testId = 'sc09-test-' + Date.now();
+  const masterPlanPath = path.join(projectRoot,
+    'docs/01-plan/features/' + testId + '.master-plan.md');
+  const stateFilePath = path.join(projectRoot,
+    '.bkit/state/master-plans/' + testId + '.json');
+
+  try {
+    const result = await handler.handleSprintAction('master-plan', {
+      id: testId,
+      name: 'SC09 Test Master Plan',
+      features: ['a', 'b'],
+    }, {});
+
+    // Layer 1: handler result
+    assert.strictEqual(result.ok, true,
+      'master-plan handler failed: ' + JSON.stringify(result));
+    assert(result.plan, 'result missing plan');
+    assert(result.masterPlanPath, 'result missing masterPlanPath');
+    assert(result.stateFilePath, 'result missing stateFilePath');
+
+    // Layer 2: state json
+    assert(fs.existsSync(stateFilePath),
+      'state json not created: ' + stateFilePath);
+    const state = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
+    assert.strictEqual(state.schemaVersion, '1.0',
+      'state schemaVersion expected 1.0, got ' + state.schemaVersion);
+    assert.strictEqual(state.projectId, testId);
+
+    // Layer 3: markdown file
+    assert(fs.existsSync(masterPlanPath),
+      'markdown not created: ' + masterPlanPath);
+
+    // Layer 4: audit entry (best-effort, may be batched)
+    const today = new Date().toISOString().slice(0, 10);
+    const auditPath = path.join(projectRoot, '.bkit/audit/' + today + '.jsonl');
+    if (fs.existsSync(auditPath)) {
+      const auditContent = fs.readFileSync(auditPath, 'utf8');
+      assert(auditContent.includes('master_plan_created'),
+        'audit missing master_plan_created entry');
+      assert(auditContent.includes(testId),
+        'audit missing testId reference');
+    }
+  } finally {
+    // Cleanup test artifacts (best-effort)
+    try { fs.unlinkSync(stateFilePath); } catch (_e) {}
+    try { fs.unlinkSync(masterPlanPath); } catch (_e) {}
+  }
+}
+
+// === SC-10: context-sizer pure function contract (S4-UX v2.1.13) ===
+function sc10() {
+  const cs = require(path.join(projectRoot,
+    'lib/application/sprint-lifecycle/context-sizer'));
+
+  // Schema version
+  assert.strictEqual(cs.CONTEXT_SIZING_SCHEMA_VERSION, '1.0');
+
+  // Token estimation determinism
+  assert.strictEqual(cs.estimateTokensForFeature('x'), 33350,
+    'default estimate must be 33350');
+  assert.strictEqual(cs.estimateTokensForFeature('x', { locHint: 2000 }), 13340,
+    'locHint=2000 estimate must be 13340');
+
+  // Topological sort
+  const t1 = cs.topologicalSort({});
+  assert.strictEqual(t1.ok, true);
+  assert.deepStrictEqual(t1.order, []);
+
+  // Cycle detection
+  assert.strictEqual(cs.detectCycle({ a: ['a'] }), true,
+    'self-loop must be detected');
+  assert.strictEqual(cs.detectCycle({ b: ['a'], c: ['b'] }), false,
+    'linear chain must not detect cycle');
+
+  // Recommendation: empty
+  const r0 = cs.recommendSprintSplit({ projectId: 'sc10-test', features: [] });
+  assert.strictEqual(r0.ok, true);
+  assert.deepStrictEqual(r0.sprints, []);
+
+  // Recommendation: 2 features, sprint shape
+  const r1 = cs.recommendSprintSplit({
+    projectId: 'sc10-test',
+    features: ['a', 'b'],
+  });
+  assert.strictEqual(r1.ok, true);
+  assert(Array.isArray(r1.sprints), 'sprints must be array');
+  if (r1.sprints.length > 0) {
+    const expectedKeys = ['dependsOn', 'features', 'id', 'name', 'scope', 'tokenEst'];
+    const gotKeys = Object.keys(r1.sprints[0]).sort();
+    assert.deepStrictEqual(gotKeys, expectedKeys,
+      'sprint shape mismatch: ' + JSON.stringify(gotKeys));
+  }
+
+  // Cycle case
+  const r2 = cs.recommendSprintSplit({
+    projectId: 'sc10-test',
+    features: ['a', 'b'],
+    dependencyGraph: { a: ['b'], b: ['a'] },
+  });
+  assert.strictEqual(r2.ok, false);
+  assert.strictEqual(r2.error, 'dependency_cycle');
+}
+
 // === Runner ===
 (async () => {
-  console.log('=== L3 Contract Tests (Sprint 5 SC-01~08) ===\n');
+  console.log('=== L3 Contract Tests (Sprint 5 SC-01~08 + S4-UX SC-09~10) ===\n');
   record('SC-01 Sprint entity shape (12 core keys)', sc01);
   record('SC-02 deps interface (start: 7 + iterate: 2 + verify: 1)', sc02);
   record('SC-03 createSprintInfra 4 adapters + Sprint 5 3 scaffolds', sc03);
-  record('SC-04 handleSprintAction(action,args,deps) + 15 VALID_ACTIONS', sc04);
+  record('SC-04 handleSprintAction(action,args,deps) + 16 VALID_ACTIONS', sc04);
   await record('SC-05 4-layer end-to-end chain (init → status → list)', sc05);
-  record('SC-06 ACTION_TYPES enum 18 entries (incl sprint_paused/resumed)', sc06);
+  record('SC-06 ACTION_TYPES enum 19 entries (incl sprint_paused/resumed/master_plan_created)', sc06);
   record('SC-07 SPRINT_AUTORUN_SCOPE inline ↔ lib/control mirror (5 levels)', sc07);
   record('SC-08 hooks.json 21 events 24 blocks invariant', sc08);
+  await record('SC-09 master-plan 4-layer chain (handler → state + markdown + audit)', sc09);
+  record('SC-10 context-sizer pure function contract (5 assertions)', sc10);
   console.log('\n=== L3 Contract: ' + passed + '/' + (passed + failed) + ' PASS ===');
   if (failed > 0) {
     console.error('\n❌ ' + failed + ' contract(s) FAILED — cross-sprint drift detected.');

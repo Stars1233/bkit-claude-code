@@ -138,21 +138,58 @@ the audit event.
 6. Return the markdown verbatim — no JSON wrapper, no headers, just the
    markdown content.
 
-## Sprint Split Heuristics (S3-UX Forward Compatibility)
+## Sprint Split Heuristics (Programmatic API)
 
-The S2-UX phase exposes `sprints: []` as a stub (empty array) in the output
-JSON state. The S3-UX phase will implement `context-sizer.js` to populate
-this array with token-bounded sprint splits.
+S3-UX (v2.1.13) implemented the programmatic split algorithm at
+`lib/application/sprint-lifecycle/context-sizer.js`. The S4-UX integration
+wires this algorithm into `master-plan.usecase.js` via the optional
+`deps.contextSizer` dependency injection. When the caller (LLM dispatcher
+at main session) injects this dependency, the `plan.sprints[]` array is
+populated automatically with token-bounded sprint splits.
 
-Until S3-UX lands, generate Sprint Split markdown content as a textual
-recommendation only (§5 of the output markdown), referencing the heuristic:
+### API Reference
+
+```javascript
+const lifecycle = require('./lib/application/sprint-lifecycle');
+
+// Estimate tokens for a feature (default 33350 = 5000 LOC x 6.67 tokens/LOC)
+const tokens = lifecycle.estimateTokensForFeature('auth');
+
+// Recommend sprint split with token-budget awareness + dependency graph
+const result = lifecycle.recommendSprintSplit({
+  projectId: 'q2-launch',
+  features: ['auth', 'payment', 'reports'],
+  dependencyGraph: {
+    payment: ['auth'],
+    reports: ['auth', 'payment'],
+  },
+}, lifecycle.CONTEXT_SIZING_DEFAULTS);
+
+// result.ok === true
+// result.sprints: Array<{ id, name, features, scope, tokenEst, dependsOn }>
+// result.totalTokenEst: number
+// result.warning?: string (when a single feature exceeds maxTokensPerSprint)
+// result.dependencyGraph: Object (echoed input)
+```
+
+### Algorithm Pillars
+
+- Token estimation: `Math.ceil(LOC * tokensPerLOC)`, conservative ceiling
+- Dependency graph: adjacency list `{ feature: [deps] }`, Kahn's topological sort
+- Bin-packing: greedy, with `effectiveBudget = maxTokensPerSprint * (1 - safetyMargin)`
+- Single-feature spillover: oversized feature gets its own sprint + warning
+- maxSprints cap: returns error with suggestedAction if computed split exceeds cap
+
+### Heuristics (for narrative content in §5 of master plan markdown)
 
 - Group features by dependency graph (topological sort)
-- Each group ≤ ~100K tokens (heuristic: ~1.5K LOC per 10K tokens)
-- Sequential dependency: each sprint blocks the next
-- Fallback: if features count ≤ 3 and no inter-feature deps, single sprint
+- Each group <= ~100K tokens default (configurable via `bkit.config.json` `sprint.contextSizing.maxTokensPerSprint`)
+- Sequential dependency: each sprint blocks the next via `dependsOn` array
+- Fallback: if features count <= 3 and no inter-feature deps, single sprint
 
-This text serves as documentation only. Programmatic split is owned by S3-UX.
+The agent may use this API directly (via Bash tool calling Node) when
+computing split decisions for the §5 Sprint Split Recommendation markdown
+content, or recommend the caller use it programmatically.
 
 ## Output Markdown Contract (Strict)
 

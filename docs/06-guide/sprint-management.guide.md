@@ -33,7 +33,7 @@
 
 ---
 
-## 2. 15 Sub-actions
+## 2. 16 Sub-actions
 
 ### 2.1 매트릭스
 
@@ -54,6 +54,7 @@
 | `feature` | `/sprint feature <id>` | feature 관리 | `--action list/add/remove --feature <name>` |
 | `watch` | `/sprint watch <id>` | 실시간 상태 + 트리거 + 매트릭스 스냅샷 | — |
 | `help` | `/sprint help` | 도움말 | — |
+| `master-plan` | `/sprint master-plan <project>` | Multi-sprint Master Plan 자동 생성 (sprint-master-planner agent 격리 spawn 또는 dry-run template, v2.1.13 S2-UX 추가) | `--name <name> --features <a,b,c> --trust L0-L4` (선택) `--force` (선택) |
 
 ### 2.2 예시
 
@@ -270,6 +271,143 @@ L3 Contract test (`tests/contract/v2113-sprint-contracts.test.js`) 가 이 4-lay
 # 3. q3-carry 에서 계속 진행
 /sprint start q3-carry --trust L4
 ```
+
+---
+
+## 9. Master Plan Generator + Context Sizer 워크플로우 (v2.1.13)
+
+본 섹션은 S2-UX (Master Plan Generator) + S3-UX (Context Sizer) + S4-UX (Integration) 의 통합 워크플로우를 설명합니다. **사용자 명시 4-1 (Master Plan 자동 생성) + 4-2 (컨텍스트 윈도우 sprint sizing)** 충족.
+
+### 9.1 워크플로우 Overview
+
+```
+사용자
+   |
+   | /sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment,reports
+   v
+SKILL.md bkit:sprint dispatcher
+   |
+   v
+scripts/sprint-handler.js handleMasterPlan
+   |
+   v
+lib/application/sprint-lifecycle/master-plan.usecase.js generateMasterPlan
+   |
+   | (S4-UX) deps.contextSizer 주입 시 자동 sprint split
+   v
+lib/application/sprint-lifecycle/context-sizer.js recommendSprintSplit
+   |
+   | sprints[] 배열 반환 (각 sprint <= 75K effective tokens)
+   v
+master-plan.usecase.js plan 객체에 sprints 채워짐
+   |
+   | atomic write (state-first + rollback on markdown fail)
+   v
+.bkit/state/master-plans/<projectId>.json (state)
+docs/01-plan/features/<projectId>.master-plan.md (markdown)
+.bkit/audit/<date>.jsonl (master_plan_created entry)
+```
+
+### 9.2 1-Command 사용법
+
+가장 간단한 호출:
+```bash
+/sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment,reports
+```
+
+CLI 모드 (headless test / debugging):
+```bash
+node scripts/sprint-handler.js master-plan q2-launch --name="Q2 Launch" --features=auth,payment,reports
+```
+
+플래그:
+- `--name <string>` (required): 사용자 친화적 프로젝트 이름
+- `--features <a,b,c>` (optional): comma-separated feature 목록 (또는 array)
+- `--trust L0~L4` (optional): Trust Level (default L3)
+- `--force` (optional): 기존 master plan 덮어쓰기
+- `--duration <string>` (optional): 예상 기간 (default 'TBD')
+
+### 9.3 Context Sizer 설정 (`bkit.config.json` `sprint.contextSizing`)
+
+`bkit.config.json` 의 `sprint.contextSizing` section 으로 sprint split 알고리즘을 조정할 수 있습니다 (9 fields):
+
+```json
+{
+  "sprint": {
+    "contextSizing": {
+      "enabled": true,
+      "schemaVersion": "1.0",
+      "maxTokensPerSprint": 100000,
+      "safetyMargin": 0.25,
+      "tokensPerLOC": 6.67,
+      "baselineLOC": 5000,
+      "minSprints": 1,
+      "maxSprints": 12,
+      "dependencyAware": true
+    }
+  }
+}
+```
+
+| Field | Default | 의미 |
+|-------|---------|-----|
+| `enabled` | true | context-sizing 기능 활성화 여부 |
+| `maxTokensPerSprint` | 100000 | sprint 당 최대 token (단일 세션 안전 한도) |
+| `safetyMargin` | 0.25 | 안전 margin (effective budget = max × (1 - margin)) |
+| `tokensPerLOC` | 6.67 | LOC 당 token 계수 (Master Plan §1.5 heuristic 1.5K LOC / 10K tokens 역수) |
+| `baselineLOC` | 5000 | feature 당 기본 LOC (mid-sized, 보수적) |
+| `minSprints` | 1 | 최소 sprint 수 |
+| `maxSprints` | 12 | 최대 sprint 수 (초과 시 error 반환) |
+| `dependencyAware` | true | dependency graph 기반 topological sort 활성화 |
+
+**Effective budget**: 100000 × (1 - 0.25) = **75000 tokens / sprint**. Sprint 당 ≤ 75K tokens 을 안전 한도로 사용. 사용자 명시 4-2 (단일 세션 안전 보장) 충족.
+
+### 9.4 Dependency-Aware Split
+
+Feature 간 의존성을 명시하면 자동으로 topological order 로 sprint 가 정렬됩니다:
+
+```javascript
+const lifecycle = require('./lib/application/sprint-lifecycle');
+const result = lifecycle.recommendSprintSplit({
+  projectId: 'q2-launch',
+  features: ['auth', 'payment', 'reports'],
+  dependencyGraph: {
+    payment: ['auth'],           // payment depends on auth
+    reports: ['auth', 'payment'] // reports depends on auth + payment
+  },
+}, lifecycle.CONTEXT_SIZING_DEFAULTS);
+```
+
+**알고리즘**: Kahn's algorithm (in-degree based topological sort).
+**Cycle detection**: graph 에 cycle 존재 시 `{ ok: false, error: 'dependency_cycle', cycle: [...] }` 반환.
+**Cross-sprint dep edges**: 각 sprint 의 `dependsOn` 배열에 의존 sprint id 자동 기록 (e.g., `['q2-launch-s1']`).
+
+### 9.5 Dry-Run vs Agent-Backed Generation
+
+| 모드 | Trigger | 결과 |
+|------|---------|------|
+| **Dry-run** | `deps.agentSpawner === undefined` (default) | `templates/sprint/master-plan.template.md` substitution. Minimal valid markdown 생성. `plan.sprints = []` 기본 (S2-UX), `deps.contextSizer` 주입 시 자동 채움 (S4-UX) |
+| **Agent-backed** | `deps.agentSpawner = ({ subagent_type, prompt }) => Promise<{ output }>` | `bkit:sprint-master-planner` agent 격리 spawn → markdown content 반환 |
+
+**Dry-run 사용 시점**: unit test, 초기 template 생성, agent 호출 비용 절약.
+**Agent-backed 사용 시점**: production master plan 생성, codebase 분석 + tone 일치 필요할 때.
+
+### 9.6 Idempotency + `--force` Overwrite
+
+- **Default (idempotent)**: 두 번째 호출 (same projectId) 은 `{ ok: true, alreadyExists: true, plan: <existing> }` 반환. state/markdown 변경 X.
+- **`--force` flag**: state JSON + markdown 둘 다 덮어쓰기. audit entry 에 `details.forceOverwrite: true`.
+- **Single ACTION_TYPE**: 두 케이스 모두 `'master_plan_created'` audit action 사용 (S2-UX PM-S2G resolution).
+
+### 9.7 Common Pitfalls + Troubleshooting
+
+| Pitfall | Symptom | Resolution |
+|---------|---------|------------|
+| `projectId` minimum length | `error: 'invalid_input', errors: ['projectId must match kebab-case']` | 최소 3 chars (e.g., `'p1'` 거부, `'p-1'` 또는 `'pi1'` OK) |
+| Feature 가 vague string | tokenEst 가 부정확 (default 33350) | `--locHint` 또는 `locHints: { feature: 8000 }` 전달 (v2.1.14 예정) |
+| 50+ features → maxSprints 초과 | `error: 'exceeds_maxSprints'` | `bkit.config.json` 의 `maxSprints` 증가 또는 features 분해 |
+| Dependency cycle | `error: 'dependency_cycle', cycle: [...]` | graph 재검토 — 자기 자신을 dep 하면 X |
+| Markdown 생성 실패 시 state 잔존 | state JSON 만 있고 markdown 없음 | state-first rollback 패턴 — markdown 실패 시 state 자동 삭제. 재호출로 복구 가능 |
+| Backward compat 깨짐 | 기존 caller 가 sprints:[] 의존 | S4-UX 의 auto-wiring 은 default OFF — `deps.contextSizer` 명시 inject 만 활성 |
 
 ---
 
