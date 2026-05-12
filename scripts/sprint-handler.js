@@ -42,6 +42,7 @@ const VALID_ACTIONS = Object.freeze([
   'init', 'start', 'status', 'watch', 'phase',
   'iterate', 'qa', 'report', 'archive', 'list',
   'feature', 'pause', 'resume', 'fork', 'help',
+  'master-plan', // S2-UX v2.1.13 — 16th action
 ]);
 
 /**
@@ -207,6 +208,7 @@ async function handleSprintAction(action, args, deps) {
     case 'feature': return handleFeature(a, infra);
     case 'watch':   return handleWatch(a, infra);
     case 'help':    return handleHelp();
+    case 'master-plan': return handleMasterPlan(a, infra, d);
     default:        return { ok: false, error: 'Unreachable action: ' + action };
   }
 }
@@ -510,9 +512,72 @@ function handleHelp() {
       '  watch    /sprint watch <id>',
       '  fork     /sprint fork <id> --new <newId>',
       '  feature  /sprint feature <id> --action list|add|remove --feature <name>',
+      '  master-plan /sprint master-plan <project> --name <name> --features <a,b,c>',
       '  help     /sprint help',
     ].join('\n'),
   };
+}
+
+// =====================================================================
+// S2-UX v2.1.13 — Master Plan Generator handler (16th action)
+// =====================================================================
+
+/**
+ * Handle `/sprint master-plan <project>` action — delegates to
+ * lib/application/sprint-lifecycle generateMasterPlan use case.
+ *
+ * Cross-sprint integration (PRD §JS-02): this handler does NOT spawn the
+ * sprint-master-planner agent itself. The LLM dispatcher at main session
+ * may inject `deps.agentSpawner` (wrapping Task tool invocation). When not
+ * injected, the use case runs in dry-run mode (template substitution).
+ *
+ * @param {Object} args - { id (projectId), name (projectName), features?, trust?, context?, force?, duration?, projectRoot? }
+ * @param {Object} infra - SprintInfra bundle (unused here, use case constructs its own paths)
+ * @param {Object} deps - { agentSpawner?, fileWriter?, fileDeleter?, auditLogger?, taskCreator? }
+ * @returns {Promise<{ ok: boolean, plan?, masterPlanPath?, stateFilePath?, alreadyExists?, error?, errors? }>}
+ */
+async function handleMasterPlan(args, infra, deps) {
+  if (!args || typeof args.id !== 'string' || args.id.length === 0) {
+    return { ok: false, error: 'master-plan requires { id (projectId) }' };
+  }
+  if (typeof args.name !== 'string' || args.name.length === 0) {
+    return { ok: false, error: 'master-plan requires { name (projectName) }' };
+  }
+  const features = parseFeaturesFlag(args.features);
+  const input = {
+    projectId: args.id,
+    projectName: args.name,
+    features: features,
+    context: Object.assign(defaultContext(), args.context || {}),
+    trustLevel: normalizeTrustLevel(args),
+    projectRoot: args.projectRoot || process.cwd(),
+    force: args.force === true || args.force === 'true',
+    duration: typeof args.duration === 'string' ? args.duration : 'TBD',
+  };
+  const lifecycle = require('../lib/application/sprint-lifecycle');
+  const d = deps || {};
+  const usecaseDeps = {
+    agentSpawner: d.agentSpawner,
+    fileWriter: d.fileWriter,
+    fileDeleter: d.fileDeleter,
+    auditLogger: d.auditLogger,
+    taskCreator: d.taskCreator,
+  };
+  return lifecycle.generateMasterPlan(input, usecaseDeps);
+}
+
+/**
+ * Parse `--features` flag value (CSV string or array) into a string array.
+ *
+ * @param {string|string[]|undefined} raw
+ * @returns {string[]}
+ */
+function parseFeaturesFlag(raw) {
+  if (Array.isArray(raw)) return raw.filter(function (s) { return typeof s === 'string' && s.length > 0; });
+  if (typeof raw === 'string' && raw.length > 0) {
+    return raw.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+  }
+  return [];
 }
 
 // =====================================================================

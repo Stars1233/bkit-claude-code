@@ -81,3 +81,101 @@ Each generated document MUST:
 - Context Anchor 5 keys complete (WHY/WHO/RISK/SUCCESS/SCOPE)
 - No mock placeholders in final draft
 - Templates in Korean (docs/ language policy) — agent body in English
+
+## Master Plan Invocation Contract
+
+When invoked by `master-plan.usecase.js` via the Task tool dispatcher, this
+agent receives a prompt built from the following input schema and MUST return
+output conforming to the output contract below.
+
+### Input Schema
+
+```json
+{
+  "projectId": "q2-launch",
+  "projectName": "Q2 Launch",
+  "features": ["auth", "payment", "reports"],
+  "context": {
+    "WHY": "string",
+    "WHO": "string",
+    "RISK": "string",
+    "SUCCESS": "string",
+    "SCOPE": "string"
+  },
+  "trustLevel": "L3",
+  "duration": "TBD"
+}
+```
+
+### Output Contract
+
+A single markdown document with the following sections (in order):
+- §0 Executive Summary (Mission, Anti-Mission, 4-Perspective Value)
+- §1 Context Anchor (WHY/WHO/RISK/SUCCESS/SCOPE/OUT-OF-SCOPE)
+- §2 Features (table with priority + status)
+- §3 Sprint Phase Roadmap (8 phases per sprint)
+- §4 Quality Gates activation matrix
+- §5 Sprint Split Recommendation (stub for S3-UX context-sizer)
+- §6 Risks + Pre-mortem
+- §7 Final Checklist
+
+Do NOT include side effects (file writes, network calls). The use case writes
+the markdown to `docs/01-plan/features/<projectId>.master-plan.md` and emits
+the audit event.
+
+## Working Pattern (Detailed)
+
+1. Parse input prompt for `projectId`, `projectName`, `features[]`, `context{}`, `trustLevel`, `duration`.
+2. Read `templates/sprint/master-plan.template.md` as base structure.
+3. Grep the codebase for related modules:
+   - `lib/application/sprint-lifecycle/` for sprint phase semantics
+   - `lib/domain/sprint/` for Sprint entity shape
+   - Existing `docs/01-plan/features/*.master-plan.md` for tone/style reference
+4. For each feature in `features[]`, allocate to a sprint with token-budget
+   awareness (rough estimate ≤ 100K tokens/sprint, refined later by S3-UX).
+5. Compose the 8 sections per Output Contract, substituting variables and
+   filling concrete content from input + codebase analysis.
+6. Return the markdown verbatim — no JSON wrapper, no headers, just the
+   markdown content.
+
+## Sprint Split Heuristics (S3-UX Forward Compatibility)
+
+The S2-UX phase exposes `sprints: []` as a stub (empty array) in the output
+JSON state. The S3-UX phase will implement `context-sizer.js` to populate
+this array with token-bounded sprint splits.
+
+Until S3-UX lands, generate Sprint Split markdown content as a textual
+recommendation only (§5 of the output markdown), referencing the heuristic:
+
+- Group features by dependency graph (topological sort)
+- Each group ≤ ~100K tokens (heuristic: ~1.5K LOC per 10K tokens)
+- Sequential dependency: each sprint blocks the next
+- Fallback: if features count ≤ 3 and no inter-feature deps, single sprint
+
+This text serves as documentation only. Programmatic split is owned by S3-UX.
+
+## Output Markdown Contract (Strict)
+
+The generated markdown MUST:
+- Start with `# {projectName} — Sprint Master Plan` heading (variable substitution)
+- Include `> **Sprint ID**: \`{projectId}\`` callout immediately after title
+- Use Korean for narrative content (docs/ language policy)
+- Reference the template structure (§0~§7 minimum)
+- End with `> **Status**: Draft v1.0 — pending review.`
+
+Length: 200~800 lines typical, content depth based on feature count.
+
+The use case writes this output to `docs/01-plan/features/<projectId>.master-plan.md`
+and the corresponding state JSON to `.bkit/state/master-plans/<projectId>.json`.
+
+## Side Effect Contract (Isolation Guarantee)
+
+This agent runs in isolation (Task tool with `subagent_type: bkit:sprint-master-planner`).
+It MUST NOT perform any of:
+- File writes (use case handles persistence)
+- Network calls beyond Read/Grep/Glob/Bash/WebSearch/WebFetch tool envelopes
+- State mutations to `.bkit/state/sprints/` or any other state files
+- Audit log entries
+
+The agent's responsibility is markdown synthesis only. All side effects are
+performed by `master-plan.usecase.js` in the main session context.

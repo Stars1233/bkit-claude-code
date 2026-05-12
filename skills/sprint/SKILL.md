@@ -6,7 +6,7 @@ deprecation-risk: none
 effort: medium
 description: |
   Sprint Management — generic sprint capability for ANY bkit user.
-  15 sub-actions: init, start, status, watch, phase, iterate, qa, report, archive, list, feature, pause, resume, fork, help.
+  16 sub-actions: init, start, status, watch, phase, iterate, qa, report, archive, list, feature, pause, resume, fork, help, master-plan.
   Triggers: sprint, sprint start, sprint init, sprint status, sprint list,
   스프린트, 스프린트 시작, 스프린트 상태,
   スプリント, スプリント開始, スプリント状態,
@@ -14,7 +14,15 @@ description: |
   sprint, iniciar sprint, estado sprint,
   sprint, demarrer sprint, statut sprint,
   Sprint, Sprint starten, Sprint Status,
-  sprint, avviare sprint, stato sprint.
+  sprint, avviare sprint, stato sprint,
+  master plan, multi-sprint plan, sprint master plan,
+  마스터 플랜, 멀티 스프린트 계획, 스프린트 마스터 플랜,
+  マスタープラン, マルチスプリント計画, スプリントマスタープラン,
+  主计划, 多冲刺计划, 冲刺主计划,
+  plan maestro, plan multi-sprint, plan maestro sprint,
+  plan maître, plan multi-sprint, plan maître sprint,
+  Masterplan, Multi-Sprint-Plan, Sprint-Masterplan,
+  piano principale, piano multi-sprint, piano principale sprint.
 argument-hint: "[action] [name] [--trust L0-L4] [--from <phase>]"
 user-invocable: true
 allowed-tools:
@@ -75,6 +83,7 @@ and consumed transparently along the way.
 | `feature <id>` | Per-feature operations (Sprint 5) | `/sprint feature my-launch --feature auth` |
 | `fork <id>` | Fork into a new sprint (Sprint 5) | `/sprint fork my-launch --new my-launch-v2` |
 | `help` | Print sub-action help | `/sprint help` |
+| `master-plan <project>` | Generate multi-sprint Master Plan (agent isolated spawn) | `/sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment` |
 
 ## Trust Level Scope (auto-run boundary)
 
@@ -163,6 +172,7 @@ via `scripts/sprint-handler.js`.
 | `feature` | `id`, `action` | `featureName` (required for add/remove) | `args = { id: "my-launch", action: "list" }` |
 | `fork` | `id`, `newId` | — | `args = { id: "my-launch", newId: "my-launch-v2" }` |
 | `help` | — | — | `args = {}` |
+| `master-plan` | `id` (projectId), `name` (projectName) | `features` (CSV or array), `trust`/`trustLevel`, `context`, `projectRoot`, `force` (boolean), `duration` | `args = { id: "q2-launch", name: "Q2 Launch", features: ["auth", "payment"] }` |
 
 ### 10.2 Trust Level Acceptance
 
@@ -232,3 +242,86 @@ after `action` treated as `id` if no `--id` flag is provided.
 
 Exit codes: `0` (success), `1` (handler returned `ok: false`), `2`
 (exception thrown).
+
+## 11. Master Plan Generator (16th Sub-Action)
+
+The `master-plan` action generates a multi-sprint roadmap via the
+`bkit:sprint-master-planner` agent (isolated subagent spawn) and persists
+both markdown documentation and state JSON.
+
+### 11.1 Workflow
+
+```
+USER: /sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment
+   |
+SKILL.md dispatches -> scripts/sprint-handler.js handleMasterPlan
+   |
+handleMasterPlan calls lib/application/sprint-lifecycle/master-plan.usecase.js generateMasterPlan
+   |
+generateMasterPlan validates input + loads existing state (idempotent check)
+   |
+If deps.agentSpawner provided: spawn bkit:sprint-master-planner agent -> markdown
+If not: dry-run via templates/sprint/master-plan.template.md substitution
+   |
+Atomic write: .bkit/state/master-plans/<projectId>.json (state first)
+   |
+File write: docs/01-plan/features/<projectId>.master-plan.md (markdown)
+   |
+Audit: lib/audit/audit-logger.js writeAuditLog({ action: 'master_plan_created' })
+   |
+Optional Task wiring: deps.taskCreator called N times for N sprint tasks
+```
+
+### 11.2 Idempotency + Force Overwrite
+
+- Default: idempotent. Second call with same projectId returns existing plan.
+- `--force` flag: overwrites both state JSON and markdown. Audit entry has
+  `details.forceOverwrite: true`.
+- Audit ACTION_TYPE remains `'master_plan_created'` for both cases (PM-S2G).
+
+### 11.3 Dry-Run vs Agent-Backed Generation
+
+When the caller (LLM dispatcher at main session) does NOT inject
+`deps.agentSpawner`, the use case generates a minimal valid markdown by
+substituting variables in `templates/sprint/master-plan.template.md`. The
+output is a skeleton — header, context anchor placeholders, empty features
+table, empty sprints array. This dry-run mode is useful for unit tests and
+when the user wants a starting template to fill manually.
+
+When `deps.agentSpawner` is injected, the use case calls it with
+`{ subagent_type: 'bkit:sprint-master-planner', prompt: <built> }` and uses
+the returned `output` field as the markdown content.
+
+### 11.4 State Schema v1.0
+
+The state JSON at `.bkit/state/master-plans/<projectId>.json`:
+
+```json
+{
+  "schemaVersion": "1.0",
+  "projectId": "q2-launch",
+  "projectName": "Q2 Launch",
+  "features": ["auth", "payment", "reports"],
+  "sprints": [],
+  "dependencyGraph": {},
+  "trustLevel": "L3",
+  "context": { "WHY": "", "WHO": "", "RISK": "", "SUCCESS": "", "SCOPE": "" },
+  "generatedAt": "2026-05-12T20:00:00Z",
+  "updatedAt": "2026-05-12T20:00:00Z",
+  "masterPlanPath": "docs/01-plan/features/q2-launch.master-plan.md"
+}
+```
+
+The `sprints` array is populated by the S3-UX `context-sizer.js` use case.
+S2-UX leaves it as an empty stub.
+
+### 11.5 Task Management Integration (Optional)
+
+When the caller injects `deps.taskCreator`, the use case iterates
+`plan.sprints` sequentially (ENH-292 caching alignment) and calls
+`deps.taskCreator(...)` once per planned sprint with `addBlockedBy` populated
+from the previous sprint's task ID. This enables automatic Task list creation
+for multi-sprint roadmaps.
+
+When `deps.taskCreator` is undefined or `plan.sprints.length === 0`, Task
+creation is silently skipped (no error).
