@@ -1,189 +1,191 @@
-# Sprint Management 사용자 가이드 (v2.1.13)
+# Sprint Management User Guide (v2.1.13)
 
-> **언어**: 한국어 (영어 사용자는 [`README.md`](../../README.md#sprint-management-v2113) 또는 [`skills/sprint/SKILL.md`](../../skills/sprint/SKILL.md) 참조)
-> **bkit 버전**: v2.1.13
-> **마지막 갱신**: 2026-05-12
-> **관련 문서**: [Migration Guide](./sprint-migration.guide.md) · [Master Plan](../01-plan/features/sprint-management.master-plan.md)
-
----
-
-## 1. Sprint Management 개념
-
-### 1.1 정의
-
-**Sprint** 는 하나 이상의 feature 를 **공유 scope · 예산 · 일정** 아래 묶는 메타 컨테이너입니다. 각 sprint 는 **8-phase 라이프사이클** 을 따라 자율적으로 진행되며, 사용자가 정의한 **Trust Level** 에 따라 자동/수동 모드를 선택할 수 있습니다.
-
-### 1.2 PDCA 와의 관계
-
-| 항목 | PDCA (기존) | Sprint Management (신규) |
-|------|-------------|-------------------------|
-| 단위 | 단일 feature | 1+ feature 묶음 |
-| Phase | 9개 (pm/plan/design/do/check/act/qa/report/archived) | 8개 (prd/plan/design/do/iterate/qa/report/archived) |
-| 목적 | feature 단위 PDCA 사이클 | sprint 단위 예산 + 시간 박스 |
-| 자율 실행 | `/pdca` 명령 | `/sprint <action>` 명령 + Trust Scope |
-| 상호 운용 | ✅ 공존 가능 (orthogonal storage) | ✅ 공존 가능 |
-
-**핵심 원칙**: Sprint Management 는 PDCA 를 **대체하지 않습니다**. 두 시스템은 `.bkit/state/` 의 별도 파일에 독립적으로 상태를 저장하며, 동일 feature 가 PDCA 사이클 + Sprint 컨테이너에 동시 포함될 수 있습니다 (orthogonal coexistence).
-
-### 1.3 언제 사용해야 하는가?
-
-- ✅ **여러 feature 를 한 분기/스프린트 일정에 묶고 싶을 때** — Sprint Management
-- ✅ **단일 feature 의 PDCA 사이클을 돌릴 때** — 기존 PDCA `/pdca`
-- ✅ **두 가지를 동시에 사용** — sprint 안에 여러 feature 의 개별 PDCA 사이클을 트랙
+> **Language**: English (formerly Korean — translated per user direction 2026-05-12)
+> **bkit version**: v2.1.13
+> **Last updated**: 2026-05-12
+> **Related**: [Migration Guide](./sprint-migration.guide.md) · [Master Plan (archived)](../archive/2026-05/01-plan/features/sprint-management.master-plan.md)
 
 ---
 
-## 2. 16 Sub-actions
+## 1. What Is Sprint Management?
 
-### 2.1 매트릭스
+### 1.1 Definition
 
-| Action | 명령 | 목적 | 입력 |
-|--------|------|------|------|
-| `init` | `/sprint init <id>` | Sprint 생성 | `--name <name> --trust L0-L4 --features <a,b>` |
-| `start` | `/sprint start <id>` | Sprint 실행 시작 | `--trust L0-L4` (선택) |
-| `status` | `/sprint status <id>` | 현재 상태 조회 | — |
-| `list` | `/sprint list` | 모든 sprint 목록 | — |
-| `phase` | `/sprint phase <id>` | 다음 phase 로 진행 | `--to <phase>` |
-| `iterate` | `/sprint iterate <id>` | matchRate 반복 개선 루프 실행 | — |
-| `qa` | `/sprint qa <id>` | QA phase 실행 | `--feature <name>` (선택) |
-| `report` | `/sprint report <id>` | 보고서 생성 | — |
-| `archive` | `/sprint archive <id>` | 보존 처리 | — |
-| `pause` | `/sprint pause <id>` | 자동 진행 중지 | — |
-| `resume` | `/sprint resume <id>` | 자동 진행 재개 | — |
-| `fork` | `/sprint fork <id>` | 다른 sprint 로 분기 | `--new <newId>` |
-| `feature` | `/sprint feature <id>` | feature 관리 | `--action list/add/remove --feature <name>` |
-| `watch` | `/sprint watch <id>` | 실시간 상태 + 트리거 + 매트릭스 스냅샷 | — |
-| `help` | `/sprint help` | 도움말 | — |
-| `master-plan` | `/sprint master-plan <project>` | Multi-sprint Master Plan 자동 생성 (sprint-master-planner agent 격리 spawn 또는 dry-run template, v2.1.13 S2-UX 추가) | `--name <name> --features <a,b,c> --trust L0-L4` (선택) `--force` (선택) |
+A **Sprint** is a meta-container that groups one or more features under a **shared scope, budget, and timeline**. Each sprint follows an **8-phase lifecycle** and runs autonomously according to the user-defined **Trust Level**.
 
-### 2.2 예시
+### 1.2 Relationship to PDCA
+
+| Aspect | PDCA (existing) | Sprint Management (new) |
+|---|---|---|
+| Unit | Single feature | 1+ features bundled together |
+| Phases | 9 (`pm` / `plan` / `design` / `do` / `check` / `act` / `qa` / `report` / `archive`) | 8 (`prd` / `plan` / `design` / `do` / `iterate` / `qa` / `report` / `archived`) |
+| Purpose | Per-feature PDCA cycle | Sprint-level budget + time-box |
+| Auto-run | `/pdca` commands | `/sprint <action>` + Trust Level Scope |
+| Interop | ✅ Coexist (orthogonal storage) | ✅ Coexist |
+
+**Core principle**: Sprint Management does **not replace** PDCA. The two systems persist state in separate files under `.bkit/state/`, and a single feature can belong to both a PDCA cycle and a Sprint container simultaneously (orthogonal coexistence).
+
+### 1.3 When Should You Use Sprint?
+
+- ✅ **Grouping multiple features into one quarter/sprint timeline** — use Sprint Management
+- ✅ **Running a PDCA cycle on a single feature** — use existing `/pdca`
+- ✅ **Both at once** — track individual feature PDCA cycles inside a sprint container
+
+---
+
+## 2. The 16 Sub-actions
+
+### 2.1 Action Matrix
+
+| Action | Command | Purpose | Inputs |
+|---|---|---|---|
+| `init` | `/sprint init <id>` | Create a sprint | `--name <name> --trust L0-L4 --features <a,b>` |
+| `start` | `/sprint start <id>` | Start sprint execution | `--trust L0-L4` (optional) |
+| `status` | `/sprint status <id>` | Query current state | — |
+| `list` | `/sprint list` | List all sprints | — |
+| `phase` | `/sprint phase <id>` | Advance to the next phase | `--to <phase>` |
+| `iterate` | `/sprint iterate <id>` | Run the matchRate improvement loop | — |
+| `qa` | `/sprint qa <id>` | Run the QA phase | `--feature <name>` (optional) |
+| `report` | `/sprint report <id>` | Generate the completion report | — |
+| `archive` | `/sprint archive <id>` | Move to terminal archived state | — |
+| `pause` | `/sprint pause <id>` | Stop auto-run | — |
+| `resume` | `/sprint resume <id>` | Resume auto-run | — |
+| `fork` | `/sprint fork <id>` | Fork into a new sprint | `--new <newId>` |
+| `feature` | `/sprint feature <id>` | Manage features | `--action list/add/remove --feature <name>` |
+| `watch` | `/sprint watch <id>` | Live status + triggers + matrix snapshot | — |
+| `help` | `/sprint help` | Help text | — |
+| `master-plan` | `/sprint master-plan <project>` | Auto-generate a multi-sprint Master Plan (sprint-master-planner agent isolated spawn or dry-run template, v2.1.13 S2-UX) | `--name <name> --features <a,b,c> --trust L0-L4` (optional), `--force` (optional) |
+
+### 2.2 Examples
 
 ```bash
-# Sprint 생성 + 시작 + 상태 조회
+# Create + start + status
 /sprint init q2-launch --name "Q2 Launch" --trust L3
 /sprint start q2-launch
 /sprint status q2-launch
 
-# Phase 직접 전환
+# Manual phase transition
 /sprint phase q2-launch --to design
 
-# feature 추가/제거
+# Add/remove features
 /sprint feature q2-launch --action add --feature payment-flow
 /sprint feature q2-launch --action remove --feature legacy-module
 
-# 일시 중지 + 재개
+# Pause + resume
 /sprint pause q2-launch
 /sprint resume q2-launch
 
-# 분기 (carry items 만 새 sprint 로 이월)
+# Fork (carry only incomplete features to a new sprint)
 /sprint fork q2-launch --new q3-carry
 
-# 실시간 모니터
+# Live monitor
 /sprint watch q2-launch
 ```
 
 ---
 
-## 3. 8-Phase Lifecycle
+## 3. The 8-Phase Lifecycle
 
 ```
 prd → plan → design → do → iterate → qa → report → archived
 ```
 
-### 3.1 각 Phase 의 목적
+### 3.1 Purpose of Each Phase
 
-| Phase | 산출물 | bkit 문서 위치 |
-|-------|--------|---------------|
+| Phase | Output | bkit doc location |
+|---|---|---|
 | `prd` | Product Requirements Document | `docs/01-plan/features/<id>.prd.md` |
 | `plan` | Implementation Plan | `docs/01-plan/features/<id>.plan.md` |
 | `design` | Detailed Design | `docs/02-design/features/<id>.design.md` |
 | `do` | Implementation (code) | `lib/`, `scripts/`, `skills/`, `agents/` |
-| `iterate` | Iterate Analysis (matchRate 100%) | `docs/03-analysis/features/<id>.iterate.md` |
+| `iterate` | Iterate Analysis (matchRate ≥ threshold) | `docs/03-analysis/features/<id>.iterate.md` |
 | `qa` | QA Report | `docs/05-qa/features/<id>.qa-report.md` |
 | `report` | Completion Report | `docs/04-report/features/<id>.report.md` |
-| `archived` | (보존됨) | sprint 메타데이터에만 표시 |
+| `archived` | (preserved) | Sprint metadata only |
 
-### 3.2 전환 규칙
+### 3.2 Transition Rules
 
-- 순차 진행: `prd → plan` 만 가능, `prd → design` 불가 (단, `pause` 후 archival 은 어디서든 가능)
-- `iterate → qa` 는 matchRate 가 임계값 (기본 90, sprint config 변경 가능) 통과 시
-- `archived` 는 terminal state — 더 이상 진행 불가
-- 각 전환은 `canTransitionSprint(currentPhase, toPhase) → { ok, reason? }` 패턴으로 검증
-
----
-
-## 4. 4 Auto-Pause Triggers
-
-Sprint 자동 실행 중 다음 4개 트리거 중 하나가 발동하면 sprint 가 **자동 일시 중지** 됩니다:
-
-| Trigger | 발동 조건 | 권장 대응 |
-|---------|----------|----------|
-| `QUALITY_GATE_FAIL` | M1-M10/S1-S4 quality gate 미달 | gate 측정 결과 검토, plan 수정 |
-| `ITERATION_EXHAUSTED` | iterate phase 최대 5회 반복 후에도 matchRate < 임계값 | design 재검토 또는 임계값 조정 |
-| `BUDGET_EXCEEDED` | 토큰/시간 예산 초과 | sprint 분할 또는 fork |
-| `PHASE_TIMEOUT` | 단일 phase 가 budget.phaseTimeoutMs 초과 | phase manual 진행 |
-
-**armed triggers 설정**: sprint 생성 시 `sprint.autoPause.armed` 배열로 활성 트리거 지정 (기본: 4개 모두 활성).
-
-`/sprint resume <id>` 명령으로 트리거 발동 후 재개할 수 있습니다 (단, 근본 원인 해결 권장).
+- Sequential only: `prd → plan` is valid, `prd → design` is not (except for `pause` → archival, which is allowed from anywhere)
+- `iterate → qa` requires the matchRate threshold (default 90, overridable in sprint config) to be met
+- `archived` is terminal — no further transitions
+- Each transition is gated by `canTransitionSprint(currentPhase, toPhase) → { ok, reason? }`
 
 ---
 
-## 5. Trust Level Scope (L0-L4)
+## 4. The 4 Auto-Pause Triggers
 
-`SPRINT_AUTORUN_SCOPE` 5 levels — 각 level 은 `stopAfter` (어디까지 자동 진행할지) 를 정의:
+During auto-run, if any of the following 4 triggers fires, the sprint **pauses automatically**:
 
-| Level | stopAfter | 동작 | 추천 시나리오 |
-|-------|-----------|------|-------------|
-| **L0** | `plan` | manual after plan | 첫 sprint, 사용자 모든 단계 확인 |
-| **L1** | `design` | manual after design | design 검토 후 do 진입 결정 |
-| **L2** | `do` | manual after do | 구현 결과 검토 후 iterate 결정 |
-| **L3** | `qa` | semi-auto, manual at qa | 일상적 production sprint |
-| **L4** | `archived` | full-auto until trigger | 신뢰도 높은 자동 sprint |
+| Trigger | Condition | Recommended response |
+|---|---|---|
+| `QUALITY_GATE_FAIL` | An M1–M10 / S1–S4 quality gate fails | Review the gate output and revise the plan |
+| `ITERATION_EXHAUSTED` | The iterate phase loops 5 times and still misses the matchRate threshold | Revisit the design or adjust the threshold |
+| `BUDGET_EXCEEDED` | Token / time budget exceeded | Split the sprint or fork |
+| `PHASE_TIMEOUT` | A single phase exceeds `budget.phaseTimeoutMs` | Advance the phase manually |
 
-**원칙**:
-- L0 는 가장 보수적 — 모든 phase 전환에 사용자 승인 필요
-- L4 는 자동 진행하되 4 auto-pause triggers 가 발동하면 즉시 정지
-- 사용자가 명시적으로 `--trust L4` 지정한 경우만 L4 진입 (기본 L0)
+**Configuring armed triggers**: at sprint init, set the `sprint.autoPause.armed` array to choose which triggers are active (default: all 4 armed).
 
-`lib/control/automation-controller.js` 의 `SPRINT_AUTORUN_SCOPE` 와 `lib/application/sprint-lifecycle/start-sprint.usecase.js` 의 inline scope 는 **1:1 미러** (Sprint 4 invariant, L3 contract test SC-07 자동 검증).
+Resume after a trigger fires with `/sprint resume <id>` — but fixing the root cause is strongly recommended first.
+
+---
+
+## 5. Trust Level Scope (L0–L4)
+
+`SPRINT_AUTORUN_SCOPE` has 5 levels — each level defines `stopAfter` (how far auto-run progresses before stopping):
+
+| Level | stopAfter | Behavior | Recommended scenario |
+|---|---|---|---|
+| **L0** | `plan` | Manual after plan | First sprint; user wants to confirm every step |
+| **L1** | `design` | Manual after design | Review design before entering `do` |
+| **L2** | `do` | Manual after do | Review implementation before iterate |
+| **L3** | `qa` | Semi-auto, manual at qa | Day-to-day production sprint |
+| **L4** | `archived` | Full-auto until any trigger fires | High-trust automated sprint |
+
+**Principles**:
+
+- L0 is the most conservative — every phase transition requires user approval
+- L4 advances automatically but halts the moment any of the 4 auto-pause triggers fires
+- L4 is only enabled when the user explicitly passes `--trust L4` (default is L0)
+
+`SPRINT_AUTORUN_SCOPE` in `lib/control/automation-controller.js` and the inline scope in `lib/application/sprint-lifecycle/start-sprint.usecase.js` are kept in **1:1 mirror** (Sprint 4 invariant; L3 contract test SC-07 enforces this).
 
 ---
 
 ## 6. 7-Layer Data Flow QA (S1)
 
-Sprint QA phase 는 feature 의 데이터 흐름을 **7개 hop** 으로 분할하여 검증합니다 (S1 quality gate):
+The Sprint QA phase verifies each feature's data flow across **7 hops** (S1 quality gate):
 
 ```
 H1 UI → H2 Client → H3 API → H4 Validation → H5 DB → H6 Response → H7 Client → UI
 ```
 
-### 6.1 각 Hop 의 의미
+### 6.1 Meaning of Each Hop
 
-| Hop | 검증 대상 |
-|-----|----------|
-| H1 | UI 입력 캡처 |
-| H2 | Client 측 검증 + 직렬화 |
-| H3 | API endpoint 도달 |
-| H4 | Server 측 검증 + 인증 |
-| H5 | DB persist |
-| H6 | API response 직렬화 |
-| H7 | Client deserialize + UI 반영 |
+| Hop | What is verified |
+|---|---|
+| H1 | UI input capture |
+| H2 | Client-side validation + serialization |
+| H3 | API endpoint reachability |
+| H4 | Server-side validation + authentication |
+| H5 | DB persistence |
+| H6 | API response serialization |
+| H7 | Client deserialize + UI reflection |
 
-### 6.2 dataFlowValidator 주입
+### 6.2 dataFlowValidator Injection
 
-Sprint 5 부터 `lib/infra/sprint/data-flow-validator.adapter.js` 가 3-tier validation 을 제공:
-- **Tier 1 (no-op)**: 의존성 미주입 (개발 환경 기본값)
-- **Tier 2 (static)**: `sprint.dataFlow` 매트릭스 기반 정적 heuristic
-- **Tier 3 (live)**: chrome-qa MCP 통한 실제 브라우저 probe
+Starting in Sprint 5, `lib/infra/sprint/data-flow-validator.adapter.js` provides 3-tier validation:
 
-S1 `100%` 통과 = 모든 hop PASS.
+- **Tier 1 (no-op)**: no dependency injected (default for dev environments)
+- **Tier 2 (static)**: static heuristic based on the `sprint.dataFlow` matrix
+- **Tier 3 (live)**: real browser probing via the chrome-qa MCP
+
+S1 `100%` PASS = all hops PASS.
 
 ---
 
 ## 7. Cross-feature / Cross-sprint Integration
 
-### 7.1 다중 feature 운영
+### 7.1 Multi-feature Operation
 
 ```bash
 /sprint init q2-launch --name "Q2" --features auth,payment,reporting
@@ -192,96 +194,96 @@ S1 `100%` 통과 = 모든 hop PASS.
 # → [auth, payment, reporting, analytics]
 ```
 
-각 feature 는 sprint 의 `featureMap[featureName]` 에 자체 phase/lifecycle 상태를 가지며, sprint phase 와 feature phase 는 **독립** 입니다.
+Each feature has its own phase/lifecycle state inside `featureMap[featureName]` in the sprint state, and the sprint phase is **independent** of the feature phases.
 
-### 7.2 Sprint fork 와 carry items
+### 7.2 Sprint Fork and Carry Items
 
 ```bash
 /sprint fork q2-launch --new q3-carry
 # → carry items: features still in 'do' or 'iterate' phase
 ```
 
-미완료 (still in `do`/`iterate`) features 만 자동 식별되어 신규 sprint 로 이월. 완료된 features (qa/report/archived) 는 원본 sprint 에 보존.
+Only incomplete features (still in `do` / `iterate`) are auto-identified and carried to the new sprint. Completed features (qa / report / archived) stay in the original sprint.
 
-### 7.3 Sprint 1+2+3+4 architecture 와의 cross-layer 통합
+### 7.3 Sprint 1+2+3+4 Architecture — Cross-Layer Integration
 
-| Layer | 디렉토리 | 본 가이드 관련 |
-|-------|---------|--------------|
+| Layer | Directory | Relation to this guide |
+|---|---|---|
 | Domain (Sprint 1) | `lib/domain/sprint/` | Sprint entity + frozen enum + validators |
 | Application (Sprint 2) | `lib/application/sprint-lifecycle/` | 8 use cases + DI deps interface |
 | Infrastructure (Sprint 3+5) | `lib/infra/sprint/` | 7 adapters (4 baseline + 3 production scaffold) |
-| Presentation (Sprint 4) | `skills/sprint/`, `agents/sprint-*.md`, `templates/sprint/`, `scripts/sprint-handler.js` | 사용자 표면 (16 actions, S2-UX `master-plan` 포함) |
+| Presentation (Sprint 4) | `skills/sprint/`, `agents/sprint-*.md`, `templates/sprint/`, `scripts/sprint-handler.js` | User surface (16 actions including the S2-UX `master-plan`) |
 
-L3 Contract test (`tests/contract/v2113-sprint-contracts.test.js`) 가 이 4-layer 통합 무결성을 CI gate 로 자동 검증합니다.
+The L3 Contract test (`tests/contract/v2113-sprint-contracts.test.js`) enforces the integrity of this 4-layer integration as a CI gate.
 
 ---
 
 ## 8. Worked Examples
 
-### Example 1: 단일 feature sprint (입문)
+### Example 1 — Single-feature sprint (intro)
 
 ```bash
-# 1. 단일 feature 로 sprint 생성 (Trust L0 = 모든 단계 수동 확인)
+# 1. Single-feature sprint (Trust L0 = manual confirm at every step)
 /sprint init blog-redesign --name "Blog Redesign" --features blog-page --trust L0
 
-# 2. Sprint 시작 → plan phase 까지 자동, 그 후 사용자 승인 대기
+# 2. Start → auto-runs up to plan phase, then waits for user approval
 /sprint start blog-redesign
 
-# 3. 사용자가 plan 검토 후 design 으로 진행
+# 3. User reviews plan and advances to design
 /sprint phase blog-redesign --to design
 
-# 4. 모든 phase 통과 후 archive
+# 4. After all phases complete, archive
 /sprint archive blog-redesign
 ```
 
-### Example 2: 다중 feature 동시 진행 (중급)
+### Example 2 — Multi-feature parallel (intermediate)
 
 ```bash
-# 1. 3개 feature 묶음 (Trust L3 = qa 까지 자동, qa 만 수동)
+# 1. Three features bundled (Trust L3 = auto up to qa, only qa is manual)
 /sprint init q2-release --name "Q2 Release" --features auth,payment,reports --trust L3
 
-# 2. Sprint 시작 → iterate phase 까지 자동 진행
+# 2. Start → auto-runs up through iterate phase
 /sprint start q2-release
 
-# 3. iterate phase 진입 시 matchRate 측정 시작
-# (4 auto-pause triggers 중 ITERATION_EXHAUSTED 발동 가능)
+# 3. iterate phase begins matchRate measurement
+#    (ITERATION_EXHAUSTED is one of the 4 auto-pause triggers that may fire)
 
-# 4. iterate matchRate 100% 통과 → qa 진입 시 자동 정지
+# 4. Once iterate matchRate hits 100% → auto-pauses at qa entry
 /sprint status q2-release
 # → phase: qa, status: paused (manual approval needed)
 
-# 5. QA 실행 → report → archive
+# 5. QA → report → archive
 /sprint qa q2-release
 /sprint report q2-release
 /sprint archive q2-release
 ```
 
-### Example 3: Fork + carry items (고급)
+### Example 3 — Fork + carry items (advanced)
 
 ```bash
-# 1. Q2 sprint 진행 중 일부 features 가 budget exceeded → 자동 정지
+# 1. Q2 sprint is mid-run; budget exceeded → auto-paused
 /sprint status q2-release
 # → status: paused, trigger: BUDGET_EXCEEDED
 
-# 2. 완료된 features 는 q2-release 에 두고, 미완료만 q3 으로 이월
+# 2. Keep completed features in q2-release, carry incomplete to q3
 /sprint fork q2-release --new q3-carry
 # → carry items: payment (phase: do), reports (phase: iterate)
-# → auth 는 phase: archived 이므로 carry 되지 않음
+# → auth is phase: archived, so it is NOT carried
 
-# 3. q3-carry 에서 계속 진행
+# 3. Continue work in q3-carry
 /sprint start q3-carry --trust L4
 ```
 
 ---
 
-## 9. Master Plan Generator + Context Sizer 워크플로우 (v2.1.13)
+## 9. Master Plan Generator + Context Sizer Workflow (v2.1.13)
 
-본 섹션은 S2-UX (Master Plan Generator) + S3-UX (Context Sizer) + S4-UX (Integration) 의 통합 워크플로우를 설명합니다. **사용자 명시 4-1 (Master Plan 자동 생성) + 4-2 (컨텍스트 윈도우 sprint sizing)** 충족.
+This section explains the integrated workflow of S2-UX (Master Plan Generator) + S3-UX (Context Sizer) + S4-UX (Integration). Satisfies **user-explicit requirements 4-1 (auto Master Plan generation) + 4-2 (context-window-aware sprint sizing)**.
 
-### 9.1 워크플로우 Overview
+### 9.1 Workflow Overview
 
 ```
-사용자
+User
    |
    | /sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment,reports
    v
@@ -293,43 +295,46 @@ scripts/sprint-handler.js handleMasterPlan
    v
 lib/application/sprint-lifecycle/master-plan.usecase.js generateMasterPlan
    |
-   | (S4-UX) deps.contextSizer 주입 시 자동 sprint split
+   | (S4-UX) when deps.contextSizer is injected, sprint split runs automatically
    v
 lib/application/sprint-lifecycle/context-sizer.js recommendSprintSplit
    |
-   | sprints[] 배열 반환 (각 sprint <= 75K effective tokens)
+   | returns sprints[] array (each sprint ≤ 75K effective tokens)
    v
-master-plan.usecase.js plan 객체에 sprints 채워짐
+master-plan.usecase.js fills plan.sprints
    |
    | atomic write (state-first + rollback on markdown fail)
    v
-.bkit/state/master-plans/<projectId>.json (state)
-docs/01-plan/features/<projectId>.master-plan.md (markdown)
-.bkit/audit/<date>.jsonl (master_plan_created entry)
+.bkit/state/master-plans/<projectId>.json   (state)
+docs/01-plan/features/<projectId>.master-plan.md   (markdown)
+.bkit/audit/<date>.jsonl   (master_plan_created entry)
 ```
 
-### 9.2 1-Command 사용법
+### 9.2 One-Command Usage
 
-가장 간단한 호출:
+Simplest invocation:
+
 ```bash
 /sprint master-plan q2-launch --name "Q2 Launch" --features auth,payment,reports
 ```
 
-CLI 모드 (headless test / debugging):
+CLI mode (headless test / debugging):
+
 ```bash
 node scripts/sprint-handler.js master-plan q2-launch --name="Q2 Launch" --features=auth,payment,reports
 ```
 
-플래그:
-- `--name <string>` (required): 사용자 친화적 프로젝트 이름
-- `--features <a,b,c>` (optional): comma-separated feature 목록 (또는 array)
+Flags:
+
+- `--name <string>` (required): user-friendly project name
+- `--features <a,b,c>` (optional): comma-separated feature list (or array)
 - `--trust L0~L4` (optional): Trust Level (default L3)
-- `--force` (optional): 기존 master plan 덮어쓰기
-- `--duration <string>` (optional): 예상 기간 (default 'TBD')
+- `--force` (optional): overwrite existing master plan
+- `--duration <string>` (optional): estimated duration (default `'TBD'`)
 
-### 9.3 Context Sizer 설정 (`bkit.config.json` `sprint.contextSizing`)
+### 9.3 Context Sizer Configuration (`bkit.config.json` `sprint.contextSizing`)
 
-`bkit.config.json` 의 `sprint.contextSizing` section 으로 sprint split 알고리즘을 조정할 수 있습니다 (9 fields):
+The `sprint.contextSizing` section of `bkit.config.json` tunes the sprint-split algorithm (9 fields):
 
 ```json
 {
@@ -349,22 +354,22 @@ node scripts/sprint-handler.js master-plan q2-launch --name="Q2 Launch" --featur
 }
 ```
 
-| Field | Default | 의미 |
-|-------|---------|-----|
-| `enabled` | true | context-sizing 기능 활성화 여부 |
-| `maxTokensPerSprint` | 100000 | sprint 당 최대 token (단일 세션 안전 한도) |
-| `safetyMargin` | 0.25 | 안전 margin (effective budget = max × (1 - margin)) |
-| `tokensPerLOC` | 6.67 | LOC 당 token 계수 (Master Plan §1.5 heuristic 1.5K LOC / 10K tokens 역수) |
-| `baselineLOC` | 5000 | feature 당 기본 LOC (mid-sized, 보수적) |
-| `minSprints` | 1 | 최소 sprint 수 |
-| `maxSprints` | 12 | 최대 sprint 수 (초과 시 error 반환) |
-| `dependencyAware` | true | dependency graph 기반 topological sort 활성화 |
+| Field | Default | Meaning |
+|---|---|---|
+| `enabled` | true | Whether context-sizing is active |
+| `maxTokensPerSprint` | 100000 | Hard cap per sprint (single-session safety limit) |
+| `safetyMargin` | 0.25 | Safety margin (effective budget = max × (1 − margin)) |
+| `tokensPerLOC` | 6.67 | Token-per-LOC coefficient (inverse of the Master Plan §1.5 heuristic of 1.5K LOC / 10K tokens) |
+| `baselineLOC` | 5000 | Default LOC per feature (mid-sized, conservative) |
+| `minSprints` | 1 | Minimum number of sprints |
+| `maxSprints` | 12 | Maximum number of sprints (exceeding returns an error) |
+| `dependencyAware` | true | Enable topological-sort-based dependency-aware splitting |
 
-**Effective budget**: 100000 × (1 - 0.25) = **75000 tokens / sprint**. Sprint 당 ≤ 75K tokens 을 안전 한도로 사용. 사용자 명시 4-2 (단일 세션 안전 보장) 충족.
+**Effective budget**: 100000 × (1 − 0.25) = **75000 tokens / sprint**. Each sprint is bounded by ≤ 75K tokens — satisfies user-explicit 4-2 (single-session safety guarantee).
 
 ### 9.4 Dependency-Aware Split
 
-Feature 간 의존성을 명시하면 자동으로 topological order 로 sprint 가 정렬됩니다:
+When feature dependencies are specified, sprints are automatically ordered topologically:
 
 ```javascript
 const lifecycle = require('./lib/application/sprint-lifecycle');
@@ -378,77 +383,77 @@ const result = lifecycle.recommendSprintSplit({
 }, lifecycle.CONTEXT_SIZING_DEFAULTS);
 ```
 
-**알고리즘**: Kahn's algorithm (in-degree based topological sort).
-**Cycle detection**: graph 에 cycle 존재 시 `{ ok: false, error: 'dependency_cycle', cycle: [...] }` 반환.
-**Cross-sprint dep edges**: 각 sprint 의 `dependsOn` 배열에 의존 sprint id 자동 기록 (e.g., `['q2-launch-s1']`).
+**Algorithm**: Kahn's algorithm (in-degree based topological sort).
+**Cycle detection**: if the graph has a cycle, returns `{ ok: false, error: 'dependency_cycle', cycle: [...] }`.
+**Cross-sprint dep edges**: each sprint's `dependsOn` array is automatically populated (e.g., `['q2-launch-s1']`).
 
 ### 9.5 Dry-Run vs Agent-Backed Generation
 
-| 모드 | Trigger | 결과 |
-|------|---------|------|
-| **Dry-run** | `deps.agentSpawner === undefined` (default) | `templates/sprint/master-plan.template.md` substitution. Minimal valid markdown 생성. `plan.sprints = []` 기본 (S2-UX), `deps.contextSizer` 주입 시 자동 채움 (S4-UX) |
-| **Agent-backed** | `deps.agentSpawner = ({ subagent_type, prompt }) => Promise<{ output }>` | `bkit:sprint-master-planner` agent 격리 spawn → markdown content 반환 |
+| Mode | Trigger | Result |
+|---|---|---|
+| **Dry-run** | `deps.agentSpawner === undefined` (default) | Substitutes `templates/sprint/master-plan.template.md`. Produces minimal valid markdown. `plan.sprints = []` by default (S2-UX); auto-filled when `deps.contextSizer` is injected (S4-UX). |
+| **Agent-backed** | `deps.agentSpawner = ({ subagent_type, prompt }) => Promise<{ output }>` | Isolated-spawns `bkit:sprint-master-planner` agent → returns markdown content |
 
-**Dry-run 사용 시점**: unit test, 초기 template 생성, agent 호출 비용 절약.
-**Agent-backed 사용 시점**: production master plan 생성, codebase 분석 + tone 일치 필요할 때.
+**Use dry-run** for unit tests, initial template generation, or to avoid agent invocation cost.
+**Use agent-backed** for production master plans where codebase analysis + tone consistency are required.
 
 ### 9.6 Idempotency + `--force` Overwrite
 
-- **Default (idempotent)**: 두 번째 호출 (same projectId) 은 `{ ok: true, alreadyExists: true, plan: <existing> }` 반환. state/markdown 변경 X.
-- **`--force` flag**: state JSON + markdown 둘 다 덮어쓰기. audit entry 에 `details.forceOverwrite: true`.
-- **Single ACTION_TYPE**: 두 케이스 모두 `'master_plan_created'` audit action 사용 (S2-UX PM-S2G resolution).
+- **Default (idempotent)**: a second call with the same `projectId` returns `{ ok: true, alreadyExists: true, plan: <existing> }`. State and markdown unchanged.
+- **`--force` flag**: overwrites both the state JSON and the markdown. Audit entry sets `details.forceOverwrite: true`.
+- **Single ACTION_TYPE**: both cases use the `'master_plan_created'` audit action (S2-UX PM-S2G resolution).
 
-### 9.7 Common Pitfalls + Troubleshooting
+### 9.7 Common Pitfalls and Troubleshooting
 
 | Pitfall | Symptom | Resolution |
-|---------|---------|------------|
-| `projectId` minimum length | `error: 'invalid_input', errors: ['projectId must match kebab-case']` | 최소 3 chars (e.g., `'p1'` 거부, `'p-1'` 또는 `'pi1'` OK) |
-| Feature 가 vague string | tokenEst 가 부정확 (default 33350) | `--locHint` 또는 `locHints: { feature: 8000 }` 전달 (v2.1.14 예정) |
-| 50+ features → maxSprints 초과 | `error: 'exceeds_maxSprints'` | `bkit.config.json` 의 `maxSprints` 증가 또는 features 분해 |
-| Dependency cycle | `error: 'dependency_cycle', cycle: [...]` | graph 재검토 — 자기 자신을 dep 하면 X |
-| Markdown 생성 실패 시 state 잔존 | state JSON 만 있고 markdown 없음 | state-first rollback 패턴 — markdown 실패 시 state 자동 삭제. 재호출로 복구 가능 |
-| Backward compat 깨짐 | 기존 caller 가 sprints:[] 의존 | S4-UX 의 auto-wiring 은 default OFF — `deps.contextSizer` 명시 inject 만 활성 |
+|---|---|---|
+| `projectId` minimum length | `error: 'invalid_input', errors: ['projectId must match kebab-case']` | Minimum 3 chars (e.g., `'p1'` rejected, `'p-1'` or `'pi1'` accepted) |
+| Vague feature string | `tokenEst` inaccurate (default 33350) | Pass `--locHint` or `locHints: { feature: 8000 }` (planned for v2.1.14) |
+| 50+ features → `maxSprints` exceeded | `error: 'exceeds_maxSprints'` | Increase `maxSprints` in `bkit.config.json` or split features |
+| Dependency cycle | `error: 'dependency_cycle', cycle: [...]` | Review the graph — self-deps are rejected |
+| Markdown write fails, state lingers | State JSON present but no markdown | State-first rollback pattern — state is auto-deleted on markdown failure; retry to recover |
+| Backward-compat broken | Existing caller depends on `sprints:[]` | S4-UX auto-wiring is OFF by default — only active when `deps.contextSizer` is explicitly injected |
 
 ---
 
-## 부록 A: 디렉토리 구조
+## Appendix A — Directory Structure
 
 ```
 .bkit/state/
-├── sprint-status.json          # Sprint Management 상태 (신규, runtime 생성)
-├── pdca-status.json            # 기존 PDCA 상태 (orthogonal)
-├── trust-profile.json          # Trust Level 프로필
+├── sprint-status.json          # Sprint Management state (new, runtime-created)
+├── pdca-status.json            # Existing PDCA state (orthogonal)
+├── trust-profile.json          # Trust Level profile
 └── memory.json                 # bkit memory state
 
 lib/
-├── domain/sprint/              # Sprint 1 — Domain Foundation
-├── application/sprint-lifecycle/  # Sprint 2 — Application Core
-└── infra/sprint/               # Sprint 3+5 — Infrastructure
+├── domain/sprint/                  # Sprint 1 — Domain Foundation
+├── application/sprint-lifecycle/   # Sprint 2 — Application Core
+└── infra/sprint/                   # Sprint 3+5 — Infrastructure
     ├── sprint-state-store.adapter.js   # Sprint 3
     ├── sprint-telemetry.adapter.js     # Sprint 3
     ├── sprint-doc-scanner.adapter.js   # Sprint 3
     ├── matrix-sync.adapter.js          # Sprint 3
-    ├── gap-detector.adapter.js         # Sprint 5 신규
-    ├── auto-fixer.adapter.js           # Sprint 5 신규
-    └── data-flow-validator.adapter.js  # Sprint 5 신규
+    ├── gap-detector.adapter.js         # Sprint 5 (new)
+    ├── auto-fixer.adapter.js           # Sprint 5 (new)
+    └── data-flow-validator.adapter.js  # Sprint 5 (new)
 
 skills/sprint/                  # Sprint 4 — Presentation (skill)
 agents/sprint-*.md              # Sprint 4 — 4 agents
-templates/sprint/               # Sprint 4 — 7 Korean templates
-scripts/sprint-handler.js       # Sprint 4 — 16-action dispatcher (S2-UX master-plan 포함)
+templates/sprint/               # Sprint 4 — 7 templates
+scripts/sprint-handler.js       # Sprint 4 — 16-action dispatcher (incl. S2-UX `master-plan`)
 
 tests/contract/                 # Sprint 5 — L3 Contract test (tracked, CI gate)
 └── v2113-sprint-contracts.test.js
 ```
 
-## 부록 B: 관련 문서
+## Appendix B — Related Documents
 
-- [Migration Guide](./sprint-migration.guide.md) — PDCA → Sprint 마이그레이션
-- [Master Plan](../01-plan/features/sprint-management.master-plan.md) — 전체 sprint 계획
-- [Sprint 5 PRD](../01-plan/features/v2113-sprint-5-quality-docs.prd.md) — 본 sprint 의 요구사항
-- [`skills/sprint/SKILL.md`](../../skills/sprint/SKILL.md) — 영어 reference
+- [Migration Guide](./sprint-migration.guide.md) — PDCA → Sprint migration
+- [Master Plan (archived)](../archive/2026-05/01-plan/features/sprint-management.master-plan.md) — full sprint plan
+- [Sprint 5 PRD (archived)](../archive/2026-05/01-plan/features/v2113-sprint-5-quality-docs.prd.md) — Sprint 5 requirements
+- [`skills/sprint/SKILL.md`](../../skills/sprint/SKILL.md) — primary skill reference
 
 ---
 
-**문서 버전**: v1.0 (Sprint 5 initial)
-**문의**: bkit core team via GitHub issues
+**Document version**: v1.1 (English, translated from v1.0 Korean — 2026-05-12)
+**Contact**: bkit core team via GitHub issues

@@ -103,7 +103,7 @@ f5-customization,f6-bkit-system,f7-hooks-commands,f8-archive-cleanup,f9-real-use
   --trust L4
 ```
 
-See [`docs/01-plan/features/v2113-docs-sync.master-plan.md`](../../docs/01-plan/features/v2113-docs-sync.master-plan.md) for the complete master plan and [`docs/04-report/features/v2113-docs-sync.report.md`](../../docs/04-report/features/v2113-docs-sync.report.md) for the final report with KPI + lessons learned.
+The full master plan, PRD, plan, design, and final report for that sprint were archived after completion. See [`docs/archive/2026-05/01-plan/features/v2113-docs-sync.master-plan.md`](../../docs/archive/2026-05/01-plan/features/v2113-docs-sync.master-plan.md) for the complete master plan and [`docs/archive/2026-05/04-report/features/v2113-docs-sync.report.md`](../../docs/archive/2026-05/04-report/features/v2113-docs-sync.report.md) for the final report with KPI + lessons learned.
 
 ## Related
 

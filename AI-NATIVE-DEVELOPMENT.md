@@ -315,7 +315,7 @@ idle → [PM Gate] → Plan [CP1: Requirements] [CP2: Questions]
 
 **Coexistence Model**: Sprint and PDCA are **orthogonal** — both may track concurrently. PDCA 9-phase remains per-feature; Sprint 8-phase is the meta-container. Trust Level directly drives `SPRINT_AUTORUN_SCOPE`: L0 manual+stopAfter=prd / L1 design / L2 do / L3 qa / L4 archived (full-auto). Also gates PDCA phase transitions and destructive operations.
 
-See [skills/sprint/SKILL.md](skills/sprint/SKILL.md), [docs/06-guide/sprint-management.guide.md](docs/06-guide/sprint-management.guide.md), [docs/06-guide/sprint-migration.guide.md](docs/06-guide/sprint-migration.guide.md), and [docs/01-plan/features/v2113-docs-sync.master-plan.md](docs/01-plan/features/v2113-docs-sync.master-plan.md) (real working example — this release's own documentation sync sprint).
+See [skills/sprint/SKILL.md](skills/sprint/SKILL.md), [docs/06-guide/sprint-management.guide.md](docs/06-guide/sprint-management.guide.md), and [docs/06-guide/sprint-migration.guide.md](docs/06-guide/sprint-migration.guide.md) for the full reference, deep-dive, and PDCA-to-Sprint migration mapping.
 
 ---
 

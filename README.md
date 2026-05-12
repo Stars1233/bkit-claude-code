@@ -131,7 +131,7 @@ flowchart LR
 **4 Auto-Pause Triggers** (sprint stops automatically):
 `QUALITY_GATE_FAIL` · `ITERATION_EXHAUSTED` · `BUDGET_EXCEEDED` · `PHASE_TIMEOUT`
 
-Full reference: [`skills/sprint/SKILL.md`](skills/sprint/SKILL.md) · Korean deep-dive: [`docs/06-guide/sprint-management.guide.md`](docs/06-guide/sprint-management.guide.md) · Real example: [`docs/01-plan/features/v2113-docs-sync.master-plan.md`](docs/01-plan/features/v2113-docs-sync.master-plan.md) (this release's own documentation sync sprint).
+Full reference: [`skills/sprint/SKILL.md`](skills/sprint/SKILL.md) · Deep-dive guide: [`docs/06-guide/sprint-management.guide.md`](docs/06-guide/sprint-management.guide.md) · Migration: [`docs/06-guide/sprint-migration.guide.md`](docs/06-guide/sprint-migration.guide.md).
 
 ## Architecture at a glance
 
