@@ -55,6 +55,29 @@ First-time users see an interactive 3-minute tutorial on the very first session.
 
 Clean Architecture 4-Layer (Domain ports/guards/rules · Application · Infrastructure · Presentation) with 7 Port↔Adapter pairs (cc-payload · state-store · regression-registry · audit-sink · token-meter · docs-code-index · mcp-tool) and a 3-Layer Orchestration core (intent-router · next-action-engine · team-protocol · workflow-state-machine). v2.1.11 added 4 Sprints (α Onboarding · β Discoverability · γ Trust · δ Port + Governance) covering 20 FRs; v2.1.12 hotfix patches the `lib/evals/runner-wrapper.js` argv mismatch (silent failure of `/bkit-evals run`) plus false-positive defense and JSON-parse robustness.
 
+## Sprint Management (v2.1.13)
+
+bkit Sprint Management groups one or more features under a shared scope,
+budget, and timeline. Each sprint runs its own 8-phase lifecycle:
+`prd → plan → design → do → iterate → qa → report → archived`.
+
+```
+/sprint init my-launch --name "Q2 Launch" --trust L3
+/sprint start my-launch
+/sprint status my-launch
+```
+
+**15 sub-actions**: init / start / status / list / phase / iterate / qa / report /
+archive / pause / resume / fork / feature / watch / help.
+
+**4 Auto-Pause Triggers**: quality gate fail · iteration exhausted · budget exceeded ·
+phase timeout. Trust Level scope (`L0`–`L4`) controls auto-run boundaries; at `L4`
+Full-Auto the orchestrator advances phases until any trigger fires.
+
+Sprint Management coexists with the existing PDCA 9-phase enum — both may track
+concurrently. See `skills/sprint/SKILL.md` for the full reference and
+`docs/06-guide/sprint-management.guide.md` for the Korean deep-dive guide.
+
 ## Documentation
 
 - [README-FULL.md](README-FULL.md) — full feature list, complete version history, deep architecture

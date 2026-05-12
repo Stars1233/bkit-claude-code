@@ -6,8 +6,13 @@
 > **Date**: 2026-05-12
 > **Branch**: `feature/v2113-sprint-management`
 > **Base**: main `5f6592b` (+ commit `1aec261` cc-version-analysis report series)
-> **Status**: Draft **v1.1** — Plan 단계 (PDCA `plan` phase 본 문서 진입 가능)
+> **Status**: Draft **v1.2** — Sprint 1+2+3+4 GA + Sprint 5 Production Hardening 후 LOC reconciliation
 > **사용자 명시 결정**: 사용자 = **bkit 설치한 누구나**. gpters-portal의 30-sprint matrix는 generic primitives만 추출, 도메인 특화 영역은 제외.
+>
+> **v1.2 변경 사항** (2026-05-12, Sprint 5 추가):
+> - **LOC reconciliation 매트릭스** (§19 신규) — Sprint 1+2+3+4 실측 LOC 정정 (estimate 2,400 → actual 4,867 + Sprint 5 ~1,250)
+> - Sprint 5 추가 (`v2113-sprint-5-quality-docs`) — Quality + Documentation: L3 Contract test (tracked) + 3 production adapter scaffolds + sprint-handler.js handleFork/Feature/Watch real impl + Korean user/migration guides
+> - 사용자 명시 3 (2026-05-12) — Sprint 5 QA = bkit-evals + claude -p + 4-System 공존 + Sprint↔PDCA mapping (다양한 관점)
 >
 > **v1.1 변경 사항** (2026-05-12 D11-D14 결정 반영):
 > - `/sprint start` default behavior = **auto-run** (Plan → Design → Do → Iterate → QA → Report 자율 실행). Trust Level 조건부 scope.
@@ -1827,7 +1832,59 @@ try {
 
 ---
 
+---
+
+## 22. LOC Reconciliation (v1.2 신규, 2026-05-12)
+
+본 섹션은 v1.0/v1.1 estimate vs Sprint 1+2+3+4 GA + Sprint 5 실측 LOC 정정.
+
+### 22.1 매트릭스
+
+| Sprint | v1.0/v1.1 estimate | v1.2 actual | Δ | Notes |
+|--------|---------------------|-------------|------|-------|
+| Sprint 1 (Domain) | ~400 | **685** | +285 | typedef + canTransition `{ok, reason?}` pattern + 7 validators |
+| Sprint 2 (Application) | ~600 | **1,337** | +737 | 8 use cases + DI deps interface (14 keys) + ACTIVE_GATES_BY_PHASE matrix |
+| Sprint 3 (Infra) | ~400 | **780** | +380 | 4 adapters + composite factory + 3-matrix atomic sync |
+| Sprint 4 (Presentation) | ~800 | **2,065** | +1,265 | 7 Korean templates + 4 agents + 15-action handler + skill 8개국어 frontmatter |
+| Sprint 5 (Quality + Docs) | ~600 | **~1,250** (code ~750 + docs ~500) | +650 | 3 adapter scaffolds + L3 contract (tracked) + Korean guides + handleFork/Feature/Watch |
+| Sprint 6 (Release) | ~200 | TBD | — | BKIT_VERSION bump + CHANGELOG + tag/release |
+| **Total** | **~3,000** | **~6,117+** | **+3,117** | actual = 2.04x estimate |
+
+### 22.2 Reconciliation 원인
+
+- **Sprint 1 (+285)**: typedef + canTransition `{ok, reason}` 패턴 (boolean → 객체 return) + frozen enum + validators 7건
+- **Sprint 2 (+737)**: ACTIVE_GATES_BY_PHASE matrix + 4 auto-pause triggers + 7-Layer SEVEN_LAYER_HOPS + DI deps interface 14 keys
+- **Sprint 3 (+380)**: composite factory `createSprintInfra` + atomic write tmp+rename + 3-matrix sync + OTLP opt-in
+- **Sprint 4 (+1,265)**: 7 Korean deep templates + 4 agents (sprint-orchestrator/master-planner/qa-flow/report-writer) + skill 8개국어 frontmatter + 15-action dispatcher + L3 contract 사전 준비
+- **Sprint 5 (+650)**: 3 production adapter scaffolds (gap-detector/auto-fixer/data-flow-validator) + tracked L3 contract test (8 TCs) + Korean user/migration guides (~500 LOC) + sprint-handler.js handleFork/Feature/Watch real impl
+
+### 22.3 누적 TCs
+
+| Sprint | TCs | Tracked? |
+|--------|-----|----------|
+| Sprint 1 | 40 | tests/qa/ local |
+| Sprint 2 | 79 | tests/qa/ local |
+| Sprint 3 | 66 + 10 CSI | tests/qa/ local |
+| Sprint 4 | 41 (incl 8 CSI-04) | tests/qa/ local |
+| Sprint 5 | 8 (L3 Contract) + 7-perspective QA | **tests/contract/ tracked** |
+| **Cumulative** | **244+ TCs** | **8 tracked + 236 local** |
+
+### 22.4 ★ 사용자 명시 3 (2026-05-12) 통합
+
+> "QA 는 eval 도 활용하고 claude -p 도 활용해서 Sprint 와 pdca, 그리고 각 status 관리나 memory 가 유기적으로 동작하는지도 포함해서 다양한 관점으로 실제 동작 하는지 검증해야해."
+
+Sprint 5 QA 7-perspective 매트릭스 (`docs/01-plan/features/v2113-sprint-5-quality-docs.plan.md` §2 R12 참조):
+1. L3 Contract (tracked)
+2. Sprint 1+2+3+4 regression (236 TCs)
+3. **bkit-evals scenarios** ≥ 4 (eval-score ≥ 0.8)
+4. **claude -p headless** 5 scenarios (exit 0)
+5. **4-System 공존** (sprint/pdca/trust/memory orthogonal)
+6. **Sprint↔PDCA mapping** (8-phase × 9-phase overlap documented)
+7. `claude plugin validate .` Exit 0 (F9-120 11-cycle)
+
+---
+
 **End of Master Plan**
 
-> 본 문서는 Draft v1.0. 5/13 review 결과 + 사용자 피드백을 반영하여 v1.1 갱신 예정.
-> 다음 단계: `/pdca plan sprint-management` 또는 `/pdca team sprint-management` 권장.
+> v1.2 (2026-05-12): Sprint 1+2+3+4 GA + Sprint 5 Production Hardening 추가 후 LOC reconciliation.
+> 다음 단계: Sprint 5 완료 후 Sprint 6 (Release v2.1.13).

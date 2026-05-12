@@ -245,23 +245,116 @@ async function handleResume(args, infra) {
   return result;
 }
 
-async function handleFork(_args, _infra) {
-  return { ok: true, deferred: true, message: 'fork handler deferred to Sprint 5' };
+// Sprint 5 real impl — fork: clone source sprint, carry over incomplete features
+async function handleFork(args, infra) {
+  if (!args || !args.id || !args.newId) {
+    return { ok: false, error: 'fork requires { id, newId }' };
+  }
+  const source = await infra.stateStore.load(args.id);
+  if (!source) return { ok: false, error: 'Sprint not found: ' + args.id };
+  const carryItems = identifyCarryItems(source);
+  const domain = require(require('path').join(__dirname, '..', 'lib/domain/sprint'));
+  const trustLevel = source.autoRun && source.autoRun.trustLevelAtStart ? source.autoRun.trustLevelAtStart : 'L0';
+  const newSprint = domain.createSprint({
+    id: args.newId,
+    name: (source.name || args.id) + ' (fork)',
+    features: carryItems.map(function (c) { return c.featureName; }),
+    context: source.context || {},
+    trustLevelAtStart: trustLevel,
+  });
+  await infra.stateStore.save(newSprint);
+  return { ok: true, sourceId: args.id, newSprint: newSprint, carryItems: carryItems };
 }
 
-async function handleFeature(_args, _infra) {
-  return { ok: true, deferred: true, message: 'feature handler deferred to Sprint 5' };
+function identifyCarryItems(sprint) {
+  const items = [];
+  const fm = sprint && sprint.featureMap;
+  if (!fm) return items;
+  const keys = Object.keys(fm);
+  for (let i = 0; i < keys.length; i++) {
+    const featureName = keys[i];
+    const fp = fm[featureName];
+    const phase = fp && fp.phase;
+    if (phase === 'do' || phase === 'iterate') {
+      items.push({ featureName: featureName, phase: phase, reason: 'phase_' + phase + '_not_complete' });
+    }
+  }
+  return items;
 }
 
+// Sprint 5 real impl — feature: list/add/remove feature within a sprint
+async function handleFeature(args, infra) {
+  if (!args || !args.id || !args.action) {
+    return { ok: false, error: 'feature requires { id, action: list|add|remove [, featureName] }' };
+  }
+  const sprint = await infra.stateStore.load(args.id);
+  if (!sprint) return { ok: false, error: 'Sprint not found: ' + args.id };
+  const domain = require(require('path').join(__dirname, '..', 'lib/domain/sprint'));
+
+  switch (args.action) {
+    case 'list':
+      return {
+        ok: true,
+        features: sprint.features || [],
+        featureMapKeys: Object.keys(sprint.featureMap || {}),
+      };
+    case 'add': {
+      if (!args.featureName) return { ok: false, error: 'add requires featureName' };
+      const features = (sprint.features || []).slice();
+      if (features.indexOf(args.featureName) === -1) features.push(args.featureName);
+      const updated = domain.cloneSprint(sprint, { features: features });
+      await infra.stateStore.save(updated);
+      return { ok: true, sprint: updated };
+    }
+    case 'remove': {
+      if (!args.featureName) return { ok: false, error: 'remove requires featureName' };
+      const features = (sprint.features || []).filter(function (f) { return f !== args.featureName; });
+      const updated = domain.cloneSprint(sprint, { features: features });
+      await infra.stateStore.save(updated);
+      return { ok: true, sprint: updated };
+    }
+    default:
+      return { ok: false, error: 'feature action must be list|add|remove, got: ' + args.action };
+  }
+}
+
+// Sprint 5 enhanced — watch: live snapshot with auto-pause triggers + matrix snapshots
 async function handleWatch(args, infra) {
   if (!args || !args.id) return { ok: false, error: 'watch requires { id }' };
   const sprint = await infra.stateStore.load(args.id);
   if (!sprint) return { ok: false, error: 'Sprint not found: ' + args.id };
+  const lifecycle = require(require('path').join(__dirname, '..', 'lib/application/sprint-lifecycle'));
+
+  // Auto-pause triggers snapshot (best-effort)
+  let triggers = [];
+  try {
+    if (typeof lifecycle.checkAutoPauseTriggers === 'function') {
+      triggers = lifecycle.checkAutoPauseTriggers(sprint) || [];
+    }
+  } catch (_e) { /* triggers optional */ }
+
+  // Matrix snapshots (best-effort)
+  const matrices = {};
+  try {
+    if (infra.matrixSync && typeof infra.matrixSync.read === 'function') {
+      const mods = ['data-flow', 'cumulative-state', 'feature-phase'];
+      for (let i = 0; i < mods.length; i++) {
+        try {
+          matrices[mods[i]] = await infra.matrixSync.read(args.id, mods[i]);
+        } catch (_e) {
+          matrices[mods[i]] = null;
+        }
+      }
+    }
+  } catch (_e) { /* matrices optional */ }
+
   return {
     ok: true,
     snapshot: sprint,
-    deferred: true,
-    message: 'watch live loop deferred to Sprint 5',
+    triggers: triggers,
+    matrices: matrices,
+    phase: sprint.phase,
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -284,8 +377,8 @@ function handleHelp() {
       '  pause    /sprint pause <id>',
       '  resume   /sprint resume <id>',
       '  watch    /sprint watch <id>',
-      '  fork     /sprint fork <id> --new <newId>  (Sprint 5)',
-      '  feature  /sprint feature <id> --feature <name>  (Sprint 5)',
+      '  fork     /sprint fork <id> --new <newId>',
+      '  feature  /sprint feature <id> --action list|add|remove --feature <name>',
       '  help     /sprint help',
     ].join('\n'),
   };
