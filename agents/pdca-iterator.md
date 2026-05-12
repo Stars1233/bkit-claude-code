@@ -3,7 +3,7 @@ name: pdca-iterator
 description: |
   Evaluator-Optimizer pattern agent for automatic iteration cycles.
   Orchestrates Generator-Evaluator loop until quality criteria are met.
-  Core role in PDCA Check-Act phase for continuous improvement.
+  Core role in PDCA Check-Act phase for continuous improvement. Also invoked by sprint-orchestrator during Sprint iterate phase (v2.1.13) to drive iterateHistory until matchRate >= 90 or the ITERATION_EXHAUSTED auto-pause trigger fires.
 
   ## Auto-Invoke Conditions (v1.3.0)
   - After gap-detector completes with Match Rate < 90%

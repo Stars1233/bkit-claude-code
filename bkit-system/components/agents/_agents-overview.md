@@ -1,7 +1,8 @@
 # Agents Overview
 
-> List of 36 Agents defined in bkit and their roles (v2.1.11)
+> List of 34 Agents defined in bkit and their roles (v2.1.13)
 >
+> **v2.1.13**: Sprint Management agents — added 4 sprint agents (`sprint-orchestrator`, `sprint-master-planner`, `sprint-qa-flow`, `sprint-report-writer`). Removed 6 pdca-eval-* agents (Korean-only frontmatter + v1.6.1 stale baseline + 0 spawn sites). Total 36 → 34. cto-lead/pm-lead/qa-lead extended with sprint Task spawn patterns + body sections. pdca-iterator/product-manager/gap-detector/self-healing/pipeline-guide/qa-monitor descriptions extended for sprint awareness (관점 1-1).
 > **v2.1.11**: 4 Sprints × 20 FRs Integrated Enhancement — Agents unchanged (36); Sprint γ adds `lib/application/pdca-lifecycle/` pilot referenced by `pdca-iterator` and `gap-detector` workflows. CC recommended: v2.1.118+ (79 consecutive compatible releases).
 > **v2.1.10**: Sprint 5a~7 complete — `cto-lead` body expanded (5 Task spawn blocks + `Task(pm-lead)` / `Task(qa-lead)` / `Task(pdca-iterator)` added to frontmatter, G-T-01/02). Enterprise teammates 5→6 (G-T-03). Bulk `@version 2.0.0 → 2.1.10` refresh across 79 files (66 lib + 13 scripts). CC recommended: v2.1.117+ (75 consecutive compatible releases).
 > **v2.1.9**: CC v2.1.116 response — ENH-253/254/259/263 (zero-script-qa fork verification, defense-in-depth security docs, custom skill warning, Docs=Code 15-file correction). CC recommended: v2.1.116+ (74 consecutive compatible, v2.1.115 skipped).

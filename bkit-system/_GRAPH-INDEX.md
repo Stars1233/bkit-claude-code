@@ -1,19 +1,21 @@
 # bkit Graph Index
 
-> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.12 (silent hotfix on top of v2.1.11 4 Sprints × 20 FRs Integrated Enhancement)**.
+> Obsidian graph view central hub. All components connect from this file. **Current release: v2.1.13 GA (Sprint Management major feature + tech debt cleanup on top of v2.1.11 4 Sprints × 20 FRs foundation; v2.1.12 hotfix between)**.
 >
 > **Version history is maintained in [CHANGELOG.md](../CHANGELOG.md) (single source of truth).** This file focuses on the current component graph; do not embed historical release notes here.
 >
 > Current release highlights:
+> - **Sprint Management (v2.1.13 GA)** — 8-phase meta-container (prd→plan→design→do→iterate→qa→report→archived), 16 sub-actions, 4 Auto-Pause Triggers (QUALITY_GATE_FAIL/ITERATION_EXHAUSTED/BUDGET_EXCEEDED/PHASE_TIMEOUT), Trust Level scope L0-L4 via `SPRINT_AUTORUN_SCOPE`, 7-Layer S1 dataFlowIntegrity QA via `sprint-qa-flow` agent
+> - **Tech Debt Cleanup (v2.1.13)** — net −2,333 LOC (7 legacy `templates/infra/*` removed: argocd/deploy-{dynamic,enterprise,staging-eks-ondemand}/observability x3/security/terraform)
 > - 4 Sprints × 20 FRs (α Onboarding, β Discoverability, γ Trust Foundation, δ Port + Governance)
 > - Clean Architecture 4-Layer with 7 Port↔Adapter pairs (Domain ports 7 + guards 4, 0 forbidden imports CI-enforced)
 > - Defense-in-Depth 4-Layer (CC Built-in → bkit PreToolUse → audit-logger → Token Ledger)
-> - Invocation Contract L1~L5 (226 CI-gated assertions + L2 smoke + L3 MCP stdio + L5 E2E shell)
-> - 3-Layer Orchestration (`lib/orchestrator/` 5 modules)
+> - Invocation Contract L1~L5 (226 CI-gated assertions + L2 smoke + L3 MCP stdio + L5 E2E shell + 8 v2.1.13 contract SC-01~08)
+> - 3-Layer Orchestration (`lib/orchestrator/` 5 modules) + Sprint orchestration (Sequential dispatch ENH-292 pattern)
 > - One-Liner SSoT 5/5 (`lib/infra/branding.js`)
-> - Quality Gates M1-M10 catalog + invariant
+> - Quality Gates M1-M10 catalog + invariant + Sprint S1 (dataFlow integrity)
 > - i18n KO/EN full + 6-lang fallback
-> - BKIT_VERSION 5-location invariant (`bkit.config.json` SSoT)
+> - BKIT_VERSION 5-location invariant (`bkit.config.json` SSoT — F9-120 closure 9-streak PASS)
 
 ## Philosophy (4)
 
@@ -42,11 +44,14 @@ Core design principles and methodology:
 - [[philosophy/ai-native-principles|ai-native-principles]] - AI-Native development & 3 core competencies
 - [[philosophy/pdca-methodology|pdca-methodology]] - PDCA cycle & 9-stage pipeline relationship
 
-## Skills (39)
+## Skills (44)
 
 ### PDCA Skills (2)
 - [[../skills/pdca/SKILL|pdca]] - Unified PDCA cycle management (8 actions) [Workflow]
 - [[../skills/plan-plus/SKILL|plan-plus]] - Brainstorming-enhanced PDCA planning (v1.5.5) [Workflow + Hybrid]
+
+### Sprint Skill (1) (v2.1.13)
+- [[../skills/sprint/SKILL|sprint]] - Sprint Management meta-container (8-phase, 16 sub-actions, 4 auto-pause triggers, Trust Level scope L0-L4) [Workflow]
 
 ### PM Skill (1) (v1.6.0)
 - [[../skills/pm-discovery/SKILL|pm-discovery]] - Product discovery and market research [Workflow]
@@ -88,7 +93,13 @@ The following skills were consolidated:
 - ~~ai-native-development~~ → `enterprise`
 - ~~monorepo-architecture~~ → `enterprise`
 
-## Agents (36)
+## Agents (34)
+
+### Sprint Agents (4) (v2.1.13)
+- [[../agents/sprint-master-planner|sprint-master-planner]] - Sprint Master Plan + PRD + Plan + Design generation specialist (Context-Anchor-driven)
+- [[../agents/sprint-orchestrator|sprint-orchestrator]] - Sprint full-lifecycle orchestrator (Sequential dispatch ENH-292 pattern for sub-agent caching mitigation)
+- [[../agents/sprint-qa-flow|sprint-qa-flow]] - 7-Layer S1 dataFlowIntegrity verification (UI→Client→API→Validation→DB→Response→Client→UI hop traversal)
+- [[../agents/sprint-report-writer|sprint-report-writer]] - phaseHistory + iterateHistory + featureMap + kpi + autoPause.pauseHistory aggregation → markdown report
 
 ### Level-Based Agents
 - [[../agents/starter-guide|starter-guide]] - Starter level guide (beginners)
@@ -335,19 +346,30 @@ bkit supports languages and frameworks organized by tier:
 
 > **v1.5.0**: bkit is now Claude Code exclusive. Gemini CLI support was removed for simplified architecture.
 
-**Components (v2.1.12 Final, 2026-04-28)**:
-- `skills/` - 43 skills (v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track)
-- `agents/` - 36 agents (13 opus / 21 sonnet / 2 haiku)
-- `scripts/` - 49 scripts (Node.js)
-- `lib/` - 16 subdirectories, 142 modules — Clean Architecture 4-Layer with 7 Port↔Adapter pairs
-- `templates/` - 18 templates
+**Components (v2.1.13 GA, 2026-05-12)**:
+- `skills/` - 44 skills (v2.1.13 added sprint; v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track)
+- `agents/` - 34 agents (v2.1.13 added sprint-master-planner / sprint-orchestrator / sprint-qa-flow / sprint-report-writer)
+- `scripts/` - 51 scripts (Node.js) — v2.1.13 added sprint-handler.js (660 LOC) + sprint-memory-writer.js (138 LOC)
+- `lib/` - 19 subdirectories, 163 modules — Clean Architecture 4-Layer with 7 Port↔Adapter pairs (v2.1.13 added `lib/application/sprint-lifecycle/` 13 modules + `lib/infra/sprint/` 9 modules)
+- `templates/` - 39 templates (v2.1.13 added 7 sprint templates: master-plan/prd/plan/design/iterate/qa/report)
 - `output-styles/` - 4 styles
-- `servers/` - 2 MCP servers (bkit-pdca, bkit-analysis; 16 tools registered via `lib/infra/mcp-port-registry.js`)
-- Test files - 117+ (qa-aggregate scope), 4,000+ TC (3,762 baseline + 261 v2.1.11)
-- BKIT_VERSION - 2.1.12 (`bkit.config.json` SSoT; 5-location invariant)
+- `servers/` - 2 MCP servers (bkit-pdca: 13 tools, bkit-analysis: 6 tools = **19 tools total**, registered via `lib/infra/mcp-port-registry.js`. v2.1.13 added bkit_sprint_list / bkit_sprint_status / bkit_master_plan_read)
+- Test files - 118+ (qa-aggregate scope), 4,000+ TC (3,762 baseline + 261 v2.1.11 + 8 v2.1.13 contract SC-01~08)
+- BKIT_VERSION - 2.1.13 (`bkit.config.json` SSoT; 5-location invariant; F9-120 closure 9-streak PASS)
 - One-Liner - `lib/infra/branding.js` SSoT; 5-location invariant
+- ACTION_TYPES - 20 (v2.1.13 added sprint_paused / sprint_resumed / master_plan_created / task_created)
+- CATEGORIES - 11 (v2.1.13 added 'sprint')
 
-## Templates (18)
+## Templates (39)
+
+### Sprint Templates (7) (v2.1.13)
+- `sprint/master-plan.template.md` - Sprint master plan template (Context Anchor + 9-feature breakdown pattern)
+- `sprint/prd.template.md` - Sprint-level PRD template
+- `sprint/plan.template.md` - Sprint feature plan template
+- `sprint/design.template.md` - Sprint design template (exact edit hunks pattern)
+- `sprint/iterate.template.md` - Sprint iterate report template
+- `sprint/qa.template.md` - Sprint QA report template (7-Layer S1 dataFlow)
+- `sprint/report.template.md` - Sprint final report template (KPI + lessons learned)
 
 ### PDCA Templates
 - `plan.template.md` - Plan phase

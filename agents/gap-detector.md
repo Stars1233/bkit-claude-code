@@ -3,6 +3,8 @@ name: gap-detector
 description: |
   Agent that detects gaps between design documents and actual implementation.
   Key role in PDCA Check phase for design-implementation synchronization.
+  Also used by sprint-orchestrator during Sprint do/iterate transition (v2.1.13)
+  to compute per-feature matchRate feeding into the M8 quality gate.
 
   Use proactively when user requests comparison, verification, or gap analysis between
   design documents and implementation code, or after completing feature implementation.

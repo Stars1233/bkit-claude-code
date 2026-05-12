@@ -1,242 +1,770 @@
-# bkit - Vibecoding Kit (Full Reference)
+# bkit — Full Reference
 
 > The only Claude Code plugin that verifies AI-generated code against its own design specs.
 
-> **Quick start lives in [README.md](README.md).** This file preserves the complete v2.1.12 feature inventory, version history, and deep architecture for contributors and audit consumers (v2.1.12 is a silent hotfix on top of v2.1.11; the v2.1.11 4-Sprint feature set remains the active inventory).
+> **The 5-minute version is in [README.md](README.md). This file is the deep one.** It exists for people who want to know exactly what `/sprint`, `/pdca`, and `/control` do, which agent runs in which phase, how the 11 quality gates measure things, and how the architecture stops AI from drifting. **Release history is in [CHANGELOG.md](CHANGELOG.md) and is not duplicated here.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.118+-purple.svg)](https://code.claude.com)
-[![Version](https://img.shields.io/badge/Version-2.1.12-green.svg)](CHANGELOG.md)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-v2.1.123+-purple.svg)](https://code.claude.com)
+[![Version](https://img.shields.io/badge/Version-2.1.13-green.svg)](CHANGELOG.md)
 [![Author](https://img.shields.io/badge/Author-POPUP%20STUDIO-orange.svg)](https://popupstudio.ai)
 
-> **PDCA methodology + CTO-Led Agent Teams + AI coding assistant mastery for AI-native development**
+---
 
-bkit is a Claude Code plugin that transforms how you build software with AI. It provides structured development workflows, automatic documentation, and intelligent code assistance through the PDCA (Plan-Do-Check-Act) methodology.
+## Who this file is for
 
-![bkit Introduction](images/bkit-intro.png)
+| You are… | Read this file because… |
+|---|---|
+| 🌱 **Vibe coder / non-developer** who saw the README and asked "but how does it actually work?" | Sections 0, 4.2, and 7.3 explain the moving parts in plain language with worked examples. You will not need to know Clean Architecture to follow them. |
+| 👤 **Solo dev** evaluating bkit before installing | Sections 2, 3, 5, 8 cover the commands, the quality-gate thresholds, and the agent rosters. |
+| 👥 **Team lead** thinking about adoption | Sections 6, 7, 9 cover Trust Level governance, Sprint planning, and the 4-Layer architecture / Invocation Contract that keeps drift out of the codebase. |
+| 🛠️ **Plugin author** who wants to customise bkit | Section 11 covers the project-local override pattern; sections 9 and 10 cover the contract surface. |
+
+## What you'll achieve by working through this file
+
+The bkit promise: **anyone can ship robust, production-quality software with AI** — even if you've never written a unit test or seen a CI pipeline. This document explains the underlying mechanics so you can trust the workflow when it runs unattended at Trust Level 4.
+
+| If you understand… | …you can rely on |
+|---|---|
+| **Section 4 — Workflow Internals** | bkit auto-running every PDCA phase. You'll know what happens in *pm*, *plan*, *design*, *do*, *check*, *act*, *qa*, *report*. |
+| **Section 5 — Quality Gates** | bkit pausing before drift compounds. You'll know what M1, M3, M5, S1 measure and what bkit does when they fail. |
+| **Section 6 — Trust Level** | Setting the autonomy dial confidently. You'll know exactly what L2 and L4 do differently. |
+| **Section 7 — Sprint Management** | Releases that span sessions and weeks. You'll know how the Context Sizer keeps each sprint within a single Claude session window. |
+| **Section 8 — Agent Teams** | Knowing which specialist to call. You'll know why `/pdca pm`, `/pdca team`, `/pdca qa` spawn different rosters. |
 
 ---
 
-## What is Context Engineering?
+## Table of Contents
 
-**Context Engineering** is the systematic curation of context tokens for optimal LLM inference—going beyond simple prompt crafting to build entire systems that consistently guide AI behavior.
-
-```
-Traditional Prompt Engineering:
-  "The art of writing good prompts"
-
-Context Engineering:
-  "The art of designing systems that integrate prompts, tools, and state
-   to provide LLMs with optimal context for inference"
-```
-
-**bkit is a practical implementation of Context Engineering**, providing a systematic context management system for Claude Code.
-
-### bkit's Context Engineering Architecture
-
-![bkit Context Engineering Architecture](images/bkit-architecture.png)
-
-bkit implements Context Engineering through three interconnected layers:
-
-| Layer | Components | Purpose |
-|-------|------------|---------|
-| **Domain Knowledge** | 43 Skills | Structured expert knowledge (phases, levels, specialized domains; v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track) |
-| **Behavioral Rules** | 36 Agents | Role-based constraints with model selection (opus/sonnet/haiku) |
-| **State Management** | 142 Lib Modules across 16 subdirs | PDCA state machine, workflow engine, automation control, audit, quality gates, intent detection, team coordination, 3-Layer Orchestration, Application Layer pilot (v2.1.11 γ2), Clean Architecture 4-Layer (Domain/Application/Infrastructure/Presentation) with 7 Port↔Adapter pairs |
-
-### 6-Layer Hook System
-
-Context injection occurs at six distinct layers:
-
-```
-Layer 1: hooks.json (Global)     → SessionStart, UserPromptSubmit, PreCompact, PostCompact, PreToolUse, PostToolUse, Stop, StopFailure + 13 more (21 events)
-Layer 2: Skill Frontmatter       → Domain-specific hooks (deprecated in v1.4.4, use hooks.json)
-Layer 3: Agent Frontmatter       → Task-specific hooks with constraints
-Layer 4: Description Triggers    → Semantic matching in 8 languages
-Layer 5: Scripts (42 modules)    → Actual Node.js execution logic with unified handlers
-Layer 6: Plugin Data Backup      → ${CLAUDE_PLUGIN_DATA} persistent state management
-```
-
-> **Learn more**: See [Context Engineering Principles](bkit-system/philosophy/context-engineering.md) for detailed implementation.
+0. [Plain-language Glossary](#0-plain-language-glossary)
+1. [Design Philosophy](#1-design-philosophy)
+2. [The Three Commands](#2-the-three-commands)
+3. [Command Cheat Sheet](#3-command-cheat-sheet)
+4. [Workflow Internals](#4-workflow-internals)
+5. [Quality Gates & Self-Repair](#5-quality-gates--self-repair)
+6. [Trust Level & Control](#6-trust-level--control)
+7. [Sprint Management Deep-Dive](#7-sprint-management-deep-dive)
+8. [Agent Teams](#8-agent-teams)
+9. [Architecture](#9-architecture)
+10. [Skill Evals](#10-skill-evals)
+11. [Installation & Customization](#11-installation--customization)
+12. [Requirements](#12-requirements)
+13. [Language Support](#13-language-support)
+14. [License & Contributing](#14-license--contributing)
 
 ---
 
-## Features
+## 0. Plain-language Glossary
 
-![bkit Features](images/bkit-features.png)
+The terms used in this file, explained for someone who is new to AI-coding.
 
-- **v2.1.11 Integrated Enhancement — Onboarding Revolution + Discoverability + Trust Foundation + Port & Governance (v2.1.11)** — 4 Sprints × 20 FRs GA single release. **Sprint α Onboarding**: One-Liner SSoT 5/5 enforced (plugin.json + README + README-FULL + session-context + CHANGELOG), README split (≤100 lines + README-FULL preservation), First-Run AskUserQuestion tutorial with design anchor lock, Agent Teams env preflight, `cc-version-checker.js` subprocess + version.json fallback + module-level cache. **Sprint β Discoverability**: `/bkit explore` 5-category tree with frontmatter parser, `/bkit evals run` skill regex + spawnSync wrapper, `/pdca watch` read-only NDJSON state tap, `/pdca fast-track` Daniel-mode auto-approve (DEFAULT_FAST_TRACK frozen), error-friendly localization via `lib/i18n/translator.js` + `detector.js` (KO/EN full + 6-lang fallback). **Sprint γ Trust Foundation**: `trust-engine.reconcile()` public API + `syncToControlState()`, Application Layer pilot (`lib/application/pdca-lifecycle/{index,phases,transitions}.js`), ADR 0004 (agent-hook multi-event deferral) + ADR 0005 (Application Layer pilot). **Sprint δ Port + Governance**: `mcp-tool.port.js` + 16-tool registry (7th Port↔Adapter pair), Quality Gates M1-M10 catalog + `check-quality-gates-m1-m10.js` invariant, `token-report.js` aggregate + markdown render with CAND-004 OTEL 3-attr (I4-121 stop_reason + F8-119 duration_ms + I6-119 tool_input_size_bytes), ADR 0006 CC Upgrade Policy, `release-plugin-tag.sh`. **CI invariants**: `check-trust-score-reconcile.js`, `check-quality-gates-m1-m10.js`, `docs-code-sync.js`. **Tests**: 117+ files / 4,000+ TC (3,762 baseline + 261 v2.1.11). Architecture: **43 Skills, 36 Agents, 21 Hook Events (24 blocks), 16 MCP Tools, 2 MCP Servers, 142 Lib Modules across 16 subdirs (added `lib/application/`, `lib/discovery/`, `lib/evals/`, `lib/dashboard/`, `lib/i18n/`), 49 Scripts, 117+ test files**. CC recommended **v2.1.118+** (79 consecutive compatible releases). ENH closures: ENH-277 (Port caller-agnostic), ENH-279 (release automation), ENH-280 (agent-hook multi-event deferral via ADR 0004). ENH-278 (autoMode `$defaults`) deferred to v2.1.12.
-- **Integrated Enhancement — Clean Architecture + Defense-in-Depth + Invocation Contract + 3-Layer Orchestration (v2.1.10)** — Sprint 0~7 complete. **Clean Architecture 4-Layer** (Domain: 11 modules = 6 ports + 4 guards + 1 rules, 0 forbidden imports CI-enforced; Application: cc-regression 8 modules + pdca + team; Infrastructure: cc-bridge + telemetry + docs-code-scanner + mcp-test-harness; Presentation: hooks + scripts). **Port↔Adapter mapping 6 complete** (cc-payload↔cc-bridge, state-store, regression-registry, audit-sink↔telemetry, token-meter, docs-code-index). **Guard Registry** 21 guards + `lifecycle.reconcile()` auto-release (`expectedFix` seed × 4). **Invocation Contract L1~L5**: 226 assertions (L1 + L4 CI-gated) + L2 hook attribution 13 TC + L3 MCP stdio runtime 42 TC (real spawn + tools/list) + L5 E2E shell smoke 5 scenarios. **Defense-in-Depth 4-Layer** formalized: Layer 1 (CC Built-in sandbox) → Layer 2 (bkit PreToolUse Hook: `pre-write.js` + `unified-bash-pre.js` + defense-coordinator) → Layer 3 (audit-logger OWASP A03/A08 sanitizer, 7-key PII redaction) → Layer 4 (Token Ledger `.bkit/runtime/token-ledger.json` NDJSON). **Docs=Code CI** (`scripts/docs-code-sync.js`, 0 drift, 8 counts + **BKIT_VERSION 5-location invariant**). **Sprint 7 3-Layer Orchestration** (`lib/orchestrator/` 5 modules = intent-router + next-action-engine + team-protocol + workflow-state-machine + index, 19 exports): SKILL_TRIGGER_PATTERNS 4→15, matchRate SSoT 100→90, Enterprise teammates 5→6, Trust Score level auto-reflect restored, `cto-lead` body 5 Task spawn examples + `Task(pm-lead)` / `Task(qa-lead)` / `Task(pdca-iterator)` in frontmatter, 79 `@version` bulk refresh to 2.1.10. **BKIT_VERSION centralization complete** (ENH-167, `bkit.config.json` single SoT; 5-location invariant: plugin.json / hooks.json / session-start.js / README / CHANGELOG). **ENH-202** `context: fork` 1→9 skills. **Legacy 3 modules removed** (421 LOC). **audit-logger 682GB recursion** root-fixed (`createDualSink` avoidance + Integration Runtime TC permanent defense). **Critical Bug C1/C2 fix** (`startDate`→`date`, PII 6-key blacklist + 500-char cap). **Domain purity CI** (`check-domain-purity.js`, 11 files / 0 forbidden imports: fs/child_process/net/http/https/os). **PreCompact counter** (ENH-247/257, 2-week measurement). **Hook attribution** 3 sites (Stop/SessionEnd/SubagentStop). **6 Validator CLIs**: `check-guards` / `docs-code-sync` / `check-deadcode` / `check-domain-purity` / `l3-mcp-runtime` / `test/e2e/run-all.sh`. Architecture: **39 Skills, 36 Agents, 21 Hook Events (24 blocks), 16 MCP Tools, 2 MCP Servers, 128 Lib Modules (~27,085 LOC across 15 subdirs), 47 Scripts, 113 test files, 3,762 TC** (3,760 PASS / 0 FAIL / 2 expected legacy). CC recommended v2.1.117+ (**75 consecutive compatible releases**). Invocation Contract 100% preserved + Starter/Dynamic/Enterprise zero-action update. MEMORY.md 302→79 lines decomposed (detail: `cc_version_history_v21xx.md` / `enh_backlog.md` / `github_issues_monitor.md`).
-- **CC v2.1.116 Response + 4 ENH + Docs=Code 100% Sync (v2.1.9)** - 4 ENH shipping: **ENH-253** zero-script-qa `context: fork` macOS verification (Issue [#51165](https://github.com/anthropics/claude-code/issues/51165) non-reproduction on macOS, ENH-196/202 investment protected), **ENH-254** Defense-in-Depth security architecture formalization (Layer 1 CC runtime sandbox × Layer 2 bkit `DANGEROUS_PATTERNS` hook, `docs/03-analysis/security-architecture.md`), **ENH-259** Custom Skills data loss warning for Issue [#51234](https://github.com/anthropics/claude-code/issues/51234) (`CUSTOMIZATION-GUIDE.md` backup/restore/plugin-path guidance — bkit plugin itself unaffected at `${CLAUDE_PLUGIN_ROOT}/skills/`), **ENH-263** Docs=Code 15-file architectural correction (`@version 1.6.0` in lib/: **0 matches** — ENH-270 acceptance). Positive drift: **ENH-264** `lib/core/io.js` `outputBlockWithContext` infrastructure + 2 call sites in `unified-bash-pre.js` (deploy/QA phase paths), **ENH-265** `ENABLE_PROMPT_CACHING_1H` SessionStart branch + operational guide (`docs/03-analysis/prompt-caching-optimization.md`, 30-40% token savings on long PDCA sessions). Architecture: **39 Skills, 36 Agents, 43 Scripts, 101 Lib modules (11 subdirs), 21 Hook Events, 18 Templates, 4 Output Styles, 2 MCP Servers**. CC recommended v2.1.116+ (**74 consecutive compatible releases**, v2.1.115 skipped). Shipping QA: **Match Rate 100% / Coverage 90.3% / P0 Blocker 0 / Regression 0** (`docs/05-qa/cc-v2114-v2116-shipping-readiness.report.md`).
-- **Issue #81 Hotfix + Docs=Code Philosophy Restoration (v2.1.8)** - P0 `session-context.js` guard restored (ENH-238, ENH-226 Docs=Code violation fixed — `ui.contextInjection.enabled` + `sections[]` 3-way toggle mirrors `ui.dashboard` pattern), P0 compaction SHA-256 fingerprint dedup lock (ENH-239, `lib/core/session-ctx-fp.js` — prevents PreCompact re-fire duplicate injection, 1h TTL, GC 30d/LRU 100), P1 PersistedOutputGuard (ENH-240, `lib/core/context-budget.js` — CC 10,000-char cap defense with 8,000-char hard cap + priority-preserved truncation), P3 `hooks/hooks.json` `once: true` ADR documented in `docs/context-engineering.md` (ENH-244), Iterate-discovered `getUIConfig()` bug fixed (3 new fields exposed in `lib/core/config.js`), CC v2.1.111+ recommended (72 consecutive compatible releases), 11 files +641 LOC changed, 25 new TCs + 43 regression TCs = **74 PASS / 0 FAIL**, Match Rate **100%**. Additional: 16 bug fixes consolidated from 10-agent QA Discovery methodology (11 core bugs B1~B11 + 5 Q10-review findings B12~B16), 24 new QA TCs, 239 total PASS / 1 FAIL (pre-existing), ENH-167 partial (BKIT_VERSION centralization in paths.js + MCP servers)
-- **Issue #79 Hotfix + PDCA Workflow Stabilization (v2.1.7)** - P0 `updatePdcaStatus` argument order fix (`skill-post.js:229`), P0 full-auto chain completion (`generateAutoTrigger` report/completed phase added to `automation.js`), P1 phantom feature prevention (`pre-write.js` active feature guard), P2 gap-detector analysis document auto-generation (`gap-detector-stop.js`), `pdca-skill-stop.js` `[PDCA-COMPLETE]` directive for report phase, CC v2.1.110+ recommended (71 consecutive compatible releases), 5 files ~54 LOC changed
-- **Issue #77 Hotfix + v2.1.6 Maintenance Release (v2.1.6)** - P0 GitHub Issue #77 hotfix: Claude Code auto-session-title preservation through single-source `lib/pdca/session-title.js`, phase-change-only emission (6→1 per message, ≈83% reduction), 3-way UI opt-out (`ui.{sessionTitle,dashboard,contextInjection}.enabled` in bkit.config.json), stale feature TTL (24h default) auto-cleanup; PreCompact `decision:block` on PDCA `do/check/act` phases; output-styles audit script (CC v2.1.107 regression #47482 defense); BKIT_VERSION dynamic lookup (Docs=Code); **3268/3268 tests PASS (99.6%, 0 FAIL)**, 69 consecutive compatible releases (v2.1.34~v2.1.108)
-- **Comprehensive Test Strategy + CC v2.1.96 Compatibility (v2.1.0)** - 12-perspective test framework (unit/integration/e2e/behavioral/functional/API/security/UX/performance/contract + 2 new categories), 53 new test files (+658 TC, total ~4,028 TC), 100% export coverage (607/607), 4 critical security fixes (path traversal, symlink, null byte, checkpoint integrity), trust-engine/audit-logger bug fixes, 3 test helpers (hook-runner, mcp-client, temp-dir), ENH-188 frontmatter hooks dual-fire prevention (24 components), CC v2.1.96+ recommended, 61 consecutive compatible releases (v2.1.34~v2.1.96)
-- **CC v2.1.86 Compatibility + Skills Discoverability (v2.0.8)** - 34 skills description optimized for 250-char cap (/skills listing), Hook `if` conditional field documentation (CC v2.1.85+), Enterprise org policy documentation, CC v2.1.86+ recommended, 52 consecutive compatible releases (v2.1.34~v2.1.86)
-- **Living Context System + Self-Healing + PDCA Handoff Fix (v2.0.6)** - 4-Layer Living Context (`lib/context/` 7 modules), Self-Healing agent (opus) for automated error recovery, Deploy skill with 3-environment state machine, PDCA Handoff Loss Fix Phase 2+3 (PRD→Code context preservation 30-40% → 75-85%), 11 infrastructure templates (ArgoCD, Terraform, observability), 72 lib modules, 37 skills, 32 agents, 59 scripts
-- **PM Skills Integration + Interactive Checkpoints (v2.0.3)** - PM Agent Team expanded from 9→43 frameworks ([pm-skills](https://github.com/phuryn/pm-skills) MIT), PDCA Interactive Checkpoints 1~5 (AskUserQuestion-gated), code-analyzer Confidence-Based Filtering (≥80%), Design phase 3 Architecture Options (Minimal/Clean/Pragmatic), btw CTO Team Integration, pm-prd template v2.0 with Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Growth Loops)
-- **Cross-Project Isolation Fix (v2.0.1)** - PLUGIN_DATA backup/restore project identity guard via meta.json, globalCache project namespace, prevents cross-project PDCA state leakage ([#48](https://github.com/popup-studio-ai/bkit-claude-code/issues/48))
-- **AI Native Development OS (v2.0.0)** - Declarative PDCA state machine (20 transitions), YAML workflow DSL (3 presets), L0-L4 controllable AI automation, CLI dashboard (progress-bar, workflow-map, control-panel), audit logging + decision tracing, quality gates (7 stages), checkpoint/rollback, destructive operation detector (8 rules), MCP servers (bkit-pdca + bkit-analysis), 3,175+ TC, ~620+ exports, 88 lib modules, 37 skills, 32 agents, 20 hook events
-- **CC v2.1.78 Full Integration (v1.6.2)** - 14 ENH items (ENH-117~130), PostCompact/StopFailure hooks, ${CLAUDE_PLUGIN_DATA} persistent backup, agent effort/maxTurns, 1M context default, 128K output, 1186 TC (99.7%), 260+ exports, 54 scripts, CC v2.1.78 recommended
-- **CTO Orchestration Redesign + Quality Hardening (v1.6.1)** - Main Session as CTO pattern (CC v2.1.69+ compatibility), P0 bug fixes (4), Config-Code synchronization, 3-Tier Agent Security Model, 1073 TC comprehensive test (99.6% pass), CE Level 5 assessment (88/100), 72 files ~1,400 LOC
-- **Skills 2.0 Complete Integration (v1.6.0)** - 19 ENH items (ENH-85~103), Skill Evals framework with 28 eval definitions, Skill Classification (Workflow/Capability/Hybrid), A/B testing, template-validator, frontmatter hooks migration, context:fork deprecation, PM Agent Team integration
-- **Executive Summary & Preview UX (v1.5.9)** - Auto-generated 4-perspective summaries (Problem/Solution/Function & UX Effect/Core Value), AskUserQuestion with rich Markdown previews, ENH-74~81 CC v2.1.69 compatibility, 199 exports
-- **Studio Support & Path Registry (v1.5.8)** - Centralized state file path management (`lib/core/paths.js`), PDCA doc path registry, config cleanup (dead keys removed, missing keys added), state directory migration to `.bkit/{state,runtime,snapshots}/`, auto-migration with EXDEV fallback, 190 exports
-- **/simplify + /batch PDCA Integration (v1.5.7)** - CC built-in /simplify and /batch commands integrated into PDCA Check→Report flow, CC_COMMAND_PATTERNS 8-language awareness, HTTP Hooks documentation, English conversion for 3 stop scripts
-- **Auto-Memory Integration (v1.5.6)** - CC v2.1.59 auto-memory official support, /copy guidance, multi-agent memory optimization, ENH-48~51 enhancements, 186 exports
-- **Plan Plus Skill (v1.5.5)** - Brainstorming-enhanced PDCA planning with intent discovery, alternatives exploration, and YAGNI review
-- **bkend MCP Accuracy Fix (v1.5.4)** - MCP tool coverage 19→28+, accurate tool names, dynamic Base URL, search_docs workflow
-- **Team Visibility & State Writer (v1.5.3)** - Agent Teams state management with `.bkit/agent-state.json` for Studio IPC
-- **SubagentStart/SubagentStop Hooks (v1.5.3)** - 2 new hook events for agent lifecycle tracking (10 hook events total)
-- **Output Styles Auto-Discovery (v1.5.3)** - `outputStyles` in plugin.json + 4th style `bkit-pdca-enterprise`
-- **CTO-Led Agent Teams (v1.5.1)** - CTO agent orchestrates parallel PDCA execution with multi-agent teams (Dynamic: 3, Enterprise: 5 teammates)
-- **Output Styles (v1.5.1)** - Level-based response formatting (bkit-learning, bkit-pdca-guide, bkit-enterprise, bkit-pdca-enterprise)
-- **Agent Memory (v1.5.1)** - Cross-session context persistence for all 32 agents (auto-active)
-- **Natural Feature Discovery (v1.5.1)** - Auto-trigger integration aligned with "Automation First" philosophy
-- **Task Management + PDCA Integration (v1.4.7)** - Task Chain Auto-Creation, Task ID Persistence, Check↔Act Iteration
-- **Core Modularization (v1.4.7)** - lib/common.js split into 5 modules (lib/core/, lib/pdca/, lib/intent/, lib/task/, lib/team/)
-- **Context Engineering (v1.4.4)** - Systematic context curation with 7 library modules and unified hook system
-- **PDCA Methodology** - Structured development workflow with automatic documentation
-- **PDCA Skill Integration (v1.4.4)** - Unified `/pdca` skill with 8 actions (plan, design, do, analyze, iterate, report, status, next)
-- **Evaluator-Optimizer Pattern** - Automatic iteration cycles from Anthropic's agent architecture
-- **9-Stage Development Pipeline** - From schema design to deployment
-- **3 Project Levels** - Starter (static), Dynamic (fullstack), Enterprise (microservices)
-- **Multilingual Support** - 8 languages (EN, KO, JA, ZH, ES, FR, DE, IT)
-- **43 Skills** - Domain-specific knowledge (Workflow / Capability / Hybrid classification; v2.1.11 added bkit-evals, bkit-explore, pdca-watch, pdca-fast-track)
-- **36 Agents** - Specialized AI assistants (opus / sonnet / haiku; see bkit-system for model distribution) including CTO/PM Team + PDCA Eval agents
-- **117+ Test Files** - 4,000+ test cases (3,762 baseline + 261 v2.1.11 across α/β/γ/δ Sprints) across 12 categories with Invocation Contract L1-L5 (226 assertions CI-gated)
-- **49 Hook Scripts** - Hook execution with unified handlers across 21 event types (24 blocks); v2.1.11 adds `check-trust-score-reconcile.js`, `check-quality-gates-m1-m10.js`, `release-plugin-tag.sh`
-- **142 Lib Modules** - 16 subdirectories (audit, application, cc-regression, context, control, core, dashboard, discovery, domain, evals, i18n, infra, intent, orchestrator, pdca, qa, quality, task, team, ui) — Clean Architecture 4-Layer with 7 Port↔Adapter pairs
-- **Check-Act Iteration Loop** - Automatic gap analysis and fix cycles with max 5 iterations (90% threshold)
-- **12-Category Test Suite** - Unit, integration, E2E, behavioral, contract, security, performance, UX, philosophy, architecture, controllable-AI, regression (117+ files, 4,000+ TC in qa-aggregate scope)
+| Term | What it really means |
+|---|---|
+| **Claude Code** | The AI coding tool you talk to. Think of it as a coworker who lives in your terminal. |
+| **Plugin** | Extra capabilities you bolt on to Claude Code. bkit is a plugin. |
+| **bkit** | The plugin you're reading about. It adds 3 commands (`/sprint`, `/pdca`, `/control`), 44 skills, 34 specialist agents, 11 quality checks. |
+| **Skill** | A bundle of instructions Claude Code reads to remember "how do I run a PDCA cycle?" or "how do I plan a sprint?" When you type `/pdca`, a skill activates. |
+| **Agent** | A specialist version of Claude Code that knows one job very well — e.g. `frontend-architect`, `qa-lead`, `gap-detector`. The agent's job is in its name. |
+| **Hook** | A piece of code that runs *around* AI actions. bkit's hooks intercept dangerous actions (deleting files, leaking secrets), log every step, and inject context. There are 21 hook events Claude Code fires. |
+| **Context** | Everything the AI knows at the moment it decides what to write — your prompt, the file it just read, the rules it was given, its memory. AI quality is mostly about getting the right context to the AI at the right moment. |
+| **Context Engineering** | A discipline that says: *don't try to write the perfect prompt — build a system that gives the AI the right context every time.* bkit is a Context Engineering system. |
+| **PDCA** | Plan → Do → Check → Act. A 70-year-old continuous improvement loop. bkit's 9-phase version is `pm → plan → design → do → check → act → qa → report → archive`. |
+| **Sprint** | A *container* that groups multiple features under a shared budget and timeline. Each sprint runs through its own 8 phases. A sprint can contain many features, each going through PDCA. |
+| **Match rate** | A percentage measuring how much of your *design spec* actually appears in the *generated code*. 90 % means the AI did 90 % of what was specified. bkit auto-repairs anything below that. |
+| **Quality gate** | A hard stop that won't let the workflow advance until a measurable rule is satisfied. bkit has 11 of them. |
+| **Trust Level (L0–L4)** | The dial that decides how far the AI runs unattended. L0 = "ask me at every step", L4 = "wake me when it's done". |
+| **Auto-pause trigger** | A condition that pauses an automated run so a human can intervene. bkit has 4: quality gate fail, iteration exhausted, budget exceeded, phase timeout. |
+| **Audit log** | A permanent record of every important action bkit took, with sensitive data scrubbed out. Lives in `.bkit/runtime/audit-log.ndjson`. |
+| **MCP** | Model Context Protocol — Anthropic's standard way to plug data sources into Claude Code. bkit ships 2 MCP servers (`bkit-pdca`, `bkit-analysis`) exposing 19 tools. |
+| **Docs = Code** | bkit's principle that says "every feature must produce design docs, and the code must match those docs." A CI gate enforces 0 drift. |
 
 ---
 
-## Skill Evals: Data-Driven Skill Quality Management
+## 1. Design Philosophy
 
-Claude Code introduced **Skill Evals** in Skills 2.0—a framework for measuring skill quality through automated testing. bkit extends this concept into a **complete skill lifecycle management system** that answers a question no other plugin addresses: *"Are my skills still worth keeping?"*
+bkit is not a productivity hack. It brings **engineering discipline** to AI-native development.
 
-### What Are Skill Evals?
+The software industry refined how *humans* write code over decades — version control, code review, CI/CD, testing pyramids. When AI enters the loop, most of that discipline evaporates: developers prompt, accept, ship. Documentation becomes an afterthought. Quality becomes luck.
 
-Skill Evals run automated quality checks against skills by sending test prompts and comparing outputs against expected results. Think of them as **unit tests for AI skills**—they catch regressions when models update and measure whether a skill still adds value.
+**bkit exists because AI-assisted development deserves the same rigor as traditional engineering.**
 
-### How bkit Enhances Skill Evals
+### 1.1 What we optimise for
 
-bkit builds three layers on top of Claude Code's native Evals:
+| We optimise for | Over | Concretely |
+|---|---|---|
+| **Process** | Output | One feature through proper planning + design + implementation + verification beats ten hacked-together features. The PDCA cycle *is* the product. |
+| **Verification** | Trust | AI generates plausible code. Plausible is not correct. Every implementation goes through gap analysis. Below 90 % match, the system iterates. We do not ship hope. |
+| **Context** | Prompts | A clever prompt helps once. A systematic context system helps every time. 44 skills + 34 agents + 163 lib modules exist so the AI receives the right context at the right moment. |
+| **Constraints** | Features | Three project levels, not infinite configuration. Fixed 9-phase PDCA and 8-phase Sprint, not a customizable workflow builder. Opinionated defaults eliminate decision fatigue. |
 
-| Layer | Claude Code Native | bkit Enhancement |
-|-------|-------------------|------------------|
-| **Eval Execution** | Basic eval runner | `evals/runner.js` with benchmark mode, 29 pre-built eval definitions |
-| **A/B Testing** | Not available | `evals/ab-tester.js` compares skill performance across models (e.g., Sonnet 4.6 vs Opus 4.6) |
-| **Skill Classification** | Not available | All 43 skills classified as Workflow / Capability / Hybrid with deprecation-risk scoring (v2.1.11 scope, +4 new skills: bkit-evals, bkit-explore, pdca-watch, pdca-fast-track) |
+> *"We do not offer a hundred features. We engineer each one through proper design and verification. That is the difference between a tool and a discipline."*
 
+### 1.2 The three core philosophies (the contract with you)
+
+These come from [`bkit-system/philosophy/core-mission.md`](bkit-system/philosophy/core-mission.md). Every line of bkit code is judged against them.
+
+| # | Principle | What it means for you, the user |
+|---|---|---|
+| 1 | **Automation First** | You don't need to memorise PDCA. You don't need to know which skill to call. Describe what you want; the intent-router (`lib/orchestrator/intent-router.js`) picks the right skill or agent. The state machine drives the rest. Manual is the fallback, not the default. |
+| 2 | **No Guessing** | bkit refuses to fabricate. If `gap-detector` is unsure, it reads the spec again. If still unsure, it asks you via AskUserQuestion — it does not invent. 11 quality gates + `design-validator` + `code-analyzer` enforce this. |
+| 3 | **Docs = Code** | Every feature produces docs: PRD + plan + design + analysis + completion report. The docs are the contract; the code must match. `scripts/docs-code-sync.js` runs in CI and fails the build if the doc-side counts drift from the code-side counts. |
+
+### 1.3 Context Engineering — the deeper "why"
+
+Most AI-coding tools focus on *prompts*. bkit focuses on *context*. The distinction is the entire reason bkit exists.
+
+A prompt is a single message you send. Context is the entire information environment the AI is working inside — your conventions, your prior decisions, your design spec, the rules you set, the memory of last week's session, the audit trail of what changed.
+
+> *"bkit is a practical implementation of Context Engineering — a systematic discipline for building, maintaining, and verifying the right context for AI-assisted development."* — [`bkit-system/philosophy/context-engineering.md`](bkit-system/philosophy/context-engineering.md)
+
+| Symptom of bad context | What goes wrong | How bkit fixes it |
+|---|---|---|
+| AI hallucinates names, paths, or APIs that don't exist | The AI has no real grounding in your code | **Skills** auto-load the right grounding (PDCA rules, Sprint state, your style guide). 44 skills, 8-language auto-trigger. |
+| AI is confident but wrong | The AI doesn't know what "correct" means in your project | **gap-detector** measures match rate against the design spec; **code-analyzer** checks quality scores. Wrong is detected, not assumed away. |
+| AI loses focus halfway through | Context window overflows in long sessions | **Sprint Management** splits work into context-budgeted chunks (≤ 75 K tokens each). **Memory** + **Task Management** survive session clears. |
+| You ship and then discover the bug | No verification was ever run | **11 quality gates** run between phases. Failing a gate auto-pauses. |
+| You ship and the new dev can't tell what changed | No audit trail | **Audit log** + **Token Ledger** + **Docs = Code** keep a permanent record. |
+
+### 1.4 Controllable AI — the principles behind /control
+
+These come from [`AI-NATIVE-DEVELOPMENT.md`](AI-NATIVE-DEVELOPMENT.md). They are why bkit ships a Trust Level dial instead of "AI off / AI on".
+
+| Principle | What it gives you |
+|---|---|
+| **Safe defaults** | Out of the box, bkit asks before doing anything destructive. Trust Level starts at L2 (Semi-Auto). |
+| **Progressive trust** | As your `matchRate` track record improves, bkit's Trust Score can recommend a higher level — but never silently. |
+| **Full visibility** | Every phase emits an audit entry. `/sprint status`, `/sprint watch`, `/pdca status` show you the current state at any moment. |
+| **Always interruptible** | `Ctrl+C` cancels. `/sprint pause` halts. `pdca-iterator` auto-stops after 5 cycles. 4 auto-pause triggers guarantee the run never gets away from you. |
+
+---
+
+## 2. The Three Commands
+
+Everything else in bkit — 44 skills, 34 agents, 21 hooks, 11 quality gates, 226+ contract assertions — exists to make these three commands work reliably.
+
+| Command | One-line purpose | When you use it |
+|---|---|---|
+| **`/sprint`** | Group multiple features into a release container, plan them, and run them. | Quarter launch, milestone, 2+ linked features sharing scope/budget/timeline |
+| **`/pdca`** | Drive a single feature from PRD to release-ready report through 9 phases. | A single feature, *or* inside a sprint (the orchestrator calls /pdca per feature automatically) |
+| **`/control`** | One dial setting how much of `/sprint` and `/pdca` runs unattended. | Anytime. The setting persists. |
+
+```mermaid
+flowchart TB
+    You(["You"])
+    You --> SM["/sprint master-plan my-release<br/>--features auth,billing,reports"]
+    SM --> Auto1["Master plan + task registration"]
+    Auto1 --> SS["/sprint start sprint-1"]
+    SS --> Auto2["Sprint 8-phase. Inside 'do':<br/>PDCA 9-phase per feature"]
+    Auto2 --> Gate{"matchRate &ge; 90%?"}
+    Gate -- "no — auto-fix" --> Iter["pdca-iterator (max 5)"]
+    Iter --> Gate
+    Gate -- "yes" --> Done(["Release-ready"])
+    Ctrl["/control level 0..4"] -.->|"scopes auto-run"| Auto1
+    Ctrl -.->|"applies"| Auto2
+
+    style You fill:#e3f2fd
+    style SM fill:#fff3e0
+    style SS fill:#fff3e0
+    style Auto2 fill:#fce4ec
+    style Iter fill:#ffe0b2
+    style Done fill:#c8e6c9
+    style Ctrl fill:#f3e5f5
 ```
-evals/
-├── config.json              # Global settings (thresholds, classifications)
-├── runner.js                # Eval execution engine (CLI + module)
-├── reporter.js              # Markdown/JSON result reporting
-├── ab-tester.js             # Model comparison + parity testing
-├── workflow/{10 skills}/     # Eval definitions for permanent skills
-├── capability/{18 skills}/  # Eval definitions for model-dependent skills
-└── hybrid/{1 skill}/        # Eval definitions for single dual-purpose skill
+
+### The sprint user journey, step by step
+
+| Step | What you type | What bkit does | Output |
+|---|---|---|---|
+| **1. Plan** | `/sprint master-plan my-release --name "Q2 Launch" --features auth,billing,reports` | `sprint-master-planner` writes a Context-Anchor-driven master plan. The Context Sizer (Kahn topological + greedy bin-packing) splits features into ≤ 75 K-token sprints honoring dependencies. | `docs/01-plan/features/my-release.master-plan.md` + per-sprint `prd` / `plan` / `design` templates; `.bkit/state/master-plans/my-release.json`; audit entry `master_plan_created` |
+| **2. Register** | (automatic in Step 1) | Each sprint in `plan.sprints[]` becomes a task via `TaskCreate`. Cross-sprint `dependsOn` becomes task `blockedBy`. | One task per sprint, Kahn-ordered. Visible via `/sprint list` or `TaskList` |
+| **3. Execute** | `/sprint start my-release-s1` | `sprint-orchestrator` advances the 8-phase sprint. Inside `do`, **PDCA 9-phase runs once per feature** — `pm-lead` PRD, `cto-lead` team spawn, `gap-detector` measure, `pdca-iterator` repair, `qa-lead` test, `report-generator` summarize. | Per-feature artifacts under `docs/00-pm/...`, `docs/01-plan/features/...`, `docs/02-design/features/...`, `docs/04-report/features/...`; sprint state `.bkit/state/sprints/my-release-s1.json` |
+| **4. Govern** | `/control level 0..4` (anytime) | The dial scopes how far both Sprint and PDCA phases auto-advance before stopping. Trust Score (0–100) can also recommend a level from your track record. | `.bkit/state/trust-profile.json`; effective scope mirrored into `lib/control/automation-controller.js:SPRINT_AUTORUN_SCOPE` (L3 contract test SC-07 enforces the 1:1 mirror) |
+
+**Single feature shortcut**: skip steps 1–2 and run `/pdca pm <feature>` directly. Step 4 still applies.
+
+### 2.1 Why each step exists — the worked detail
+
+The 4 steps map directly to the user experience the bkit author had in mind. Each one is a deliberate answer to a specific failure mode of AI-assisted development.
+
+**Step 1 — Plan the release in depth, not in haste.**
+
+When you type `/sprint master-plan my-release --features auth, billing, reports`, bkit does **not** rush to a plan. The `sprint-master-planner` agent runs deliberately:
+
+- If your repo is non-trivial, it explores your existing code (`Task(Explore)`) before assuming anything about your conventions.
+- If your feature involves a domain it doesn't already know (e.g., a payment provider you haven't integrated before), it does web research first.
+- Then it splits your features into **context-budgeted Sprints** using:
+  - **Kahn topological sort** — to respect "billing depends on auth" type relationships.
+  - **Greedy bin-packing** — to keep each sprint ≤ 75 K tokens, so a single Claude Code session can finish the sprint without running out of context.
+- Finally it writes a master plan with a **Context Anchor** (WHY / WHO / WHAT / RISK / SUCCESS / SCOPE) that every later phase reads.
+
+You can also call specialist agents directly when you want more depth for a particular feature:
+
+| Command | What it spawns | Output |
+|---|---|---|
+| `/pdca pm <feature>` | 4 PM agents in parallel (`pm-discovery` + `pm-strategy` + `pm-research` + `pm-prd`) using 43 product-management frameworks (JTBD, Lean Canvas, SWOT, PESTLE, Porter's, Pre-mortem, Personas, TAM/SAM/SOM, …) | A comprehensive PRD at `docs/00-pm/<feature>.prd.md` |
+| `/pdca team <feature>` | A multi-specialist implementation team led by `cto-lead` — 4–6 agents in parallel (developer · qa · frontend · backend · security · architect) | Code + reviews from multiple perspectives |
+| `/pdca qa <feature>` | 5-agent QA team led by `qa-lead` — test-planner · test-generator · debug-analyst · qa-monitor with Zero Script QA (Docker log analysis) | Full L1–L5 test plan, generated tests, runtime verification |
+
+**Step 2 — Approve, register, remember.**
+
+After you approve the master plan, bkit takes three durable actions:
+
+1. **Task Management registration** — every sprint becomes a task via the system's `TaskCreate` tool. The sprint dependency order becomes task `blockedBy` order. You can see them via `/sprint list` or via Claude Code's `TaskList`.
+2. **Memory persistence** — the sprint roster is written to `.bkit/state/memory.json`. If your laptop dies, your session clears, or you start a new Claude Code session next month, the plan is still there.
+3. **Audit entry** — an `master_plan_created` action lands in `.bkit/runtime/audit-log.ndjson`.
+
+The combination means **bkit picks up exactly where it stopped**, every single time.
+
+**Step 3 — Auto-run each sprint through PDCA.**
+
+`/sprint start sprint-1` advances the 8-phase sprint (`prd → plan → design → do → iterate → qa → report → archived`). Inside the `do` phase, the orchestrator runs the **full PDCA 9-phase loop once per feature**. The default targets are aggressive:
+
+- `iterate` phase targets **matchRate = 100 %** (will accept ≥ 90 %, controlled by gate M1)
+- `qa` phase requires **all 11 gates pass**, including S1 dataFlow integrity ≥ 85 %
+- Below threshold → `pdca-iterator` auto-fires, up to 5 self-repair cycles
+
+Critically, **every transition is gated** (see §5). The workflow can't accidentally advance past a failure.
+
+**Step 4 — Govern with one dial.**
+
+`/control level N` is **the** autonomy knob. The same setting governs both Sprint and PDCA — there's no second knob to forget. The dial maps to a `stopAfter` phase (see §6). Trust Score (0–100) can recommend a level from your track record, but you stay in charge: `autoEscalation` / `autoDowngrade` flags in `bkit.config.json` decide whether bkit may move the dial on its own.
+
+> **Hook-driven invisible execution**: while you read the master plan, Claude Code's 21 hook events are quietly firing — `PreToolUse` blocks unsafe operations, `PostToolUse` logs every action, `SessionStart` restores memory, `Stop` writes the closing audit entry. You never invoke a hook directly; bkit attaches them automatically through `hooks/hooks.json` (24 blocks across 21 events). See §4.3 for the lifecycle map.
+
+> **8-language auto-trigger**: skills and agents declare keywords in 8 languages (EN, KO, JA, ZH, ES, FR, DE, IT). If you type *"로그인 기능 만들어줘"*, *"作成一个登录功能"*, or *"build a login feature"* — bkit's intent-router maps to the same skill. You never need to know the English command name.
+
+---
+
+## 3. Command Cheat Sheet
+
+### Sprint (16 sub-actions)
+
+| Sub-action | Purpose |
+|---|---|
+| `init <id>` | Create a sprint manually (without a master plan) |
+| `master-plan <project> --features ...` | Auto-write the master plan + register every sprint as a task |
+| `start <id>` | Run the sprint up to the Trust Level scope |
+| `status <id>` | Current state + triggers + matrix snapshot |
+| `list` | All sprints with phase + status |
+| `watch <id>` | Live dashboard, ticks every 30 s |
+| `phase <id> --to <phase>` | Manual phase transition |
+| `iterate <id>` | matchRate-100 % loop (max 5) |
+| `qa <id>` | 7-Layer S1 dataFlow integrity check |
+| `report <id>` | Cumulative KPI + lessons learned |
+| `archive <id>` | Move to terminal state (forward-only) |
+| `pause <id>` / `resume <id>` | Stop / restart auto-run |
+| `fork <id> --new <newId>` | Carry incomplete features into a new sprint |
+| `feature <id> --action list/add/remove --feature <name>` | Manage features inside the sprint |
+| `help` | Help text |
+
+### PDCA (single feature, 9 phases + utilities)
+
+| Sub-action | Purpose | Spawned agents |
+|---|---|---|
+| `pm <feat>` | 4 PM agents in parallel → PRD with 43 frameworks | pm-lead · pm-discovery · pm-strategy · pm-research · pm-prd |
+| `plan <feat>` | Plan with Context Anchor + Module Map | product-manager |
+| `design <feat>` | 3 architecture options (Minimal / Clean / Pragmatic) | cto-lead · frontend-architect · security-architect |
+| `do <feat>` | Implementation (single-agent mode) | bkend-expert · frontend-architect |
+| `team <feat>` | **4–6 specialists in parallel** (recommended for do) | cto-lead orchestrates developer · qa · frontend · security · architect |
+| `check <feat>` | Design ↔ code gap analysis | gap-detector |
+| `iterate <feat>` | Auto-fix sub-90 % match | pdca-iterator |
+| `qa <feat>` | L1–L5 test execution | qa-lead · qa-test-planner · qa-test-generator · qa-debug-analyst · qa-monitor |
+| `report <feat>` | KPI + lessons learned | report-generator |
+| `archive <feat>` | Move docs to archive + state cleanup | — |
+| `status` | Current PDCA state across features | — |
+| `cleanup` | Remove stale features (idle > 7 d) | — |
+| `watch` | Live dashboard | — |
+
+### Control & utilities
+
+| Command | Purpose |
+|---|---|
+| `/control level 0..4` | Set autonomy (applies to `/sprint` + `/pdca`) |
+| `/control status` | Current Trust Level + Trust Score |
+| `/bkit` | List skills, agents, commands |
+| `/bkit-explore` | Browse component tree (5 categories) |
+| `/pdca-batch` | Independent parallel PDCA cycles (no shared scope) |
+
+---
+
+## 4. Workflow Internals
+
+### 4.1 What each PDCA phase does (without you)
+
+PDCA is bkit's 9-phase loop for a single feature. Each phase has a definite output written to disk — that's the "Docs = Code" principle in action. You can stop after any phase, inspect the output, and resume.
+
+| Phase | What bkit auto-runs | Where the result lands | Why this phase exists |
+|---|---|---|---|
+| **pm** *(product management)* | `pm-lead` spawns 4 PM agents in parallel: **discovery** (Opportunity Solution Tree + Brainstorm + Assumption Risk) · **strategy** (JTBD + Lean Canvas + SWOT + PESTLE + Porter's + Growth Loops) · **research** (Personas + Competitors + TAM/SAM/SOM + Journey Map + ICP) · **prd** (Pre-mortem + User/Job Stories + Test Scenarios + Stakeholder Map + Battlecards) | `docs/00-pm/<feature>.prd.md` | So the AI knows *who* this feature serves, *why*, and *what success looks like* — before writing a line of code. |
+| **plan** | `product-manager` writes the plan with a **Context Anchor** (WHY / WHO / WHAT / RISK / SUCCESS / SCOPE) + Module Map + Session Guide | `docs/01-plan/features/<feature>.plan.md` | The Context Anchor is what every later phase reads. It is the single source of truth for *intent*. |
+| **design** | `cto-lead` proposes **3 architecture options** (Minimal / Clean / Pragmatic). Single AskUserQuestion pause for the choice. | `docs/02-design/features/<feature>.design.md` | Three options force a real trade-off discussion. You pick one; bkit honours it for the rest of the cycle. |
+| **do** *(single-agent mode)* | `developer` / `bkend-expert` / `frontend-architect` writes the code on its own | Source files | Best for small, contained features where one specialist is enough. |
+| **do** *(team mode, via `/pdca team`)* | `cto-lead` spawns 4–6 specialists in parallel: developer · qa · frontend · backend · security · architect. Sequential dispatch enforced under ENH-292 to dodge sub-agent caching regressions. | Source files + per-agent review notes | The default for non-trivial work. Multiple perspectives catch bugs single specialists miss. |
+| **check** | `gap-detector` measures design ↔ code match rate | `docs/03-analysis/<feature>.analysis.md` | Verifies that what got built matches what was designed. **No fabricated progress reports** — the percentage is measured, not asserted. |
+| **act** | matchRate ≥ 90 % → advance. < 90 % → `pdca-iterator` (Evaluator-Optimizer pattern, max 5 cycles) | Iteration log appended to analysis doc | Self-repair. The phase where bkit fixes drift before you ever see it. |
+| **qa** | `qa-lead` orchestrates 4 QA agents: `qa-test-planner` (L1–L5 plan) · `qa-test-generator` (test code) · `qa-debug-analyst` (runtime errors) · `qa-monitor` (Zero Script QA via Docker logs) | `docs/05-qa/<feature>.qa.md` + actual test files | L1 unit · L2 integration · L3 contract · L4 system · L5 E2E. The full pyramid. |
+| **report** | `report-generator` produces a completion report with KPI + lessons learned + carry items | `docs/04-report/features/<feature>.report.md` | The audit trail. Next sprint planner reads this to learn from this one. |
+| **archive** | Checkpoint preserved, state cleaned, `MEMORY.md` appended | `.bkit/state/` + `docs/archive/` | Closes the loop. The feature is done; the docs are searchable forever. |
+
+> **Beginner note**: you almost never type `/pdca check` or `/pdca act` yourself. The orchestrator runs them automatically when the previous phase ends. The only phase that pauses for input (under the default Trust Level L2) is **design**, where you pick one of the three architecture options.
+
+### 4.2 Live scenario — Trust L4, autoIterate=true
+
+A realistic 60-minute run with one user input:
+
+```text
+10:00  /pdca pm user-auth
+       └─ pm-lead spawns 4 PM agents in parallel (43 frameworks)
+10:08  PRD complete · auto-advance
+10:12  /pdca plan (auto)  → product-manager → Context Anchor written
+10:18  /pdca design (auto) → cto-lead → 3 architecture options
+       Checkpoint AskUserQuestion: "Minimal / Clean / Pragmatic?"   [1 USER INPUT]
+10:20  Design confirmed · auto-advance
+10:20  /pdca team (auto) → cto-lead spawns 4 specialists
+10:45  Implementation complete · auto-advance to check
+10:45  /pdca check (auto) → gap-detector → matchRate = 78 %
+       M1 FAIL (78 < 90) → AUTO-TRIGGER /pdca iterate
+10:48  Cycle 1: pdca-iterator patches 7 gaps → re-measure 89 %
+10:50  Cycle 2: patches 3 more → re-measure 94 % ✅ EXIT
+10:50  /pdca qa (auto) → qa-lead → 4 QA agents L1–L5
+10:58  QA PASS · auto-advance
+10:58  /pdca report (auto) → report-generator → completion report
+11:00  Feature complete.
+       Total: 60 min · 1 user input · 4–6 parallel agents · 2 self-repair cycles
 ```
 
-### Skill Classification & Lifecycle
+### 4.3 Claude Code hooks lifecycle — what runs around every AI action
 
-Not all skills age the same way. bkit classifies each skill to manage its lifecycle:
+You don't invoke hooks. They run automatically because bkit attaches them via `hooks/hooks.json` (24 hook blocks across 21 hook events). Hooks are what make bkit's safety net invisible: you never have to remember to verify, log, or block — Claude Code fires the events, bkit responds.
 
-| Classification | Count | Purpose | What Evals Measure |
-|---------------|:-----:|---------|-------------------|
-| **Workflow** | 17 | Process automation (PDCA, pipelines) | Quality regression only—these skills are permanent |
-| **Capability** | 18 | Model ability augmentation (mockups, APIs) | **Parity testing**—can the model match this skill's output without it? |
-| **Hybrid** | 1 | Both process + capability | Both regression and parity |
+```mermaid
+flowchart TD
+    A["You type a message"] --> B["UserPromptSubmit hook<br/>intent-router · skill auto-trigger"]
+    B --> C["AI decides on a tool call"]
+    C --> D["PreToolUse hook<br/>unified-bash-pre.js · unified-write-pre.js<br/>SAFETY: block unsafe ops"]
+    D -- "allowed" --> E["Tool executes (Write, Bash, MCP, …)"]
+    E --> F["PostToolUse hook<br/>unified-bash-post.js · unified-write-post.js · skill-post.js<br/>AUDIT: log, redact secrets"]
+    F --> G["AI continues / replies"]
+    G --> H["Stop hook<br/>unified-stop.js · next-action-engine"]
+    H --> I["Session ends or continues"]
+    I -.->|"new session"| J["SessionStart hook<br/>memory restore"]
+    D -- "blocked" --> X["AskUserQuestion fallback"]
 
-When a model upgrade makes a Capability skill redundant, the **Model Parity Test** detects it:
+    style D fill:#ffe0b2
+    style F fill:#fce4ec
+    style H fill:#e3f2fd
+    style X fill:#ffcdd2
+```
+
+| Hook event | bkit script | What it stops or does |
+|---|---|---|
+| **SessionStart** | `hooks/session-start.js` | Restore memory; print Trust Level banner; warn about unfinished sprints |
+| **UserPromptSubmit** | `scripts/user-prompt-handler.js` | Route intent; auto-trigger the right skill (`/pdca pm`, `/sprint`, …) based on 8-language keywords |
+| **PreToolUse(Bash)** | `scripts/unified-bash-pre.js` | Block dangerous shell (rm -rf /, curl-to-shell, fork-bombs, …) before they run |
+| **PreToolUse(Write/Edit)** | `scripts/unified-write-pre.js` | Block writes to protected paths; verify the file is in the active sprint scope |
+| **PreToolUse(Skill)** | `scripts/skill-pre.js` | Inject skill context; verify the skill is allowed at the current Trust Level |
+| **PostToolUse(Bash)** | `scripts/unified-bash-post.js` | Audit-log the command + exit code; scrub 7 PII patterns |
+| **PostToolUse(Write/Edit)** | `scripts/unified-write-post.js` | Update docs-code index; recompute drift |
+| **PostToolUse(Skill)** | `scripts/skill-post.js` | Emit skill-completion telemetry |
+| **Stop / SubagentStop / SessionEnd** | `scripts/unified-stop.js` | Final audit entry; commit memory; fire the next-action-engine if a Sprint/PDCA phase wants to chain |
+| **PreCompact** | `scripts/context-compaction.js` | Persist context before Claude Code compresses the conversation; defends `/compact` regressions (e.g., #47855 Opus 1M block) |
+
+The point is: **safety is not your job**. You describe the work; bkit's hooks enforce the invariants.
+
+### 4.4 8-language auto-trigger — type in your language, bkit picks the command
+
+Skills and agents declare trigger keywords in 8 languages. The `intent-router` matches your input against all of them.
+
+| Language | Sample trigger | Skill it activates |
+|---|---|---|
+| English | *"build login feature"* | `/pdca pm` |
+| Korean (한국어) | *"로그인 기능 만들어줘"* | `/pdca pm` |
+| Japanese (日本語) | *"ログイン機能を作って"* | `/pdca pm` |
+| Chinese (中文) | *"创建一个登录功能"* | `/pdca pm` |
+| Spanish (Español) | *"crear una función de inicio de sesión"* | `/pdca pm` |
+| French (Français) | *"créer une fonction de connexion"* | `/pdca pm` |
+| German (Deutsch) | *"Anmeldefunktion erstellen"* | `/pdca pm` |
+| Italian (Italiano) | *"creare una funzione di accesso"* | `/pdca pm` |
+
+You never need to know the English command name. You also never need to remember which of the 44 skills matches your intent — the keyword detection does that for you.
+
+### 4.5 When to use which specialist team
+
+Three subcommands of `/pdca` spawn different rosters. Pick by what you need *now*, not by phase name.
+
+| You want… | Use | Roster |
+|---|---|---|
+| **Deep product analysis** — personas, market sizing, JTBD, pre-mortem before any code | `/pdca pm <feature>` | `pm-lead` orchestrates `pm-discovery` + `pm-strategy` + `pm-research` + `pm-prd` (4 agents, 43 frameworks) |
+| **Parallel implementation** by multiple specialists — frontend, backend, QA, security all working at once | `/pdca team <feature>` | `cto-lead` orchestrates 4–6 specialists (developer · qa · frontend · backend · security · architect) |
+| **Thorough QA** — full L1–L5 test plan, generated tests, runtime verification | `/pdca qa <feature>` | `qa-lead` orchestrates `qa-test-planner` + `qa-test-generator` + `qa-debug-analyst` + `qa-monitor` (4 agents) |
+| **Sprint-level meta-orchestration** — multi-feature plan, dependency order, budget | `/sprint master-plan <project>` | `sprint-master-planner` (uses Context Sizer) |
+| **One-shot single-feature run** | `/pdca pm <feature>` then auto-advance under Trust Level | The orchestrator picks the agent per phase |
+
+---
+
+## 5. Quality Gates & Self-Repair
+
+A **quality gate** is a hard stop that won't let the workflow advance until a measurable condition is true. It's the mechanical version of a code reviewer who refuses to merge bad work — except this reviewer never sleeps, never has a bad day, and never lets a metric slide because it's Friday.
+
+Every phase transition is gated. Failure pauses the run and writes an audit entry. **You don't have to remember to verify — verification is automatic.**
+
+| Gate | Threshold | Triggered when | On failure |
+|---|---|---|---|
+| **M1** matchRate | ≥ 90 % | check phase ends | `pdca-iterator` auto-fires (Evaluator-Optimizer, max 5 cycles) |
+| **M2** codeQualityScore | ≥ 80 | post-do | `code-analyzer` re-runs, user confirmation requested |
+| **M3** criticalIssue count | 0 | post-do | Immediate pause, user escalation |
+| **M4** conventionCompliance | ≥ 90 % | post-do | Lint auto-fix attempted |
+| **M5** testCoverage | ≥ 70 % | post-qa | `qa-test-generator` adds tests |
+| **M6** securityScore | ≥ 85 | post-do | `security-architect` review |
+| **M7** documentationCompleteness | ≥ 90 % | post-report | Auto-doc generation |
+| **M8** sprint matchRate | ≥ 85 % | sprint iterate phase | Sprint iterate loops (max 5) |
+| **M9** contractInvariant | 0 violation | CI gate | Build blocked |
+| **M10** regressionGuard | 0 new regression | post-iterate | `regression-registry` registers + monitors |
+| **S1** dataFlowIntegrity | ≥ 85 % | sprint qa phase | 7-Layer hop re-verified (UI → Client → API → Validation → DB → Response → Client → UI) |
+
+Thresholds live in `bkit.config.json`. Sprint-specific overrides via `sprint.config.{...}` at sprint init.
+
+### What each gate protects you from — in plain language
+
+| Gate | What it prevents | A failure looks like |
+|---|---|---|
+| **M1 matchRate** | The AI claiming "done" when half the design is missing | "We asked for login + signup + reset; AI shipped login only" → matchRate = 33 %, `pdca-iterator` fires |
+| **M2 codeQualityScore** | Code that runs but is unreadable / unmaintainable | Long functions, deep nesting, magic numbers → 78 / 100 score, review re-runs |
+| **M3 criticalIssue count** | Bugs that will break production | Hardcoded credentials, SQL injection, null deref → workflow pauses immediately |
+| **M4 conventionCompliance** | Files that don't follow your existing style | Wrong indentation, mixed quotes, broken imports → lint auto-fix runs |
+| **M5 testCoverage** | Code with no tests at all | New module ships with 0 % coverage → `qa-test-generator` adds tests |
+| **M6 securityScore** | OWASP Top-10 type vulnerabilities | Missing input validation, unsafe deserialization → `security-architect` reviews |
+| **M7 documentationCompleteness** | Code that nobody can pick up next quarter | API endpoint with no description → auto-doc fills gap |
+| **M8 sprint matchRate** | Sprint declared done with one feature half-built | One of three features stuck at 70 % → sprint iterate loops, max 5 |
+| **M9 contractInvariant** | Architecture decisions silently violated | Someone imports `fs` into the Domain layer → CI build blocked |
+| **M10 regressionGuard** | A new bug that fixes another | Same test fails again after iterate → tracked, monitored |
+| **S1 dataFlowIntegrity** | Front-end form that posts but back-end never receives it | UI → Client → API hop count check fails → 7-Layer trace runs |
+
+### Worked example: a failure and the auto-repair
+
+> *Scenario: you ask for a "user-auth" feature. The AI implements login but forgets the password-reset spec line.*
+
+1. `/pdca check` runs. `gap-detector` reads `design.md` (3 specs: login, signup, reset) and the generated code (2 implemented).
+2. **matchRate = 67 %.** M1 fails (threshold 90 %).
+3. `pdca-iterator` auto-fires — no user input needed.
+4. Cycle 1 — iterator reads the missing spec, adds the password-reset module → re-measure → 91 %.
+5. M1 passes → workflow auto-advances to `qa`.
+
+You only learn this happened from the audit log. **The AI fixed its own bug before you saw it.**
+
+### The self-repair loop
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as You
+    participant P as /pdca check
+    participant GD as gap-detector
+    participant PI as pdca-iterator
+    participant Code as Your code
+
+    U->>P: /pdca check my-feature
+    P->>GD: measure design ↔ code
+    GD-->>P: matchRate = 72%
+    P->>PI: AUTO-FIRE (no user input)
+    PI->>Code: Cycle 1 — patch 7 missing items
+    PI->>GD: re-measure
+    GD-->>PI: 84%
+    PI->>Code: Cycle 2 — patch 3 more
+    PI->>GD: re-measure
+    GD-->>PI: 91% ✅
+    PI-->>P: EXIT (90% threshold met)
+    P-->>U: ✅ check passed, advance to qa
+```
+
+`/pdca iterate` is **not a button you press**. `gap-detector` detects sub-90 → `pdca-iterator` fires automatically. If the 5th cycle still fails, `ITERATION_EXHAUSTED` auto-pauses the sprint and escalates to you.
+
+---
+
+## 6. Trust Level & Control
+
+`/control level N` is the single autonomy dial. It scopes how far `/sprint` and `/pdca` run before stopping — one knob, both surfaces.
+
+| Level | Name | stopAfter | Pick when |
+|---|---|---|---|
+| **L0** | Manual | every phase | First-time user; inspect each output |
+| **L1** | Guided | plan | Verify scope before AI implements |
+| **L2** | Semi-Auto | do | **Default** — Plan/Design/Do auto, QA/Report manual |
+| **L3** | Auto | qa | Trust implementation, double-check QA |
+| **L4** | Full-Auto | archived | Fire-and-forget; pauses only on quality-gate failure or auto-pause trigger |
+
+### Trust Score (0–100)
+
+bkit computes a Trust Score from your recent track record (matchRate history, manual-override frequency, gate-pass rate). High scores can auto-escalate the level; low scores auto-downgrade. Override anytime with `/control level N`.
+
+| Trust Score | Effect |
+|---|---|
+| ≥ 80 | `pdca-fast-track` available — auto-approves Checkpoints 1–8 |
+| 60–79 | Defaults to L2 (Semi-Auto) |
+| < 60 | Defaults to L1 (Guided) |
+
+`autoEscalation` and `autoDowngrade` flags in `bkit.config.json:automation` decide whether bkit may change the level on its own.
+
+### Which level should I pick?
+
+If you're new to bkit, **start low and earn trust**. The Trust Score climbs automatically as your sprint history accumulates clean matchRate runs; bkit can offer to upgrade you when it's safe.
+
+| Situation | Recommended level |
+|---|---|
+| Day 1 with bkit, you want to see what each phase produces | **L0 Manual** — inspect every output |
+| You're confident the spec is right but want to review architecture choices | **L1 Guided** — stop after Plan |
+| Daily driver — you trust planning and design but want to check QA yourself | **L2 Semi-Auto** *(default)* |
+| You've shipped a few features with bkit and the matchRate is consistently > 95 % | **L3 Auto** — only Report is manual |
+| Overnight run, fire-and-forget, you'll review the report tomorrow | **L4 Full-Auto** — pauses only on a quality-gate failure or auto-pause trigger |
+
+The dial is reversible. Drop it back down whenever you want; the next phase respects the new setting.
+
+---
+
+## 7. Sprint Management Deep-Dive
+
+### 7.1 The 8-phase sprint lifecycle
+
+```mermaid
+flowchart LR
+    prd --> plan --> design --> do
+    do --> iterate
+    iterate -- "matchRate &lt; 100%, max 5" --> iterate
+    iterate --> qa
+    qa --> report --> archived
+
+    style prd fill:#e3f2fd
+    style iterate fill:#ffe0b2
+    style qa fill:#fce4ec
+    style report fill:#e8f5e9
+    style archived fill:#c8e6c9
+```
+
+| Phase | Output | Agent |
+|---|---|---|
+| prd | `docs/00-pm/<sprint>.prd.md` | sprint-master-planner |
+| plan | `docs/01-plan/features/<sprint>.plan.md` | sprint-master-planner |
+| design | `docs/02-design/features/<sprint>.design.md` | sprint-master-planner |
+| do | Per-feature PDCA cycles run inside | sprint-orchestrator |
+| iterate | `docs/03-analysis/<sprint>.iterate.md` (per cycle) | pdca-iterator (delegated) |
+| qa | `docs/05-qa/<sprint>.qa.md` (7-Layer S1) | sprint-qa-flow |
+| report | `docs/04-report/features/<sprint>.report.md` | sprint-report-writer |
+| archived | Terminal state; sprint state preserved | — |
+
+### 7.2 The 4 auto-pause triggers
+
+A sprint pauses automatically on any of these. Resume with `/sprint resume <id>` after fixing the root cause.
+
+| Trigger | Condition | Most common cause |
+|---|---|---|
+| `QUALITY_GATE_FAIL` | Any M-gate or S1 fails | matchRate stuck below 90 % after iterate exhausts |
+| `ITERATION_EXHAUSTED` | iterate phase exceeds 5 cycles | Gap too large to auto-fix; needs human intervention |
+| `BUDGET_EXCEEDED` | Token usage > sprint budget (default 1 M) | Feature scope underestimated |
+| `PHASE_TIMEOUT` | Phase exceeds timeout (default 4 h) | Hung or blocked |
+
+### 7.3 Sprint vs PDCA vs pdca-batch — pick one
+
+```mermaid
+flowchart TD
+    Q["What are you building?"]
+    Q --> Single{"Single feature?"}
+    Single -- "Yes" --> PDCA["/pdca pm feature<br/>9-phase per feature"]
+    Single -- "No" --> Shared{"Shared scope/<br/>budget/timeline?"}
+    Shared -- "Yes" --> Sprint["/sprint master-plan project<br/>8-phase container,<br/>PDCA runs inside"]
+    Shared -- "No" --> Batch["/pdca-batch<br/>independent parallel cycles"]
+    Q --> Static{"Non-technical<br/>or static-only?"}
+    Static -- "Yes" --> Starter["/starter init<br/>no PDCA needed"]
+```
+
+Deep-dive guide: [`docs/06-guide/sprint-management.guide.md`](docs/06-guide/sprint-management.guide.md). PDCA ↔ Sprint migration mapping: [`docs/06-guide/sprint-migration.guide.md`](docs/06-guide/sprint-migration.guide.md).
+
+---
+
+## 8. Agent Teams
+
+bkit ships 34 agents organised into specialist teams. Three teams matter most for the daily workflow:
+
+### 8.1 PM Agent Team — `/pdca pm <feature>`
+
+Runs **before** the Plan phase to produce a comprehensive PRD via automated product discovery. Based on [pm-skills](https://github.com/phuryn/pm-skills) by Pawel Huryn (MIT).
+
+```mermaid
+flowchart LR
+    PM["pm-lead (opus)"] --> D["pm-discovery (sonnet)"]
+    PM --> S["pm-strategy (sonnet)"]
+    PM --> R["pm-research (sonnet)"]
+    D --> PRD["pm-prd (sonnet)"]
+    S --> PRD
+    R --> PRD
+    PRD --> Out["docs/00-pm/feature.prd.md"]
+```
+
+### 8.2 CTO-Led Team — `/pdca team <feature>`
+
+Parallel implementation with multiple specialists.
+
+```mermaid
+flowchart TB
+    CTO["cto-lead (opus)"]
+    CTO --> FE["frontend-architect"]
+    CTO --> BE["bkend-expert / enterprise-expert"]
+    CTO --> QA["qa-strategist"]
+    CTO --> SEC["security-architect"]
+    CTO --> PM["product-manager"]
+    CTO -. "Enterprise +1" .-> Arch["infra-architect"]
+```
+
+| Level | Teammates | Default roster |
+|---|---|---|
+| Dynamic | 3 | developer · qa · frontend |
+| Enterprise | 5 | architect · developer · qa · reviewer · security |
+| Enterprise + Sprint (v2.1.13) | 6 | + sprint-orchestrator |
+
+**Requirements**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + Claude Code v2.1.32+.
+
+### 8.3 QA Lead Team — `/pdca qa <feature>`
+
+```mermaid
+flowchart LR
+    QL["qa-lead"] --> TP["qa-test-planner<br/>L1-L5 plan"]
+    QL --> TG["qa-test-generator<br/>test code"]
+    QL --> DA["qa-debug-analyst<br/>runtime errors"]
+    QL --> QM["qa-monitor<br/>Zero Script QA"]
+```
+
+### 8.4 Sprint Team — added in v2.1.13
+
+| Agent | Role |
+|---|---|
+| `sprint-master-planner` | Writes Context-Anchor-driven master plan; invokes Context Sizer |
+| `sprint-orchestrator` | Advances sprint 8 phases; spawns PDCA per feature in `do` |
+| `sprint-qa-flow` | Runs 7-Layer S1 dataFlow integrity check |
+| `sprint-report-writer` | Aggregates phase + iterate history + KPI + lessons learned |
+
+---
+
+## 9. Architecture
+
+### 9.1 Clean Architecture 4-Layer
+
+```mermaid
+flowchart TB
+    subgraph Presentation
+        hooks["hooks/ (21 events / 24 blocks)"]
+        scripts["scripts/ (51 Node.js)"]
+        skills["skills/ (44)"]
+        agents["agents/ (34)"]
+    end
+    subgraph Infrastructure
+        infra["lib/infra/ (cc-bridge · telemetry · docs-code-scanner · mcp-port-registry · sprint · …)"]
+    end
+    subgraph Application
+        app["lib/application/ (pdca-lifecycle · sprint-lifecycle · …)"]
+        ccr["lib/cc-regression/"]
+        team["lib/team/"]
+    end
+    subgraph Domain
+        domain["lib/domain/ (12 modules · 0 forbidden imports · CI-enforced)"]
+    end
+    Presentation --> Infrastructure
+    Infrastructure --> Application
+    Application --> Domain
+```
+
+### 9.2 Component inventory (v2.1.13, measured 2026-05-12)
+
+| Surface | Count | Notes |
+|---|---|---|
+| Skills | 44 | +`sprint` added v2.1.13 |
+| Agents | 34 | +4 sprint agents added v2.1.13 (sprint-master-planner · sprint-orchestrator · sprint-qa-flow · sprint-report-writer) |
+| Hook events / blocks | 21 / 24 | Invariant maintained |
+| MCP servers / tools | 2 / 19 | +3 sprint tools (bkit_sprint_list · bkit_sprint_status · bkit_master_plan_read) |
+| Lib modules / subdirs | 163 / 19 | +`lib/application/sprint-lifecycle/` (13 modules) + `lib/infra/sprint/` (9 modules) |
+| Scripts | 51 | +`sprint-handler.js` (660 LOC) + `sprint-memory-writer.js` (138 LOC) |
+| Templates | 39 | +7 sprint templates |
+| Test files / cases | 118+ / 4,000+ | +`tests/contract/v2113-sprint-contracts.test.js` (10 SC contracts) |
+| ACTION_TYPES | 20 | +sprint_paused · sprint_resumed · master_plan_created · task_created |
+| CATEGORIES | 11 | +sprint |
+| Port↔Adapter pairs | 7 | cc-payload · state-store · regression-registry · audit-sink · token-meter · docs-code-index · mcp-tool |
+
+### 9.3 Defense-in-Depth 4-Layer
+
+```mermaid
+flowchart LR
+    User["User input"] --> L1["Layer 1: CC built-in sandbox"]
+    L1 --> L2["Layer 2: bkit PreToolUse hooks<br/>pre-write.js · unified-bash-pre.js<br/>defense-coordinator"]
+    L2 --> L3["Layer 3: audit-logger sanitizer<br/>OWASP A03/A08 · 7-key PII redaction"]
+    L3 --> L4["Layer 4: Token Ledger NDJSON<br/>.bkit/runtime/token-ledger.ndjson"]
+    L4 --> Action["Tool execution"]
+```
+
+### 9.4 3-Layer Orchestration
+
+```mermaid
+flowchart TB
+    user["User message"]
+    user --> IR["intent-router<br/>feature > skill > agent priority"]
+    IR --> NA["next-action-engine<br/>Stop-family hook routing"]
+    NA --> TP["team-protocol<br/>PM / CTO / QA Lead Task spawn"]
+    NA --> WSM["workflow-state-machine<br/>matchRate SSoT 90"]
+    TP --> Agents["34 agents"]
+    WSM --> Phases["PDCA + Sprint phases"]
+```
+
+### 9.5 Invocation Contract L1–L5
+
+| Level | What | Count | Where |
+|---|---|---|---|
+| L1 | Contract baseline JSON | 94 | `tests/contract/baseline.json` |
+| L2 | Hook attribution smoke | 98 TC | `tests/integration/hooks/` |
+| L3 | MCP stdio runtime | 42 TC | `tests/contract/l3-mcp-stdio.test.js` |
+| L3 (v2.1.13) | Sprint cross-sprint contracts | 10 TC (SC-01~10) | `tests/contract/v2113-sprint-contracts.test.js` |
+| L5 | E2E shell scenarios | 5 | `tests/e2e/run-all.sh` |
+
+CI gate `contract-check.yml` enforces 226+ assertions.
+
+---
+
+## 10. Skill Evals
+
+bkit extends Claude Code's Skill Evals into a **complete skill lifecycle management** system: *"are my skills still worth keeping?"*
+
+### 10.1 Three layers over native evals
+
+| Layer | Claude Code native | bkit enhancement |
+|---|---|---|
+| Eval execution | Basic runner | `evals/runner.js` with benchmark mode + 29 eval definitions |
+| A/B testing | Not available | `evals/ab-tester.js` compares skill performance across models |
+| Classification | Not available | All 44 skills classified Workflow / Capability / Hybrid with deprecation-risk scoring |
+
+### 10.2 Skill classification
+
+| Class | Count | Purpose | What evals measure |
+|---|---|---|---|
+| Workflow | 17 | Process automation (PDCA, pipelines) | Regression — these skills are permanent |
+| Capability | 18 | Model ability augmentation | **Parity testing** — can the model match the skill's output without it? |
+| Hybrid | 1 | Both process + capability | Both regression and parity |
+
+When a model upgrade makes a Capability skill redundant, the Model Parity Test detects it:
 
 ```bash
-# Does the model now produce equivalent results without this skill?
-node evals/ab-tester.js --parity phase-3-mockup --model claude-opus-4-6
+# Does the model produce equivalent results without this skill?
+node evals/ab-tester.js --parity phase-3-mockup --model claude-opus-4-7
 
 # Compare skill performance between two models
-node evals/ab-tester.js --skill pdca --modelA claude-sonnet-4-6 --modelB claude-opus-4-6
+node evals/ab-tester.js --skill pdca --modelA claude-sonnet-4-6 --modelB claude-opus-4-7
 
 # Run all 29 skill evaluations
 node evals/runner.js --benchmark
 ```
 
-### What Changes for Users
-
-| Before (v1.5.9) | After (v1.6.1 with Evals) |
-|-----------------|--------------------------|
-| 28 skills, no quality measurement | 37 skills, 29 with automated eval definitions |
-| No way to know if a skill degraded after model update | Benchmark detects regression across all skills |
-| Manual judgment on skill usefulness | Data-driven deprecation recommendations |
-| Skills accumulate indefinitely | Skill lifecycle: create → eval → deprecate → remove |
-| "Does this skill help?" is a guess | Parity test gives a quantified answer |
-
-### Integration with PDCA
-
-Skill Evals connect directly to bkit's PDCA workflow:
-
-- **Skill Creator** (`skill-creator/`) generates new skills with eval templates pre-included
-- **Template Validator** ensures PDCA documents maintain required sections
-- **Classification metadata** in every SKILL.md frontmatter enables automated lifecycle decisions
-- **Quarterly benchmarks** track skill quality trends over time
-
-> **Philosophy**: bkit's third principle is *"No Guessing."* Skill Evals replace intuition with measurement—you never have to guess whether a skill is still earning its place in your workflow.
+> **Philosophy**: bkit's third principle is *No Guessing*. Skill Evals replace intuition with measurement.
 
 ---
 
-### New to Claude Code?
+## 11. Installation & Customization
 
-> **First time using Claude Code?**
->
-> Start with [bkit-starter](https://github.com/popup-studio-ai/bkit-starter)!
->
-> - Beginner-friendly guide
-> - No programming experience required
-> - Build your first project hands-on
->
-> ```bash
-> /plugin enable bkit-starter
-> ```
->
-> bkit is the advanced extension designed for users who have mastered bkit-starter.
-
----
-
-## Requirements
-
-| Requirement | Minimum Version | Notes |
-|-------------|:---------------:|-------|
-| **Claude Code** | **v2.1.78+** | Required. bkit v2.1.11 uses agent frontmatter (effort/maxTurns/disallowedTools), 21 hook events (24 blocks), 2 MCP servers + 16 tools, Clean Architecture Domain + Application layers, and ${CLAUDE_PLUGIN_DATA}. Recommended: **v2.1.118+** (79 consecutive compatible releases, includes Defense-in-Depth 4-Layer + Invocation Contract 226 assertions + CAND-004 OTEL 3-attr accumulation via v2.1.119/121). |
-| Node.js | v18+ | For hook script execution |
-| Agent Teams (optional) | Set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required only for CTO-Led Agent Teams feature |
-
-> **Troubleshooting**: If you see `"Failed to load hooks"` error after installation, update Claude Code to the latest version:
-> ```bash
-> claude update
-> ```
-
-> ⚠️ **CC v2.1.113+ Users — Custom Skills Data Loss Warning**
->
-> On CC v2.1.113+ first-run, the `~/.claude/skills/` directory may be silently deleted ([#51234](https://github.com/anthropics/claude-code/issues/51234)).
-> - ✅ bkit plugin itself is unaffected (uses `${CLAUDE_PLUGIN_ROOT}/skills/`)
-> - ⚠️ If you keep user custom skills there, **back up before upgrading**:
->   ```bash
->   cp -R ~/.claude/skills ~/.claude/skills.backup.$(date +%Y%m%d)
->   ```
-> - Full guide: [CUSTOMIZATION-GUIDE.md — Custom Skills Data Loss Warning](./CUSTOMIZATION-GUIDE.md#custom-skills-data-loss-warning-cc-v21116-users)
-
----
-
-## Quick Start
-
-> **Note**: bkit is designed for **Claude Code**. For Gemini CLI, see [bkit-gemini](https://github.com/popup-studio-ai/bkit-gemini).
-
-### Option 1: Marketplace Installation (Recommended)
-
-The easiest way to install bkit is through the Claude Code marketplace.
+### 11.1 Marketplace install (recommended)
 
 ```bash
 # Step 1: Add bkit marketplace
@@ -244,292 +772,59 @@ The easiest way to install bkit is through the Claude Code marketplace.
 
 # Step 2: Install bkit plugin
 /plugin install bkit
+
+# Step 3: (Optional) Enable Agent Teams
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 ```
 
-#### Managing Marketplaces
+| Plugin | Best for |
+|---|---|
+| **bkit** | Full PDCA methodology + Sprint Management for experienced developers |
+| **bkit-starter** | Korean learning guide for first-time Claude Code users |
 
-Use `/plugin` command and navigate to **Marketplaces** tab to manage your plugin sources:
+### 11.2 Customization (project-local overrides)
 
-![bkit Marketplace](images/bkit-marketplace.png)
+Claude Code searches in this priority order:
 
-- **bkit-marketplace**: Contains bkit and bkit-starter plugins
-- **claude-plugins-official**: Official Anthropic plugins
-
-#### Discovering Plugins
-
-Navigate to **Discover** tab to browse and install available plugins:
-
-![bkit Marketplace Plugins](images/bkit-marketplace-plugins.png)
-
-| Plugin | Description | Best For |
-|--------|-------------|----------|
-| **bkit** | Full PDCA methodology + Claude Code mastery | Experienced developers |
-| **bkit-starter** | Korean learning guide for beginners | First-time Claude Code users |
-
-#### Auto-Update Configuration
-
-Keep your plugins up-to-date automatically by configuring auto-update in your settings:
-
-```json
-// ~/.claude/settings.json
-{
-  "plugins": {
-    "autoUpdate": true
-  }
-}
-```
-
-**Update Commands:**
-- Press `u` in the Marketplaces view to update all plugins
-- Press `r` to remove a marketplace
-- Use `Space` to toggle plugin selection in Discover view
-
-### Plugin Structure
-
-```
-bkit-claude-code/
-├── .claude-plugin/
-│   ├── plugin.json          # Claude Code plugin manifest
-│   └── marketplace.json     # Marketplace registry
-├── agents/                  # Specialized AI agents
-├── commands/                # CLI command definitions
-├── skills/                  # Domain knowledge
-├── hooks/                   # Event hooks (hooks.json)
-├── evals/                   # Skill eval definitions & runner
-├── scripts/                 # Hook execution scripts
-├── servers/                 # MCP servers (bkit-pdca, bkit-analysis)
-├── lib/                     # Shared utilities (142 modules across 16 subdirs — Clean Architecture 4-Layer with 7 Port↔Adapter pairs)
-├── output-styles/           # Level-based response formatting
-├── templates/               # Document templates
-└── bkit.config.json         # Centralized configuration
-```
-
----
-
-## Customization
-
-After installing bkit via the marketplace, you can customize any component by copying it to your project's `.claude/` folder.
-
-> **Comprehensive Guide**: See **[CUSTOMIZATION-GUIDE.md](CUSTOMIZATION-GUIDE.md)** for detailed instructions on customizing bkit for your organization, including platform-specific paths, component examples, and license attribution requirements.
-
-### How It Works
-
-Claude Code searches for configuration files in this priority order:
-1. **Project `.claude/`** (highest priority - your customizations)
+1. **Project `.claude/`** (your customizations — highest priority)
 2. **User `~/.claude/`**
 3. **Plugin installation** (default)
 
-### Customization Steps
-
 ```bash
-# Step 1: Find the plugin installation location
+# Step 1: Find the plugin installation
 ls ~/.claude/plugins/bkit/
 
-# Step 2: Copy only the files you want to customize
+# Step 2: Copy only the file you want to customize
 mkdir -p .claude/skills/starter
 cp ~/.claude/plugins/bkit/skills/starter/SKILL.md .claude/skills/starter/
 
-# Step 3: Edit the copied file in your project
-# Your project's .claude/skills/starter/SKILL.md will override the plugin's version
-
-# Step 4: Commit to version control (optional)
-git add .claude/
-git commit -m "feat: customize bkit starter skill"
+# Step 3: Edit; your version overrides the plugin's
 ```
 
-### Available Components for Customization
+Full guide with platform paths + license attribution: [CUSTOMIZATION-GUIDE.md](CUSTOMIZATION-GUIDE.md).
 
-| Component | Location | Description |
-|-----------|----------|-------------|
-| **Skills** | `~/.claude/plugins/bkit/skills/` | Domain knowledge, context and slash commands (e.g., `/pdca plan`) |
-| **Agents** | `~/.claude/plugins/bkit/agents/` | Specialized AI assistants |
-| **Templates** | `~/.claude/plugins/bkit/templates/` | Document templates |
-| **Scripts** | `~/.claude/plugins/bkit/scripts/` | Hook scripts |
-| **Config** | `~/.claude/plugins/bkit/bkit.config.json` | Central configuration |
-
-### Important Notes
-
-- **Customized files don't receive plugin updates.** When bkit is updated, your customized files remain unchanged while non-customized files are updated automatically.
-- **Check the [CHANGELOG](CHANGELOG.md)** periodically for updates that might affect your customizations.
-- **Delete a customized file** to revert to the plugin's default version.
-- **Attribution required**: When creating derivative plugins, follow the [License & Attribution](CUSTOMIZATION-GUIDE.md#license--attribution) guidelines.
+⚠️ **CC v2.1.113+ Users — `~/.claude/skills/` may be silently deleted on first run** ([#51234](https://github.com/anthropics/claude-code/issues/51234)). bkit plugin itself is unaffected (uses `${CLAUDE_PLUGIN_ROOT}/skills/`). Back up user custom skills before upgrading.
 
 ---
 
-## Usage
+## 12. Requirements
 
-### Start Learning
-```bash
-/claude-code-learning
-```
+| Requirement | Minimum | Recommended | Notes |
+|---|---|---|---|
+| **Claude Code** | v2.1.78 | **v2.1.123+** (conservative) · **v2.1.139** (balanced) | 94 consecutive compatible releases since v2.1.34 |
+| **Node.js** | v18+ | — | Hook script execution |
+| **Agent Teams (optional)** | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | — | Required for `/pdca team` |
 
-### Initialize a Project
-```bash
-/starter      # Static website (Starter level)
-/dynamic      # Fullstack with BaaS (Dynamic level)
-/enterprise   # Microservices with K8s (Enterprise level)
-```
-
-### PDCA Workflow (v2.0.3)
-
-> **v2.0.3**: Each phase now includes Interactive Checkpoints that pause for user confirmation before proceeding. Plan confirms requirements, Design presents 3 architecture options, Do confirms implementation scope, Check offers fix strategy choices.
-
-```bash
-/pdca pm {feature}       # PM analysis & PRD generation (43 frameworks)
-/pdca plan {feature}     # Create plan document (Checkpoint 1-2)
-/pdca design {feature}   # Create design document (Checkpoint 3: 3 architecture options)
-/pdca do {feature}       # Implementation guide
-/pdca analyze {feature}  # Run gap analysis
-/pdca iterate {feature}  # Auto-fix with Evaluator-Optimizer pattern
-/pdca report {feature}   # Generate completion report
-/pdca status             # Check current PDCA status
-/pdca next               # Guide to next PDCA step
-```
-
-### CTO-Led Agent Teams (v1.5.1)
-
-CTO-Led Agent Teams enable parallel PDCA execution with multiple AI agents orchestrated by a CTO lead agent.
-
-```bash
-# Start CTO Team for a feature
-/pdca team {feature}
-
-# Monitor team progress
-/pdca team status
-
-# Cleanup team resources
-/pdca team cleanup
-```
-
-**How it works:**
-1. CTO lead agent (opus) analyzes the feature and selects the optimal team composition
-2. Teammates are spawned in parallel (Dynamic: 3, Enterprise: 5 agents)
-3. Each teammate handles a specific area (QA, frontend, backend, security, etc.)
-4. CTO orchestrates task assignment, progress monitoring, and result aggregation
-5. Team is cleaned up after work is complete
-
-**Requirements:**
-- Set environment variable: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-- Claude Code v2.1.32+
-
-**Available Team Agents:**
-
-| Team | Agent | Model | Role |
-|------|-------|-------|------|
-| CTO | cto-lead | opus | Team orchestration, PDCA workflow management |
-| CTO | frontend-architect | sonnet | UI/UX design, component architecture |
-| CTO | product-manager | sonnet | Requirements analysis, feature prioritization |
-| CTO | qa-strategist | sonnet | Test strategy, quality metrics coordination |
-| CTO | security-architect | opus | Vulnerability analysis, auth design review |
-| PM | pm-lead | opus | PM Team orchestration, PRD synthesis |
-| PM | pm-discovery | sonnet | Opportunity Solution Tree analysis |
-| PM | pm-strategy | sonnet | Value Proposition, Lean Canvas |
-| PM | pm-research | sonnet | Personas, competitors, market sizing |
-| PM | pm-prd | sonnet | PRD document generation |
-
-### PM Agent Team (v1.6.0)
-
-PM Agent Team runs **before** the Plan phase to produce a comprehensive PRD (Product Requirements Document) through automated product discovery.
-
-```bash
-# Run PM analysis before planning
-/pdca pm user-authentication
-
-# Then proceed with PDCA planning (PRD auto-referenced)
-/pdca plan user-authentication
-```
-
-**How it works:**
-1. pm-lead (opus) collects project context and git history
-2. Three agents run in parallel with 43 frameworks:
-   - discovery: Opportunity Solution Tree + Brainstorm + Assumption Risk Assessment
-   - strategy: JTBD + Lean Canvas + SWOT + PESTLE + Porter's Five Forces + Growth Loops
-   - research: Personas + Competitors + TAM/SAM/SOM + Customer Journey Map + ICP
-3. pm-prd synthesizes all findings into a PRD with 6 sections + Execution Deliverables (Pre-mortem, User/Job Stories, Test Scenarios, Stakeholder Map, Battlecards) at `docs/00-pm/{feature}.prd.md`
-4. Plan phase automatically references the PRD for higher-quality planning
-
-**Frameworks**: Based on [pm-skills](https://github.com/phuryn/pm-skills) by Pawel Huryn (MIT License)
+> **Troubleshooting**: If you see `"Failed to load hooks"` after install, run `claude update`.
 
 ---
 
-## Project Levels
+## 13. Language Support
 
-| Level | Description | Stack |
-|-------|-------------|-------|
-| **Starter** | Static websites, portfolios | HTML, CSS, JS |
-| **Dynamic** | Fullstack applications | Next.js, BaaS |
-| **Enterprise** | Microservices architecture | K8s, Terraform, MSA |
+bkit auto-detects 8 languages from trigger keywords:
 
----
-
-## Is bkit Only for Development?
-
-![bkit for Non-Development](images/to-use-non-development.png)
-
-bkit is **primarily designed for software development**. However, some components can inspire structured workflows beyond coding:
-
-| Component | Beyond Development Uses |
-|-----------|------------------------|
-| **PDCA Methodology** | Project management, process improvement |
-| **Document Templates** | Planning any structured project |
-| **Gap Analysis** | Comparing any plan vs. actual outcome |
-
-> **Note**: For general writing, research, or non-technical tasks, plain Claude Code (without bkit) is better suited.
-
----
-
-## Documentation
-
-### Customization Guide
-
-- **[CUSTOMIZATION-GUIDE.md](CUSTOMIZATION-GUIDE.md)** - Complete guide to customizing bkit for your organization
-  - Platform-specific configuration paths (macOS, Linux, Windows, WSL)
-  - Component customization (agents, skills, commands, hooks, templates)
-  - License attribution requirements for derivative works
-  - bkit design philosophy and architecture decisions
-
-### Current Reference (bkit-system/)
-
-- **[System Architecture](bkit-system/README.md)** - Plugin structure and trigger system overview
-- **[Context Engineering](bkit-system/philosophy/context-engineering.md)** - LLM context curation principles (v1.4.2)
-- **[Core Mission & Philosophy](bkit-system/philosophy/core-mission.md)** - 3 core philosophies (Automation First, No Guessing, Docs=Code)
-- **[AI-Native Principles](bkit-system/philosophy/ai-native-principles.md)** - AI-Native development and 3 core competencies
-- **[PDCA Methodology](bkit-system/philosophy/pdca-methodology.md)** - PDCA cycle and 9-stage pipeline relationship
-- **[Graph Index](bkit-system/_GRAPH-INDEX.md)** - Obsidian-optimized component graph
-
-### Component Reference
-
-- [Development Pipeline](skills/development-pipeline/SKILL.md) - 9-stage pipeline skill
-- [Skills Reference](skills/) - 43 domain skills (Workflow / Capability / Hybrid; +4 v2.1.11 skills)
-- [Agents Reference](agents/) - 36 specialized agents (11 opus / 19 sonnet / 2 haiku)
-
-### PDCA Documents
-
-- [Active PDCA](docs/pdca/) - Current plan/design/analysis documents
-- [Archive](docs/archive/) - Completed PDCA + legacy documents
-
-### Other
-
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
-
-### Visualize with Obsidian
-
-The `bkit-system/` documentation is optimized for [Obsidian](https://obsidian.md/)'s Graph View:
-
-1. Open `bkit-system/` as an Obsidian vault
-2. Press `Ctrl/Cmd + G` to open Graph View
-3. Explore component relationships visually
-
-See **[bkit-system/README.md](bkit-system/README.md#viewing-with-obsidian)** for detailed instructions.
-
----
-
-## Language Support
-
-bkit automatically detects your language from trigger keywords:
-
-| Language | Trigger Keywords |
-|----------|-----------------|
+| Language | Trigger sample |
+|---|---|
 | English | static website, beginner, API design |
 | Korean | 정적 웹, 초보자, API 설계 |
 | Japanese | 静的サイト, 初心者, API設計 |
@@ -539,99 +834,29 @@ bkit automatically detects your language from trigger keywords:
 | German | statische Webseite, Anfänger |
 | Italian | sito web statico, principiante |
 
-### Setting Response Language
-
-Claude Code supports configuring your preferred response language through the `language` setting in your settings file.
-
-#### Configuration Files (Priority Order)
-
-| File | Scope | Git Tracked |
-|------|-------|-------------|
-| `.claude/settings.local.json` | Project (personal) | No (gitignored) |
-| `.claude/settings.json` | Project (shared) | Yes |
-| `~/.claude/settings.json` | User (global) | N/A |
-
-#### How to Configure
-
-Add the `language` key to any settings file:
+Set your reply language with `language` in `.claude/settings.json`:
 
 ```json
-{
-  "language": "korean"
-}
+{ "language": "korean" }
 ```
 
-#### Supported Languages
-
-| Language | Setting Value |
-|----------|---------------|
-| English | `"english"` (default) |
-| Korean | `"korean"` |
-| Japanese | `"japanese"` |
-| Chinese | `"chinese"` |
-| Spanish | `"spanish"` |
-| French | `"french"` |
-| German | `"german"` |
-| Italian | `"italian"` |
-
-> **Note**: Trigger keywords work in any language. The `language` setting only affects Claude's response language.
+Trigger keywords work in any language regardless of the reply setting.
 
 ---
 
-## Contributing
+## 14. License & Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+| | |
+|---|---|
+| **License** | Apache 2.0 · [LICENSE](LICENSE) · [NOTICE](NOTICE) (required for redistribution) |
+| **Copyright** | 2024–2026 POPUP STUDIO PTE. LTD. |
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) — `main` requires admin merge + PR review |
+| **Issues** | [GitHub Issues](https://github.com/popup-studio-ai/bkit-claude-code/issues) |
+| **Email** | `contact@popupstudio.ai` |
 
-### Branch Protection
+### Release history
 
-- Only `admin` team members can merge to `main`
-- All changes require pull request review
-- Version releases are managed through Git tags
-
----
-
-## Design Philosophy
-
-bkit is not a productivity hack. It is an attempt to bring **engineering discipline** to AI-native development.
-
-The software industry has spent decades refining how humans write code—version control, code review, CI/CD, testing pyramids. But when AI enters the development loop, most of that discipline evaporates. Developers prompt, accept, and ship. The feedback loop disappears. Documentation becomes an afterthought. Quality becomes a matter of luck.
-
-**bkit exists because we believe AI-assisted development deserves the same rigor as traditional engineering.**
-
-### What we optimize for
-
-- **Process over output.** A single feature built through proper planning, design, implementation, and verification is worth more than ten features hacked together. The PDCA cycle is not overhead—it is the product.
-
-- **Verification over trust.** AI generates plausible code. Plausible is not correct. Every implementation goes through gap analysis against its design document. If the match rate falls below 90%, the system iterates automatically. We do not ship hope.
-
-- **Context over prompts.** A well-structured prompt helps once. A well-structured context system helps every time. bkit's 142 lib modules (16 subdirs, Clean Architecture 4-Layer with 7 Port↔Adapter pairs), 43 skills, and 36 agents exist to ensure the AI receives the right context at the right moment—not through clever prompting, but through systematic engineering.
-
-- **Constraints over features.** We intentionally limit what bkit does. Three project levels, not infinite configuration. A fixed 9-stage pipeline, not a customizable workflow builder. Opinionated defaults, not a framework for frameworks. Constraints eliminate decision fatigue and make the system learnable.
-
-### What this means in practice
-
-When you use bkit, you will write a plan document before writing code. You will generate a design specification before implementation. You will run gap analysis after every feature. You will produce a completion report that captures what was built, what was verified, and what was learned.
-
-This is slower than prompting and shipping. It is also how software that lasts gets built.
-
-> *"We do not offer a hundred features. We engineer each one through proper design and verification. That is the difference between a tool and a discipline."*
-
----
-
-## License
-
-Copyright 2024-2026 POPUP STUDIO PTE. LTD.
-
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
-
-You must include the [NOTICE](NOTICE) file in any redistribution.
-
----
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/popup-studio-ai/bkit-claude-code/issues)
-- **Email**: contact@popupstudio.ai
+bkit follows [Semantic Versioning](https://semver.org/). **All release notes live in [CHANGELOG.md](CHANGELOG.md)** and are not duplicated here.
 
 ---
 

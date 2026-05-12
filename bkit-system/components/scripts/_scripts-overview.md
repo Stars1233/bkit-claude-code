@@ -1,7 +1,8 @@
 # Scripts Overview
 
-> 49 Node.js Scripts used by bkit hooks (v2.1.11)
+> 51 Node.js Scripts used by bkit hooks (v2.1.13)
 >
+> **v2.1.13**: Sprint Management — added `scripts/sprint-handler.js` (16-action CLI dispatcher) and `scripts/sprint-memory-writer.js` (MEMORY.md auto-append on archive). Scripts 49→51. `scripts/notification-handler.js` extended with sprint state enrichment in idle prompts. `scripts/task-created-handler.js` extended with Sprint task naming detection + `task_created` ACTION_TYPES registration (ENH-156 enum fix). MCP `servers/bkit-pdca-server/index.js` exposes 3 new sprint tools (`bkit_sprint_status`, `bkit_sprint_list`, `bkit_master_plan_read`) + 2 sprint resources (관점 1-1 DEEP-6 sweep).
 > **v2.1.11**: 4 Sprints × 20 FRs — Sprint α adds `hooks/startup/preflight.js` (Agent Teams env), `hooks/startup/first-run.js` (AskUserQuestion tutorial); Sprint γ adds `scripts/check-trust-score-reconcile.js`; Sprint δ adds `scripts/check-quality-gates-m1-m10.js` and `scripts/release-plugin-tag.sh`. Scripts 47→49. CC recommended: v2.1.118+ (79 consecutive compatible).
 > **v2.1.10**: Sprint 5a~7 complete — BKIT_VERSION centralization (5-location single SoT), 3-Layer Orchestration (`lib/orchestrator/` 5 new modules), legacy cleanup (removed 3 modules: hook-io / ops-metrics / deploy-state-machine), new `cc-bridge.js` Port↔Adapter, MCP stdio L3 runtime runner (42 TC), `check-domain-purity.js` CI step. Scripts 43→47. CC recommended: v2.1.117+.
 > **v2.1.9**: CC v2.1.116 response — Scripts unchanged (43). ENH-254 `config-change-handler.js:17-29` defense-in-depth comment reinforced (5 DANGEROUS_PATTERNS + Layer 1/Layer 2 architecture). Positive drift: ENH-264 `unified-bash-pre.js:144,183` `outputBlockWithContext` calls (deploy/QA phase paths). CC recommended: v2.1.116+.

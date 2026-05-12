@@ -5,7 +5,7 @@ classification-reason: Process automation persists regardless of model advanceme
 deprecation-risk: none
 effort: low
 description: |
-  Complete 9-phase development pipeline guide — from schema to deployment.
+  Complete 9-phase development pipeline guide — from schema to deployment. Pipeline phases (1-schema → 9-deployment) are orthogonal to PDCA's 9-phase per-feature cycle and Sprint's 8-phase container; each pipeline phase may host PDCA cycles for individual features, and multi-feature pipeline initiatives can be wrapped in /sprint (v2.1.13).
   Triggers: development pipeline, where to start, phase, 개발 파이프라인, 순서, 시작.
 agent: bkit:pipeline-guide
 allowed-tools:

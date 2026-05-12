@@ -5,7 +5,7 @@ classification-reason: Batch PDCA management persists regardless of model advanc
 deprecation-risk: none
 effort: high
 description: |
-  Manage multiple PDCA features and batch operations.
+  Manage multiple PDCA features as independent parallel cycles (no shared scope/budget). For multiple features that share scope, budget, or timeline as one cohesive initiative, use /sprint (v2.1.13) — sprint groups features into a single 8-phase container, while pdca-batch keeps them independent.
   Triggers: pdca-batch, batch, multiple features, 다중 기능, 배치.
 argument-hint: "[status|plan|manage]"
 user-invocable: true

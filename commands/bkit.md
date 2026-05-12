@@ -45,6 +45,26 @@ PDCA (Document-Driven Development)
   /pdca status               Show current PDCA status
   /pdca next                 Guide to next step
 
+Sprint Management (v2.1.13 — meta-container for 1+ features)
+  /sprint init <id> [--name <name>] [--features a,b] [--trust L0-L4]
+                             Create sprint (8-phase: prd→plan→design→do→iterate→qa→report→archived)
+  /sprint start <id> [--trust L0-L4]   Auto-run up to Trust Level scope (L4=full-auto)
+  /sprint status <id>        Current phase + status + auto-pause triggers
+  /sprint list               All sprints overview
+  /sprint watch <id>         Live snapshot + 4 triggers + 3 matrices (dataFlow/cumulative/feature-phase)
+  /sprint phase <id> --to <phase>      Manual phase transition
+  /sprint iterate <id>       matchRate 100% loop (max 5 iterations)
+  /sprint qa <id> [--feature <name>]   7-Layer S1 dataFlow integrity check
+  /sprint report <id>        Generate sprint completion report
+  /sprint archive <id>       Move to archived (terminal state)
+  /sprint pause <id>         Stop auto-run (4 triggers also auto-pause)
+  /sprint resume <id>        Resume from paused state
+  /sprint fork <id> --new <newId>      Carry incomplete features → new sprint
+  /sprint feature <id> --action list|add|remove --feature <name>
+  /sprint help               Sprint Management help
+  Korean guide: docs/06-guide/sprint-management.guide.md
+  Migration:    docs/06-guide/sprint-migration.guide.md (PDCA↔Sprint, orthogonal coexistence)
+
 Project Initialization
   /starter init <name>       Static web project (HTML/CSS/Next.js)
   /dynamic init <name>       Fullstack app (bkend.ai BaaS)
@@ -87,11 +107,12 @@ Output Styles (v1.5.3)
 
 ## Functions Reference
 
-### User-Invocable Skills (13)
+### User-Invocable Skills (14)
 
 | Function | Description |
 |----------|-------------|
 | `/pdca` | PDCA cycle management (pm, plan, design, do, analyze, iterate, report, archive, cleanup, team, status, next) |
+| `/sprint` | **Sprint Management (v2.1.13)** — meta-container grouping 1+ features (16 sub-actions: init/start/status/list/watch/phase/iterate/qa/report/archive/pause/resume/fork/feature/help/master-plan). Orthogonal coexistence with PDCA |
 | `/starter` | Starter project (HTML/CSS/Next.js) |
 | `/dynamic` | Dynamic project (bkend.ai BaaS) |
 | `/enterprise` | Enterprise project (K8s/Terraform) |
@@ -206,6 +227,19 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 | Output Styles | `/output-style` | Custom response formatting |
 | TaskCompleted Hook | Automatic | Auto-advance PDCA phases on task completion |
 | TeammateIdle Hook | Automatic | Assign work to idle teammates |
+
+### v2.1.13 Features (Sprint Management — work in progress)
+
+| Feature | Activation | Description |
+|---------|-----------|-------------|
+| Sprint Management | `/sprint <action>` | Meta-container grouping 1+ features under shared scope/budget/timeline. 8-phase lifecycle (prd→plan→design→do→iterate→qa→report→archived). 16 sub-actions. Orthogonal to PDCA 9-phase (both may coexist) |
+| Trust Level Scope L0-L4 | `--trust L0-L4` flag | `SPRINT_AUTORUN_SCOPE` controls auto-run boundary (L0 stop-after-plan / L1 design / L2 do / L3 qa / L4 archived = full-auto) |
+| 4 Auto-Pause Triggers | Automatic during auto-run | QUALITY_GATE_FAIL / ITERATION_EXHAUSTED / BUDGET_EXCEEDED / PHASE_TIMEOUT — instant pause on detection |
+| 7-Layer S1 dataFlow QA | `/sprint qa <id>` | H1-H7 hops (UI→Client→API→Validation→DB→Response→Client→UI) integrity check |
+| L3 Contract Test (tracked CI gate) | `tests/contract/v2113-sprint-contracts.test.js` | 8 cross-sprint contracts (SC-01~08): entity shape / deps interface / infra adapters / handler signature / 4-layer chain / ACTION_TYPES 18 / SPRINT_AUTORUN_SCOPE mirror / hooks 21:24 |
+| 3 Production Adapter Scaffolds | Sprint 2 deps injection | `createGapDetector` / `createAutoFixer` / `createDataFlowValidator` — no-op baseline + agentTaskRunner-injected real impl path |
+| Korean User Guide | `docs/06-guide/` | sprint-management.guide.md (~330 lines, 8 sections) + sprint-migration.guide.md (~200 lines, PDCA↔Sprint mapping) |
+| Sprint Phase Enum | `lib/application/sprint-lifecycle/phases.js` | `SPRINT_PHASES` frozen Object + `SPRINT_PHASE_ORDER` 8 strings + `isValidSprintPhase` / `nextSprintPhase` helpers |
 
 ### v2.1.10 Features (current — Sprint 0~7 Integrated Enhancement)
 

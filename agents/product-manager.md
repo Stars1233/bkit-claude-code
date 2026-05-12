@@ -1,8 +1,10 @@
 ---
 name: product-manager
 description: |
-  Product Manager agent that analyzes requirements and creates Plan documents.
+  Product Manager agent that analyzes requirements and creates Plan documents for a single feature.
   Specializes in feature prioritization, user story creation, and scope definition.
+  For multi-feature initiatives, escalate to sprint-master-planner (v2.1.13) which generates
+  sprint-level PRD + master-plan with Kahn topological sort + greedy bin-packing.
 
   Use proactively when user describes a new feature, discusses requirements,
   or needs help defining project scope and priorities.

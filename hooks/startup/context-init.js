@@ -1,8 +1,27 @@
 /**
- * bkit Vibecoding Kit - SessionStart: Context Initialization Module (v2.0.0)
+ * bkit Vibecoding Kit - SessionStart: Context Initialization Module
  *
- * Handles Context Hierarchy, Memory Store, Import Resolver initialization,
- * and Context Fork cleanup (stale forks).
+ * Initializes session-level context that survives only within this process:
+ *   1. ensureBkitDirs — audit/, checkpoints/, decisions/, workflows/, etc.
+ *   2. git worktree guard (#46808) — flag linked worktrees where hooks may not fire
+ *   3. PDCA status init + v2→v3 schema auto-migration
+ *   4. Import Resolver — preload startup imports from bkit.config.json
+ *   5. UserPromptSubmit bug detection (GitHub #20659)
+ *   6. Fork-enabled skill scan (context: fork frontmatter)
+ *   7. Import preload availability check
+ *
+ * v2.1.13 cleanup (관점 1-2 B2): Removed safeRequire calls + dependent blocks
+ * for three modules deleted in commit 21d35d6 (2026-04-08, v2.1.1 S1 cleanup):
+ *   - lib/context-hierarchy.js   → session context blob; never reintroduced.
+ *   - lib/memory-store.js        → simple key-value memory; never reintroduced.
+ *   - lib/context-fork.js        → fork lifecycle manager; agent system replaced it.
+ * The previous lazy safeRequire pattern silently swallowed null returns, leaving
+ * three `if (mod) { ... }` blocks as permanently dead code. The fork-enabled
+ * skill scan (FIX-04) still runs since it only collected metadata; it no longer
+ * persists to a missing context store.
+ *
+ * @module hooks/startup/context-init
+ * @version 2.1.13
  */
 
 const fs = require('fs');
@@ -13,7 +32,11 @@ const { debugLog } = require('../../lib/core/debug');
 const { initPdcaStatusIfNotExists, getPdcaStatusFull } = require('../../lib/pdca/status');
 const { getBkitConfig } = require('../../lib/core/config');
 
-// Lazy-load optional modules with graceful fallback
+/**
+ * Lazy-load optional modules with graceful fallback.
+ * Retained for `lib/import-resolver.js` which is the only optional dependency
+ * remaining after the v2.1.1 S1 cleanup (commit 21d35d6).
+ */
 function safeRequire(modulePath) {
   try {
     return require(modulePath);
@@ -24,18 +47,17 @@ function safeRequire(modulePath) {
 
 /**
  * Run context initialization.
- * Initializes Context Hierarchy, Memory Store, Import Resolver,
- * and cleans up stale Context Forks.
  * @param {object} _input - Hook input (unused, reserved for future use)
- * @returns {{ contextHierarchy: object|null, memoryStore: object|null, importResolver: object|null, contextFork: object|null, forkEnabledSkills: Array }}
+ * @returns {{
+ *   importResolver: object|null,
+ *   forkEnabledSkills: Array<{name:string, mergeResult:boolean}>,
+ *   userPromptBugWarning: string|null
+ * }}
  */
 function run(_input) {
-  const contextHierarchy = safeRequire('../../lib/context-hierarchy.js');
-  const memoryStore = safeRequire('../../lib/memory-store.js');
   const importResolver = safeRequire('../../lib/import-resolver.js');
-  const contextFork = safeRequire('../../lib/context-fork.js');
 
-  // v2.0.0: Ensure all bkit directories exist (audit/, checkpoints/, decisions/, workflows/, etc.)
+  // Ensure all bkit directories exist (audit/, checkpoints/, decisions/, workflows/, etc.)
   try {
     const { ensureBkitDirs } = require('../../lib/core/paths');
     ensureBkitDirs();
@@ -61,54 +83,14 @@ function run(_input) {
   // Initialize PDCA status file if not exists
   initPdcaStatusIfNotExists();
 
-  // v2.0.0: Trigger pdca-status auto-migration (v2 → v3 schema) if needed
+  // Trigger pdca-status auto-migration (v2 → v3 schema) if needed
   try {
     getPdcaStatusFull();
   } catch (e) {
     debugLog('SessionStart', 'PDCA status migration check failed', { error: e.message });
   }
 
-  // Context Hierarchy initialization (FR-01)
-  if (contextHierarchy) {
-    try {
-      contextHierarchy.clearSessionContext();
-      const pdcaStatus = getPdcaStatusFull();
-      contextHierarchy.setSessionContext('sessionStartedAt', new Date().toISOString());
-      contextHierarchy.setSessionContext('platform', BKIT_PLATFORM);
-      contextHierarchy.setSessionContext('level', detectLevel());
-      if (pdcaStatus && pdcaStatus.primaryFeature) {
-        contextHierarchy.setSessionContext('primaryFeature', pdcaStatus.primaryFeature);
-      }
-      debugLog('SessionStart', 'Session context initialized', {
-        platform: BKIT_PLATFORM,
-        level: detectLevel()
-      });
-    } catch (e) {
-      debugLog('SessionStart', 'Failed to initialize session context', { error: e.message });
-    }
-  }
-
-  // Memory Store initialization (FR-08)
-  if (memoryStore) {
-    try {
-      const sessionCount = memoryStore.getMemory('sessionCount', 0);
-      memoryStore.setMemory('sessionCount', sessionCount + 1);
-      const previousSession = memoryStore.getMemory('lastSession', null);
-      memoryStore.setMemory('lastSession', {
-        startedAt: new Date().toISOString(),
-        platform: BKIT_PLATFORM,
-        level: detectLevel()
-      });
-      debugLog('SessionStart', 'Memory store initialized', {
-        sessionCount: sessionCount + 1,
-        hasPreviousSession: !!previousSession
-      });
-    } catch (e) {
-      debugLog('SessionStart', 'Failed to initialize memory store', { error: e.message });
-    }
-  }
-
-  // Import Resolver - Load startup context (FR-02)
+  // Import Resolver — Load startup context (FR-02)
   if (importResolver) {
     try {
       const config = getBkitConfig();
@@ -134,27 +116,14 @@ function run(_input) {
     }
   }
 
-  // Context Fork cleanup - Clear stale forks from previous session (FR-03)
-  if (contextFork) {
-    try {
-      const activeForks = contextFork.getActiveForks();
-      if (activeForks.length > 0) {
-        contextFork.clearAllForks();
-        debugLog('SessionStart', 'Cleared stale forks', { count: activeForks.length });
-      }
-    } catch (e) {
-      debugLog('SessionStart', 'Failed to clear stale forks', { error: e.message });
-    }
-  }
-
-  // UserPromptSubmit bug detection (FIX-03)
+  // UserPromptSubmit bug detection (FIX-03, GitHub #20659)
   let userPromptBugWarning = null;
   try {
     const hooksJsonPath = path.join(__dirname, '..', 'hooks.json');
     if (fs.existsSync(hooksJsonPath)) {
       const hooksConfig = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf8'));
       if (hooksConfig.hooks?.UserPromptSubmit) {
-        userPromptBugWarning = `Warning: UserPromptSubmit hook in plugins may not trigger (GitHub #20659). Workaround: Add to ~/.claude/settings.json. See docs/TROUBLESHOOTING.md`;
+        userPromptBugWarning = 'Warning: UserPromptSubmit hook in plugins may not trigger (GitHub #20659). Workaround: Add to ~/.claude/settings.json. See docs/TROUBLESHOOTING.md';
       }
     }
   } catch (e) {
@@ -162,6 +131,9 @@ function run(_input) {
   }
 
   // Scan skills for context:fork configuration (FIX-04)
+  // Collected for downstream tooling (debug logging + future consumers).
+  // Prior to v2.1.13, this list was persisted to lib/context-hierarchy.js
+  // (deleted in v2.1.1 S1 cleanup). It is now returned to caller only.
   const forkEnabledSkills = [];
   try {
     const skillsDir = path.join(__dirname, '../../skills');
@@ -182,15 +154,14 @@ function run(_input) {
         }
       }
     }
-    if (forkEnabledSkills.length > 0 && contextHierarchy) {
-      contextHierarchy.setSessionContext('forkEnabledSkills', forkEnabledSkills);
+    if (forkEnabledSkills.length > 0) {
       debugLog('SessionStart', 'Fork-enabled skills detected', { skills: forkEnabledSkills });
     }
   } catch (e) {
     debugLog('SessionStart', 'Skill fork scan failed', { error: e.message });
   }
 
-  // Preload common imports (FIX-05)
+  // Preload common imports (FIX-05) — availability check only
   if (importResolver) {
     const commonImports = [
       '${PLUGIN_ROOT}/templates/shared/api-patterns.md',
@@ -211,10 +182,7 @@ function run(_input) {
   }
 
   return {
-    contextHierarchy,
-    memoryStore,
     importResolver,
-    contextFork,
     forkEnabledSkills,
     userPromptBugWarning
   };

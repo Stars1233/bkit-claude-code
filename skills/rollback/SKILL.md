@@ -5,7 +5,7 @@ classification-reason: Checkpoint and rollback management persists regardless of
 deprecation-risk: none
 effort: medium
 description: |
-  Manage PDCA checkpoints and rollback — create, list, restore for safe recovery.
+  Manage PDCA checkpoints and rollback — create, list, restore for safe recovery. Rollback events are recorded via lib/audit/audit-logger ACTION_TYPES.rollback_executed. For sprint-level recovery, individual feature rollbacks may be triggered from within sprint phases (sprint itself is forward-only — terminal state is `archived`, not rolled back; v2.1.13).
   Triggers: rollback, checkpoint, restore, undo, 롤백, 체크포인트, 복원.
 argument-hint: "[list|to|phase|reset] [target]"
 user-invocable: true

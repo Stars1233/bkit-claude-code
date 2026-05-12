@@ -1,5 +1,5 @@
 {
-  "version": "2.1.12",
+  "version": "2.1.13",
   "ui": {
     "sessionTitle": {
       "enabled": true,
@@ -72,6 +72,36 @@
     "autoStartThreshold": 100,
     "fullAuto": {
       "reviewCheckpoints": ["design"]
+    }
+  },
+  "sprint": {
+    "_comment": "v2.1.13 Sprint Management defaults (DEEP-6). Per-sprint overrides via sprint.config.{...} at sprint init time take precedence.",
+    "defaultTrustLevel": "L2",
+    "defaultBudget": 1000000,
+    "defaultPhaseTimeoutHours": 4,
+    "defaultMaxIterations": 5,
+    "defaultMatchRateTarget": 100,
+    "defaultMatchRateMinAcceptable": 90,
+    "defaultDashboardMode": "session-start",
+    "autoPause": {
+      "armedTriggers": ["QUALITY_GATE_FAIL", "ITERATION_EXHAUSTED", "BUDGET_EXCEEDED", "PHASE_TIMEOUT"]
+    },
+    "qualityGates": {
+      "M1_matchRate": { "threshold": 90 },
+      "M2_codeQualityScore": { "threshold": 80 },
+      "M3_criticalIssueCount": { "threshold": 0 },
+      "M8_matchRate": { "threshold": 85 }
+    },
+    "contextSizing": {
+      "enabled": true,
+      "schemaVersion": "1.0",
+      "maxTokensPerSprint": 100000,
+      "safetyMargin": 0.25,
+      "tokensPerLOC": 6.67,
+      "baselineLOC": 5000,
+      "minSprints": 1,
+      "maxSprints": 12,
+      "dependencyAware": true
     }
   },
   "triggers": {

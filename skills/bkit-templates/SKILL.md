@@ -5,7 +5,7 @@ classification-reason: Process automation persists regardless of model advanceme
 deprecation-risk: none
 effort: low
 description: |
-  PDCA document templates — Plan, Design, Analysis, Report with consistent structure.
+  PDCA + Sprint document templates — Plan, Design, Analysis, Report for individual features plus templates/sprint/{master-plan, prd, plan, design, iterate, qa, report}.template.md for sprint-level documents (v2.1.13).
   Triggers: template, plan document, design template, 템플릿, 문서 양식.
 user-invocable: false
 allowed-tools:
@@ -20,6 +20,8 @@ allowed-tools:
 
 ## Available Templates
 
+### PDCA (per-feature, 9-phase)
+
 | Template | Path | Purpose |
 |----------|------|---------|
 | Plan | `${CLAUDE_PLUGIN_ROOT}/templates/plan.template.md` | Feature planning |
@@ -28,6 +30,18 @@ allowed-tools:
 | Report | `${CLAUDE_PLUGIN_ROOT}/templates/report.template.md` | Completion report |
 | Index | `${CLAUDE_PLUGIN_ROOT}/templates/_INDEX.template.md` | Document index |
 | CLAUDE | `${CLAUDE_PLUGIN_ROOT}/templates/CLAUDE.template.md` | CLAUDE.md template |
+
+### Sprint (multi-feature container, 8-phase, v2.1.13)
+
+| Template | Path | Purpose |
+|----------|------|---------|
+| Master Plan | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/master-plan.template.md` | Sprint scope + features + dependency graph + Trust scope |
+| PRD | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/prd.template.md` | Sprint-level product requirements |
+| Plan | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/plan.template.md` | Sprint plan (per-feature plan synthesis) |
+| Design | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/design.template.md` | Sprint-level technical design |
+| Iterate | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/iterate.template.md` | Iteration log + iterateHistory |
+| QA | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/qa.template.md` | 7-Layer dataFlowIntegrity (S1) report |
+| Report | `${CLAUDE_PLUGIN_ROOT}/templates/sprint/report.template.md` | Sprint completion + KPI + carry items |
 
 ## Template Usage
 

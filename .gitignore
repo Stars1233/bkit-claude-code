@@ -20,11 +20,14 @@ node_modules/
 
 # Test directories (local testing only)
 test/
-tests/
+tests/*
 test-scripts/
 # v2.1.10: Contract Test (Invocation Contract baseline) — tracked for CI Gate
 !test/contract/
 !test/contract/**
+# v2.1.13 Sprint 5: L3 Contract Test (cross-sprint contract drift CI Gate) — tracked
+!tests/contract/
+!tests/contract/**
 
 # Obsidian - Root level (personal settings, not for sharing)
 .obsidian/

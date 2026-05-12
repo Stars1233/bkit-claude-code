@@ -245,6 +245,43 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  // v2.1.13 Sprint Management (관점 1-1 DEEP-6): expose Sprint state to MCP
+  // clients so the LLM can read sprint lifecycle without shell or file access.
+  {
+    name: 'bkit_sprint_status',
+    description: 'Read current Sprint status. Optionally filter by sprint id for detail.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sprintId: { type: 'string', description: 'Sprint id (kebab-case). Omit for full summary.' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'bkit_sprint_list',
+    description: 'List sprints with optional status filter (active|paused|archived).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['active', 'paused', 'archived', 'all'], default: 'all' },
+        limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'bkit_master_plan_read',
+    description: 'Read sprint master plan JSON state (schemaVersion, features, sprints, dependencyGraph).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Sprint master plan project id (kebab-case).' },
+      },
+      required: ['projectId'],
+      additionalProperties: false,
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -268,6 +305,19 @@ const RESOURCES = [
     uri: 'bkit://audit/latest',
     name: 'Latest Audit Log',
     description: 'Today\'s audit log entries (last 20).',
+    mimeType: 'application/json',
+  },
+  // v2.1.13 Sprint Management (관점 1-1 DEEP-6)
+  {
+    uri: 'bkit://sprint/status',
+    name: 'Sprint Current Status',
+    description: 'Current Sprint status from sprint-status.json.',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'bkit://sprint/master-plans',
+    name: 'Sprint Master Plans Index',
+    description: 'Directory listing of .bkit/state/master-plans/ (sprint master plan JSON files).',
     mimeType: 'application/json',
   },
 ];
@@ -434,6 +484,78 @@ function handleBkitMetricsHistory(args) {
 }
 
 // ---------------------------------------------------------------------------
+// v2.1.13 Sprint Management tool handlers (관점 1-1 DEEP-6)
+// ---------------------------------------------------------------------------
+
+function handleBkitSprintStatus(args) {
+  const { sprintId } = args || {};
+  const state = readJsonOrNull(statePath('sprint-status.json'));
+  if (!state) {
+    return okResponse({ version: null, entries: {}, total: 0 });
+  }
+  const entries = state.entries || {};
+  if (sprintId) {
+    const s = entries[sprintId];
+    if (!s) return errResponse('NOT_FOUND', `Sprint not found: ${sprintId}`);
+    return okResponse({ version: state.version, sprint: { id: sprintId, ...s } });
+  }
+  const list = Object.entries(entries).map(([id, s]) => ({
+    id,
+    name: s.name,
+    phase: s.phase,
+    status: s.status,
+    trustLevelAtStart: s.trustLevelAtStart,
+    updatedAt: s.updatedAt,
+  }));
+  return okResponse({
+    version: state.version,
+    total: list.length,
+    summary: {
+      active: list.filter(s => s.status === 'active').length,
+      paused: list.filter(s => s.status === 'paused').length,
+      archived: list.filter(s => s.status === 'archived').length,
+    },
+    entries: list,
+  });
+}
+
+function handleBkitSprintList(args) {
+  const { status = 'all', limit = 50 } = args || {};
+  const state = readJsonOrNull(statePath('sprint-status.json'));
+  const entries = (state && state.entries) || {};
+  let list = Object.entries(entries).map(([id, s]) => ({
+    id,
+    name: s.name,
+    phase: s.phase,
+    status: s.status,
+    trustLevelAtStart: s.trustLevelAtStart,
+    updatedAt: s.updatedAt,
+    pauseHistoryCount: (s.autoPause && Array.isArray(s.autoPause.pauseHistory)) ? s.autoPause.pauseHistory.length : 0,
+  }));
+  if (status !== 'all') {
+    list = list.filter(s => s.status === status);
+  }
+  list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  return okResponse({ status, total: list.length, items: list.slice(0, limit) });
+}
+
+function handleBkitMasterPlanRead(args) {
+  const { projectId } = args || {};
+  if (!projectId || typeof projectId !== 'string') {
+    return errResponse('INVALID_PARAMS', 'projectId is required (kebab-case string)');
+  }
+  if (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(projectId)) {
+    return errResponse('INVALID_PARAMS', `projectId must be kebab-case: ${projectId}`);
+  }
+  const file = statePath(path.join('master-plans', `${projectId}.json`));
+  const plan = readJsonOrNull(file);
+  if (!plan) {
+    return errResponse('NOT_FOUND', `Master plan not found: ${projectId}.json`);
+  }
+  return okResponse({ projectId, plan });
+}
+
+// ---------------------------------------------------------------------------
 // Resource handlers
 // ---------------------------------------------------------------------------
 
@@ -480,6 +602,47 @@ function handleResourceAuditLatest() {
   };
 }
 
+// v2.1.13 Sprint Management resource handlers (관점 1-1 DEEP-6)
+function handleResourceSprintStatus() {
+  const data = readJsonOrNull(statePath('sprint-status.json')) || { version: null, entries: {} };
+  return {
+    contents: [{
+      uri: 'bkit://sprint/status',
+      mimeType: 'application/json',
+      text: JSON.stringify(data, null, 2),
+    }],
+  };
+}
+
+function handleResourceSprintMasterPlans() {
+  const dir = statePath('master-plans');
+  let files = [];
+  if (fs.existsSync(dir)) {
+    files = fs.readdirSync(dir)
+      .filter(name => name.endsWith('.json'))
+      .map(name => {
+        const projectId = name.replace(/\.json$/, '');
+        const plan = readJsonOrNull(path.join(dir, name)) || {};
+        return {
+          projectId,
+          schemaVersion: plan.schemaVersion || null,
+          projectName: plan.projectName || null,
+          featureCount: Array.isArray(plan.features) ? plan.features.length : 0,
+          sprintCount: Array.isArray(plan.sprints) ? plan.sprints.length : 0,
+          generatedAt: plan.generatedAt || null,
+          updatedAt: plan.updatedAt || null,
+        };
+      });
+  }
+  return {
+    contents: [{
+      uri: 'bkit://sprint/master-plans',
+      mimeType: 'application/json',
+      text: JSON.stringify({ total: files.length, masterPlans: files }, null, 2),
+    }],
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tool dispatch
 // ---------------------------------------------------------------------------
@@ -495,12 +658,19 @@ const TOOL_HANDLERS = {
   bkit_report_read: (args) => handleDocRead('report', args),
   bkit_metrics_get: handleBkitMetricsGet,
   bkit_metrics_history: handleBkitMetricsHistory,
+  // v2.1.13 Sprint Management (관점 1-1 DEEP-6)
+  bkit_sprint_status: handleBkitSprintStatus,
+  bkit_sprint_list: handleBkitSprintList,
+  bkit_master_plan_read: handleBkitMasterPlanRead,
 };
 
 const RESOURCE_HANDLERS = {
   'bkit://pdca/status': handleResourcePdcaStatus,
   'bkit://quality/metrics': handleResourceQualityMetrics,
   'bkit://audit/latest': handleResourceAuditLatest,
+  // v2.1.13 Sprint Management (관점 1-1 DEEP-6)
+  'bkit://sprint/status': handleResourceSprintStatus,
+  'bkit://sprint/master-plans': handleResourceSprintMasterPlans,
 };
 
 // ---------------------------------------------------------------------------

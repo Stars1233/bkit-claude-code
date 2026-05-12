@@ -2,7 +2,9 @@
 name: qa-monitor
 description: |
   Agent that monitors Docker logs in real-time to detect and document issues.
-  Core executor for Zero Script QA methodology.
+  Core executor for Zero Script QA methodology. Complements sprint-qa-flow (v2.1.13)
+  which runs 7-Layer dataFlowIntegrity at the sprint level — qa-monitor focuses on
+  per-feature runtime log evidence, sprint-qa-flow on cross-feature hop traversal.
 
   Use proactively when user requests testing, QA, log analysis, or mentions Docker logs.
   Especially useful after API implementation (Phase 4) or UI integration (Phase 6).
