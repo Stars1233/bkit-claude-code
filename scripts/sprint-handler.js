@@ -238,20 +238,45 @@ async function handleInit(args, infra) {
 }
 
 async function handleStart(args, infra, deps) {
-  if (!args || !args.id || !args.name) {
-    return { ok: false, error: 'start requires { id, name }' };
+  if (!args || !args.id) {
+    return { ok: false, error: 'start requires { id }' };
   }
+  // Deep-QA fix: when started after init, hydrate name/context/features
+  // from existing state so users don't have to re-supply them.
+  // Idempotent semantics — startSprint UC internally distinguishes resume vs create.
+  let resolvedName = args.name;
+  let resolvedContext = args.context;
+  let resolvedFeatures = args.features;
+  const existing = await infra.stateStore.load(args.id);
+  if (existing) {
+    if (!resolvedName) resolvedName = existing.name;
+    if (!resolvedContext) resolvedContext = existing.context;
+    if (!Array.isArray(resolvedFeatures)) resolvedFeatures = existing.features;
+  }
+  if (!resolvedName) {
+    return { ok: false, error: 'start requires { id, name } (sprint not yet initialized)' };
+  }
+  // Only pass context if caller explicitly provided one OR existing has non-empty
+  // values; otherwise omit so validateSprintInput skips context check (existing
+  // init flow already permits empty default context — see handleInit).
+  const passContext = (function () {
+    if (args.context && typeof args.context === 'object') return args.context;
+    if (existing && existing.context && Object.values(existing.context).some(v => typeof v === 'string' && v.trim().length > 0)) {
+      return existing.context;
+    }
+    return undefined;
+  })();
   const lifecycleDeps = Object.assign({
     stateStore: infra.stateStore,
     eventEmitter: infra.eventEmitter.emit,
   }, deps.lifecycleDeps || {});
   return lifecycle.startSprint({
     id: args.id,
-    name: args.name,
+    name: resolvedName,
     trustLevel: normalizeTrustLevel(args),
     phase: args.phase,
-    context: { ...defaultContext(), ...(args.context || {}) },
-    features: Array.isArray(args.features) ? args.features : [],
+    context: passContext,
+    features: Array.isArray(resolvedFeatures) ? resolvedFeatures : [],
   }, lifecycleDeps);
 }
 
