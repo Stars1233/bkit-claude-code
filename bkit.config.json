@@ -74,6 +74,19 @@
       "reviewCheckpoints": ["design"]
     }
   },
+  "sprint": {
+    "contextSizing": {
+      "enabled": true,
+      "schemaVersion": "1.0",
+      "maxTokensPerSprint": 100000,
+      "safetyMargin": 0.25,
+      "tokensPerLOC": 6.67,
+      "baselineLOC": 5000,
+      "minSprints": 1,
+      "maxSprints": 12,
+      "dependencyAware": true
+    }
+  },
   "triggers": {
     "implicitEnabled": true,
     "confidenceThreshold": 0.7,
