@@ -181,9 +181,13 @@ Claude: 1. Compare code with design documents
 
 | Command | Description |
 |---------|-------------|
-| `/pdca-status` | Check current PDCA status |
-| `/pdca-design {feature}` | Create design document |
-| `/pdca-analyze {feature}` | Run Gap analysis |
+| `/pdca status` | Check current PDCA status (9-phase per-feature) |
+| `/pdca design {feature}` | Create design document |
+| `/pdca analyze {feature}` | Run Gap analysis |
+| `/sprint init {id} --name <name>` | Initialize a multi-feature sprint (8-phase container, v2.1.13) |
+| `/sprint master-plan {id} --features=a,b,c` | Generate sprint master plan |
+| `/sprint status {id}` | View sprint state + auto-pause history |
+| `/control level <0-4>` | Set Trust Level — gates PDCA + Sprint auto-run |
 
 ---
 

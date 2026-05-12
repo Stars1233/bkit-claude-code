@@ -179,12 +179,16 @@ function sc06() {
   const match = src.match(/const\s+ACTION_TYPES\s*=\s*\[([\s\S]*?)\];/);
   assert(match, 'ACTION_TYPES array literal not found');
   const entries = match[1].match(/'[^']+'/g) || [];
-  assert.strictEqual(entries.length, 19,
-    'ACTION_TYPES expected 19 entries, got ' + entries.length);
+  // v2.1.13 DEEP-4 fix: added 'task_created' (ENH-156 was emitting but enum
+  // missed registration; previously bypassed normalizeEntry validation via
+  // entry.action fallback).
+  assert.strictEqual(entries.length, 20,
+    'ACTION_TYPES expected 20 entries, got ' + entries.length);
   const flat = entries.join(',');
   assert(flat.includes('sprint_paused'), 'sprint_paused missing from ACTION_TYPES');
   assert(flat.includes('sprint_resumed'), 'sprint_resumed missing from ACTION_TYPES');
   assert(flat.includes('master_plan_created'), 'master_plan_created missing from ACTION_TYPES (S2-UX v2.1.13)');
+  assert(flat.includes('task_created'), 'task_created missing from ACTION_TYPES (DEEP-4 v2.1.13)');
 }
 
 // === SC-07: SPRINT_AUTORUN_SCOPE mirror (Sprint 2 inline ↔ Sprint 4 lib/control) ===
@@ -349,7 +353,7 @@ function sc10() {
   record('SC-03 createSprintInfra 4 adapters + Sprint 5 3 scaffolds', sc03);
   record('SC-04 handleSprintAction(action,args,deps) + 16 VALID_ACTIONS', sc04);
   await record('SC-05 4-layer end-to-end chain (init → status → list)', sc05);
-  record('SC-06 ACTION_TYPES enum 19 entries (incl sprint_paused/resumed/master_plan_created)', sc06);
+  record('SC-06 ACTION_TYPES enum 20 entries (incl sprint_paused/resumed/master_plan_created/task_created)', sc06);
   record('SC-07 SPRINT_AUTORUN_SCOPE inline ↔ lib/control mirror (5 levels)', sc07);
   record('SC-08 hooks.json 21 events 24 blocks invariant', sc08);
   await record('SC-09 master-plan 4-layer chain (handler → state + markdown + audit)', sc09);

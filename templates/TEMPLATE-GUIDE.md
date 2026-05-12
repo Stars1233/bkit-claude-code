@@ -9,6 +9,10 @@
 ```
 What are you doing?
 │
+├─► Starting a multi-feature initiative (shared scope/budget)?  [v2.1.13]
+│   └─► Use Sprint Templates
+│       (Master Plan → PRD → Plan → Design → Do → Iterate → QA → Report)
+│
 ├─► Starting a new feature?
 │   │
 │   ├─► Using 9-phase Pipeline? ──► Use Pipeline Templates
@@ -79,6 +83,31 @@ Project Complexity?
 
 ---
 
+## Sprint Templates (8-Phase Container, v2.1.13)
+
+| Phase | Template | Purpose |
+|-------|----------|---------|
+| Master Plan | `sprint/master-plan.template.md` | Sprint scope + features + dependency graph + Trust scope |
+| PRD | `sprint/prd.template.md` | Sprint-level product requirements (multi-feature) |
+| Plan | `sprint/plan.template.md` | Sprint plan synthesizing per-feature plans |
+| Design | `sprint/design.template.md` | Sprint-level technical design |
+| Iterate | `sprint/iterate.template.md` | Iteration log + iterateHistory (until matchRate ≥ 90 or ITERATION_EXHAUSTED) |
+| QA | `sprint/qa.template.md` | 7-Layer dataFlowIntegrity (S1) report |
+| Report | `sprint/report.template.md` | Sprint completion + KPI + carry items |
+
+### Sprint vs PDCA vs Pipeline
+
+| Scenario | Sprint | PDCA | Pipeline |
+|----------|:------:|:----:|:--------:|
+| Multi-feature initiative sharing scope/budget/timeline | ✅ | ⚠️ | ⚠️ |
+| Single feature lifecycle | ⚠️ | ✅ | ⚠️ |
+| New project from scratch (full 9 phases) | ⚠️ | ⚠️ | ✅ |
+| Quick fix / bug fix | ❌ | ⚠️ | ❌ |
+
+Sprint can host PDCA cycles inside it (per-feature) and can wrap Pipeline phases when the initiative spans multiple phases.
+
+---
+
 ## Other Templates
 
 | Template | Purpose |
@@ -115,16 +144,25 @@ Project Complexity?
 ## Quick Commands
 
 ```bash
-# PDCA Commands
-/pdca-plan {feature}      # Create plan document
-/pdca-design {feature}    # Create design document
-/pdca-analyze {feature}   # Run gap analysis
-/pdca-report {feature}    # Create completion report
+# PDCA Commands (per-feature)
+/pdca plan {feature}      # Create plan document
+/pdca design {feature}    # Create design document
+/pdca analyze {feature}   # Run gap analysis
+/pdca report {feature}    # Create completion report
 
-# Pipeline Commands
+# Pipeline Commands (9-phase)
 /pipeline-start           # Start 9-phase pipeline
 /pipeline-status          # Check current phase
 /pipeline-next            # Go to next phase
+
+# Sprint Commands (multi-feature, v2.1.13)
+/sprint init {id} --name <name>                     # Initialize sprint
+/sprint master-plan {id} --features=f1,f2,f3        # Generate master plan
+/sprint start {id}                                  # Begin 8-phase lifecycle
+/sprint phase {id} --to {prd|plan|design|do|iterate|qa|report|archived}
+/sprint qa {id}                                     # 7-Layer dataFlowIntegrity
+/sprint report {id}                                 # Aggregate KPI + carry items
+/sprint archive {id}                                # Escape hatch (gate-free)
 
 # Project Setup
 /setup-claude-code        # Generate CLAUDE.md
@@ -150,15 +188,26 @@ When using both PDCA and Pipeline:
 ```
 docs/
 ├── 01-plan/
-│   ├── features/          # PDCA Plan documents
+│   ├── features/          # PDCA Plan + Sprint master-plan (v2.1.13)
+│   │   ├── {feature}.plan.md           # PDCA per-feature
+│   │   └── {projectId}.master-plan.md  # Sprint master plan
 │   ├── schema.md          # Pipeline Phase 1
 │   └── conventions.md     # Pipeline Phase 2
 ├── 02-design/
-│   ├── features/          # PDCA Design documents
+│   ├── features/          # PDCA Design + Sprint design documents
 │   ├── mockup/            # Pipeline Phase 3
 │   └── api/               # Pipeline Phase 4
-├── 03-analysis/           # PDCA Check documents
-└── 04-report/             # PDCA Act documents
+├── 03-analysis/           # PDCA Check + Sprint iterate logs
+├── 04-report/             # PDCA Act + Sprint completion reports
+└── 05-qa/                 # Sprint 7-Layer S1 qa-reports (v2.1.13)
+
+.bkit/state/
+├── sprint-status.json     # Sprint entries (v2.1.13)
+├── master-plans/          # Sprint master-plan JSON state (v2.1.13)
+│   └── {projectId}.json
+├── pdca-status.json       # PDCA features
+├── trust-profile.json     # Trust L0-L4 + SPRINT_AUTORUN_SCOPE
+└── memory.json            # bkit memory
 ```
 
 ---

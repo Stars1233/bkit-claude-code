@@ -38,6 +38,19 @@ if (isPdcaTask) {
   debugLog('TaskCreated', 'PDCA task detected', { phase: pdcaPhase, feature: pdcaFeature });
 }
 
+// v2.1.13: Sprint task naming convention — emitted by sprint-master-planner
+// usecase via deps.taskCreator: "Sprint <id>: <name>".
+const SPRINT_PATTERN = /^Sprint\s+([a-z][a-z0-9-]*[a-z0-9])\s*:\s*(.+)/;
+const sprintMatch = taskSubject.match(SPRINT_PATTERN);
+const isSprintTask = !!sprintMatch;
+let sprintId = null;
+let sprintName = null;
+if (isSprintTask) {
+  sprintId = sprintMatch[1];
+  sprintName = sprintMatch[2].trim();
+  debugLog('TaskCreated', 'Sprint task detected', { sprintId, sprintName });
+}
+
 // Log to audit if available
 try {
   const { writeAuditLog } = require('../lib/audit/audit-logger');
@@ -45,7 +58,7 @@ try {
     actor: 'hook',
     actorId: 'task-created-handler',
     action: 'task_created',
-    category: 'pdca',
+    category: isSprintTask ? 'sprint' : 'pdca',
     target: taskSubject,
     targetType: 'task',
     details: {
@@ -53,6 +66,9 @@ try {
       isPdcaTask,
       pdcaPhase,
       pdcaFeature,
+      isSprintTask,
+      sprintId,
+      sprintName,
     },
     result: 'success',
   });

@@ -34,7 +34,7 @@ variables:
 
 ---
 
-## PDCA Status
+## PDCA Status (per-feature, 9-phase)
 
 ```
 Current Phase: [{phase}] ← You are here
@@ -49,6 +49,25 @@ Current Phase: [{phase}] ← You are here
                                          │  Act   │
                                          │(Improve)│
                                          └────────┘
+```
+
+## Sprint Status (v2.1.13, multi-feature container, 8-phase)
+
+```
+For multi-feature initiatives sharing scope/budget/timeline:
+
+PRD → Plan → Design → Do → Iterate → QA → Report → Archived
+                                  ▲     │
+                                  └──no─┘  (matchRate < 90 → ITERATION_EXHAUSTED auto-pause)
+
+4 Auto-Pause Triggers:
+  • QUALITY_GATE_FAIL — M1-M10 gate failure
+  • ITERATION_EXHAUSTED — maxIterations reached
+  • BUDGET_EXCEEDED — token budget overflow
+  • PHASE_TIMEOUT — phaseTimeoutHours exceeded
+
+Trust Level (L0-L4) gates auto-advance scope:
+  L0 stopAfter=prd (manual)  L4 stopAfter=archived (full-auto)
 ```
 
 ---

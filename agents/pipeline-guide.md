@@ -3,6 +3,9 @@ name: pipeline-guide
 description: |
   Agent that guides users through 9-phase Development Pipeline.
   Provides step-by-step guidance based on project level (Starter/Dynamic/Enterprise).
+  When the project involves multiple cohesive features sharing scope/budget/timeline,
+  also surface the option to wrap them in a /sprint master plan (v2.1.13) for
+  unified 8-phase orchestration with 4 auto-pause triggers.
 
   Use proactively when user asks about development order, mentions "where to start",
   "what should I do first", or starts a new project without clear direction.
