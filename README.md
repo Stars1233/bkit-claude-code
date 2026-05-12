@@ -105,6 +105,34 @@ bkit runs the 8-phase Sprint lifecycle (prd → plan → design → do → itera
 
 L1 (Guided) and L3 (Auto) sit between. bkit also computes a **Trust Score (0–100)** from your track record and can recommend a level — but you stay in charge.
 
+## How the bkit author actually uses bkit
+
+The 4-step experience above is the canonical flow. Here's the concrete recipe the person who built bkit uses every day — **two steps** — so you can copy it without needing to understand the full machinery underneath.
+
+### Step A — Use Claude Code as a thinking amplifier *before* the master plan
+
+The master plan is the single most important artifact in a sprint. Garbage in, garbage out. So **don't write it alone, and don't let bkit write it cold either.**
+
+1. Open a fresh Claude Code session.
+2. Talk through the release in plain language — what's the goal, who is it for, what could go wrong, what depends on what, what's still unknown? Let Claude Code push back.
+3. Have it investigate — read your repo, search the web, surface edge cases you hadn't considered.
+4. *Then* run `/sprint master-plan my-release --features ...`. By the time you do, your context is already saturated; the master plan reflects what you really meant, not a generic template.
+
+This is what **Context Engineering** looks like in practice: you don't tune the perfect prompt — you saturate the context first, then let bkit synthesise.
+
+### Step B — Hand the rest to Trust Level 4
+
+Once you approve the master plan, the keyboard goes quiet until the final report lands. The bkit author picks one of two patterns based on release size:
+
+| Release size | What you type | What happens |
+|---|---|---|
+| **Small–medium** — a few related features, single context budget | `/control level 4`, then `/sprint start <project>` once | bkit runs every sprint and every PDCA phase straight through to `archived`. You read the final report. |
+| **Large** — many sprints, large total token budget, or cross-sprint dependencies | `/control level 4`, then `/sprint start <sprint-id>` per sprint in dependency order | Each sprint runs full-auto. You skim the sprint report before launching the next sprint — a natural checkpoint between context windows. |
+
+**Trust Level 4 is not "no safety"**. The 11 quality gates and 4 auto-pause triggers still fire. bkit halts and asks for you only when a measurable rule fails. The dial removes the *unnecessary* pauses, not the necessary ones.
+
+**The outcome, repeatable**: AI plans, designs, codes, self-verifies, self-repairs, tests, and writes the completion report. You provide intent — and the final ship/no-ship decision. Nothing else.
+
 ## The three commands
 
 | Command | When to use | What it spawns | Output |
