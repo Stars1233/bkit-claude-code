@@ -24,7 +24,12 @@
 
 'use strict';
 
-const { createSprintInfra } = require('../lib/infra/sprint');
+const {
+  createSprintInfra,
+  createGapDetector,
+  createAutoFixer,
+  createDataFlowValidator,
+} = require('../lib/infra/sprint');
 const lifecycle = require('../lib/application/sprint-lifecycle');
 const domain = require('../lib/domain/sprint');
 
@@ -61,6 +66,57 @@ function defaultContext() {
 }
 
 /**
+ * Sprint 5 V#3 — Auto-wire 3 production scaffold adapters when agentTaskRunner
+ * is injected. This converts no-op baseline behavior to real agent invocations
+ * via Claude Code's Task tool (gap-detector / pdca-iterator agents + chrome-qa MCP).
+ *
+ * Caller pattern (interactive Claude Code session):
+ *   handleSprintAction('iterate', { id }, {
+ *     agentTaskRunner: async ({ subagent_type, prompt }) => {
+ *       const result = await invokeTaskTool({ subagent_type, prompt });
+ *       return { output: result.text };
+ *     },
+ *     mcpClient: { callTool: async (req) => browserBatch(req) },
+ *   });
+ *
+ * Behavior:
+ * - If `deps.agentTaskRunner` provided: auto-create gapDetector + autoFixer
+ *   from createGapDetector/AutoFixer, inject into deps.iterateDeps.
+ * - If `deps.mcpClient` provided: auto-create dataFlowValidator (Tier 3 live probe),
+ *   inject into deps.qaDeps.
+ * - If `deps.staticMatrix === true` (and no mcpClient): create Tier 2 static
+ *   heuristic validator, inject into deps.qaDeps.
+ * - Existing deps.iterateDeps / deps.qaDeps explicit injections take precedence
+ *   (override auto-wired adapters).
+ *
+ * @param {object} deps - raw deps from caller
+ * @returns {object} deps with auto-wired adapters merged
+ */
+function wireAgentAdapters(deps) {
+  if (!deps || (!deps.agentTaskRunner && !deps.mcpClient && deps.staticMatrix !== true)) {
+    return deps; // no auto-wiring needed
+  }
+
+  const wired = { ...deps };
+
+  if (deps.agentTaskRunner && (!deps.iterateDeps || (!deps.iterateDeps.gapDetector && !deps.iterateDeps.autoFixer))) {
+    const gapDetector = createGapDetector({ agentTaskRunner: deps.agentTaskRunner });
+    const autoFixer = createAutoFixer({ agentTaskRunner: deps.agentTaskRunner });
+    wired.iterateDeps = Object.assign({ gapDetector, autoFixer }, deps.iterateDeps || {});
+  }
+
+  if ((deps.mcpClient || deps.staticMatrix === true) && (!deps.qaDeps || !deps.qaDeps.dataFlowValidator)) {
+    const dataFlowValidator = createDataFlowValidator({
+      mcpClient: deps.mcpClient,
+      staticMatrix: deps.staticMatrix === true,
+    });
+    wired.qaDeps = Object.assign({ dataFlowValidator }, deps.qaDeps || {});
+  }
+
+  return wired;
+}
+
+/**
  * Main dispatcher. Routes the requested action to its handler, after
  * acquiring a fresh SprintInfra (unless one is injected via `deps.infra`
  * for testing).
@@ -75,7 +131,7 @@ async function handleSprintAction(action, args, deps) {
     return { ok: false, error: 'Unknown action: ' + action, validActions: [...VALID_ACTIONS] };
   }
   const a = args || {};
-  const d = deps || {};
+  const d = wireAgentAdapters(deps || {});
   const infra = d.infra || getInfra(a);
   switch (action) {
     case 'init':    return handleInit(a, infra);
@@ -213,7 +269,24 @@ async function handleArchive(args, infra) {
   const result = await lifecycle.archiveSprint(sprint, {
     eventEmitter: infra.eventEmitter.emit,
   });
-  if (result.ok && result.sprint) await infra.stateStore.save(result.sprint);
+  if (result.ok && result.sprint) {
+    await infra.stateStore.save(result.sprint);
+    // V#4 — best-effort MEMORY.md auto-update (non-blocking, isolated failure)
+    try {
+      const writer = require('./sprint-memory-writer');
+      const projectRoot = (args && args.projectRoot) || process.cwd();
+      const memResult = await writer.appendSprintToMemory(result.sprint, { projectRoot: projectRoot });
+      result.memoryUpdated = memResult.ok && memResult.appended;
+      if (memResult.ok && !memResult.appended) {
+        result.memoryReason = memResult.reason; // already_logged
+      } else if (!memResult.ok) {
+        result.memoryReason = memResult.reason; // non-fatal
+      }
+    } catch (e) {
+      result.memoryUpdated = false;
+      result.memoryReason = 'writer_error: ' + (e && e.message ? e.message : String(e));
+    }
+  }
   return result;
 }
 

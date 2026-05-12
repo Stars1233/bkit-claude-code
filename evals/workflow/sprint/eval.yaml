@@ -1,0 +1,57 @@
+name: sprint
+classification: workflow
+version: 2.1.13
+description: "bkit:sprint Skill — 15-action dispatcher + 8-phase lifecycle + Trust scope + auto-pause triggers process compliance"
+
+evals:
+  - name: init-action-routing
+    prompt: prompt-1-init.md
+    expected: expected-1-init.md
+    criteria:
+      - "Must route /sprint init to bkit:sprint skill (not /pdca)"
+      - "Must validate id + name required args"
+      - "Must default trust=L3 when --trust not provided"
+      - "Must default phase='prd' when --phase not provided"
+      - "Must persist state to .bkit/state/sprints/<id>.json (atomic write)"
+    timeout: 60000
+
+  - name: start-resume-existing-sprint
+    prompt: prompt-2-start.md
+    expected: expected-2-start.md
+    criteria:
+      - "Must LOAD existing sprint from stateStore (not overwrite via createSprint)"
+      - "If sprint not initialized, must return error 'use /sprint init first'"
+      - "Must preserve phase + phaseHistory from existing state"
+      - "Must apply Trust Level scope (L0 stopAfter='plan', L4 stopAfter='archived')"
+      - "Must emit SprintStarted event"
+
+  - name: phase-transition-validation
+    prompt: prompt-3-phase.md
+    expected: expected-3-phase.md
+    criteria:
+      - "Must validate transition via canTransitionSprint(from, to) returning {ok, reason?}"
+      - "Must reject invalid transitions (e.g., prd → archived directly)"
+      - "Must enforce quality gates on outgoing phase (e.g., M3 must pass before 'do' → 'iterate')"
+      - "Must update phaseHistory (exitedAt + durationMs on prior phase, new entry for target)"
+      - "Must emit SprintPhaseChanged event"
+
+  - name: archive-terminal-state
+    prompt: prompt-4-archive.md
+    expected: expected-4-archive.md
+    criteria:
+      - "Must validate sprint.phase != 'archived' already (idempotent rejection)"
+      - "Must check S4 archiveReadiness gate (true required)"
+      - "Must set phase='archived', status='archived', archivedAt=now"
+      - "Must persist final state + emit SprintArchived event"
+      - "Must enforce terminal state (no further transitions allowed)"
+
+parity_test:
+  enabled: false
+
+benchmark:
+  model_baseline: "claude-sonnet-4-6"
+  metrics:
+    - action_routing_accuracy
+    - state_preservation
+    - transition_validation
+    - terminal_enforcement
