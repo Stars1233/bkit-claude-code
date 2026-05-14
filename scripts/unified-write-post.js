@@ -212,6 +212,55 @@ try {
   }
 } catch (_) {}
 
+// ============================================================
+// v2.1.14 Sub-Sprint 2: PostToolUse Layer-6 Tier 1 audit (ENH-289 #2)
+// + reachability ping (MON-CC-NEW-PLUGIN-HOOK-DROP)
+// Symmetric with scripts/unified-bash-post.js — see that file for rationale.
+// ============================================================
+try {
+  const layer6Mod = require('../lib/defense/layer-6-audit');
+  const auditLogger = require('../lib/audit/audit-logger');
+  let checkpointMgr = null;
+  try { checkpointMgr = require('../lib/control/checkpoint-manager'); } catch (_) { /* graceful */ }
+  let ac = null;
+  try { ac = require('../lib/control/automation-controller'); } catch (_) { /* graceful */ }
+  const trustLevel = (() => {
+    try { const lv = ac && ac.getCurrentLevel(); return typeof lv === 'string' ? lv : (lv != null ? `L${lv}` : 'L2'); }
+    catch (_) { return 'L2'; }
+  })();
+  if (checkpointMgr) {
+    const layer6 = layer6Mod.createLayer6Audit({
+      audit: auditLogger,
+      checkpoint: checkpointMgr,
+      trustLevelProvider: () => trustLevel,
+      warn: () => {},
+    });
+    layer6.auditPostHoc({
+      tool: input.tool_name || 'Write',
+      toolInput: input.tool_input || {},
+      toolOutput: input.tool_response || input.tool_output || {},
+      feature: input.feature || (input.context && input.context.feature),
+      phase: input.phase || (input.context && input.context.phase),
+    }).catch(() => { /* graceful */ });
+  }
+} catch (_) { /* graceful */ }
+
+// Reachability ping — atomic rename
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const dir = path.join(root, '.bkit', 'runtime');
+  const file = path.join(dir, 'hook-reachability.json');
+  fs.mkdirSync(dir, { recursive: true });
+  let state = {};
+  try { state = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { state = {}; }
+  state.write_post = { ts: new Date().toISOString(), version: '2.1.14' };
+  const tmp = file + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2), 'utf8');
+  fs.renameSync(tmp, file);
+} catch (_) { /* graceful */ }
+
 // Output allow (PostToolUse doesn't block)
 outputAllow('', 'PostToolUse');
 

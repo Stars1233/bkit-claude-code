@@ -338,6 +338,120 @@ try {
   debugLog('SessionStart', 'first-run module failed', { error: e.message });
 }
 
+// ============================================================
+// v2.1.14 Sub-Sprint 2 (MON-CC-NEW-PLUGIN-HOOK-DROP): Hook reachability sanity
+// ============================================================
+// CC #57317 5-streak: plugin-bundled PostToolUse hooks may be silently dropped
+// by CC even though they appear in hooks.json. We detect this drop indirectly:
+// each PostToolUse hook (Bash/Write/Skill) writes its timestamp to
+// .bkit/runtime/hook-reachability.json on every fire. On SessionStart we read
+// the file and verify all three hooks fired within a recency window. A missing
+// or stale stamp signals an unhealthy hook configuration; we emit an audit
+// entry + warn the user via additionalContext. All file IO is fail-silent.
+//
+// Acceptance: the absence of evidence is itself signal — if hook-reachability
+// has never been written, we treat that as "first run after install" and skip.
+// ============================================================
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const reachFile = path.join(root, '.bkit', 'runtime', 'hook-reachability.json');
+  if (fs.existsSync(reachFile)) {
+    const STALE_THRESHOLD_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+    const now = Date.now();
+    let state = {};
+    try { state = JSON.parse(fs.readFileSync(reachFile, 'utf8')); } catch (_) { state = {}; }
+    const expected = ['bash_post', 'write_post', 'skill_post'];
+    const missing = [];
+    const stale = [];
+    for (const key of expected) {
+      const entry = state[key];
+      if (!entry || typeof entry.ts !== 'string') { missing.push(key); continue; }
+      const t = Date.parse(entry.ts);
+      if (Number.isNaN(t) || (now - t) > STALE_THRESHOLD_MS) stale.push(key);
+    }
+    if (missing.length > 0 || stale.length > 0) {
+      try {
+        const audit = require('../lib/audit/audit-logger');
+        audit.writeAuditLog({
+          actor: 'hook', actorId: 'session-start',
+          action: 'hook_reachability_lost', category: 'system',
+          target: 'PostToolUse', targetType: 'config',
+          details: { missing, stale, expected, file: reachFile },
+          result: 'blocked',
+          reason: `bkit MON-CC-NEW-PLUGIN-HOOK-DROP: PostToolUse hook reachability lost. missing=[${missing.join(',')}] stale=[${stale.join(',')}]`,
+        });
+      } catch (_) { /* graceful */ }
+      const warnMsg = `\n⚠️  bkit hook reachability check: missing=[${missing.join(',')}] stale=[${stale.join(',')}]. CC plugin-hook drop (#57317) suspected — see docs/sprint/v2114 MON-CC-NEW-PLUGIN-HOOK-DROP.`;
+      additionalContext = warnMsg + (additionalContext ? '\n' + additionalContext : '');
+    }
+  }
+} catch (_) { /* reachability check unavailable — fail-open */ }
+
+// ============================================================
+// v2.1.14 Sub-Sprint 3 (ENH-293, CARRY-5 closure): OTEL env capture
+// ============================================================
+// CC plugin-hook subprocesses inherit only a minimal env from the CC parent.
+// User-configured OTEL_* variables (set in their shell before launching
+// `claude`) are visible in SessionStart but lost when PostToolUse/PreToolUse
+// hooks spawn — telemetry.js then sees no endpoint and emits zero entries
+// (root cause of CARRY-5 #17 token-meter Adapter zero entries). We snapshot
+// the OTEL_* vars to .bkit/runtime/otel-env.json here so hook subprocesses
+// can hydrate them on entry. Fail-silent; if capture fails, telemetry keeps
+// its prior process.env-only behavior (graceful degrade, zero overhead).
+// ============================================================
+try {
+  const capturer = require('../lib/infra/otel-env-capturer');
+  const result = capturer.captureEnv(process.env, { version: BKIT_VERSION });
+  if (result && result.ok && result.count > 0) {
+    debugLog('SessionStart', 'OTEL env captured for hook subprocesses', {
+      count: result.count, captured: result.captured, file: result.file,
+    });
+  }
+} catch (_) { /* capture unavailable — telemetry falls back to process.env */ }
+
+// ============================================================
+// v2.1.14 Sub-Sprint 4 (ENH-286, differentiation #1): Memory Enforcer cache
+// ============================================================
+// CC reads CLAUDE.md but treats its directives as advisory — the model can
+// silently override them (#56865/#57485/#58887 evolved-form sightings).
+// bkit hard-enforces by extracting "Do NOT/NEVER/FORBIDDEN/MUST NOT" lines
+// at SessionStart and caching them to .bkit/runtime/memory-directives.json.
+// PreToolUse hooks (Bash) then short-circuit on a deny match. Fail-silent;
+// if extraction fails or no CLAUDE.md exists, enforcement skips and CC's
+// native advisory behavior stands unchanged.
+// ============================================================
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const candidates = [
+    path.join(root, '.claude', 'CLAUDE.md'),
+    path.join(root, 'CLAUDE.md'),
+  ];
+  let combined = '';
+  for (const file of candidates) {
+    if (fs.existsSync(file)) {
+      try { combined += fs.readFileSync(file, 'utf8') + '\n'; } catch (_) { /* graceful */ }
+    }
+  }
+  if (combined.length > 0) {
+    const { extractMemoryDirectives, serializeMemoryDirectives } = require('../lib/defense');
+    const directives = extractMemoryDirectives(combined, { source: 'CLAUDE.md' });
+    if (directives.length > 0) {
+      const payload = serializeMemoryDirectives(directives);
+      const dir = path.join(root, '.bkit', 'runtime');
+      fs.mkdirSync(dir, { recursive: true });
+      const file = path.join(dir, 'memory-directives.json');
+      const tmp = file + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify(payload, null, 2), 'utf8');
+      fs.renameSync(tmp, file);
+      debugLog('SessionStart', 'Memory Enforcer directives cached', { count: payload.count });
+    }
+  }
+} catch (_) { /* directive extraction unavailable — CC advisory behavior stands */ }
+
 const response = {
   systemMessage: `bkit Vibecoding Kit v${BKIT_VERSION} activated (Claude Code)`,
   hookSpecificOutput: {

@@ -130,3 +130,58 @@ Produce structured output in this format:
 - Do NOT conflate changes from different versions
 - Do NOT skip "minor" changes — they may affect bkit
 - Do NOT include unverified blog rumors as facts
+
+### R-Series Regression Tracker (v2.1.14 Sub-Sprint 5 — ENH-296 + ENH-306)
+
+Every CC version analysis MUST classify regressions under the R-Series:
+
+| Pattern | Definition | Tracking Output |
+|---------|------------|-----------------|
+| **R-1** | Silent npm publish — dist-tag promoted without GitHub release notes | List affected versions in summary |
+| **R-2** | True semver skip — minor integer skipped (e.g. v2.1.134/135 skip) | Note skipped versions + 18-cycle window % |
+| **R-3** | Safety hooks ignored — model overrides CLAUDE.md / hook directives | Split numbered vs dup-closure vs evolved (see below) |
+
+**R-3 sub-classification (ENH-296)**:
+
+```
+- numbered violation:  primary issue number (e.g. #54178 violation #145)
+- dup-closure:         same root cause closed multiple times (5/1 dup-closure cluster)
+- evolved form:        re-emerged in different surface — track cumulative count
+- N-streak:            N consecutive releases unresolved (e.g. #56293 11-streak)
+```
+
+When reporting, include cumulative `evolved form #N` annotation referencing
+`docs/06-guide/cc-version-monitoring.guide.md` §3.1 for the running list.
+
+### release_drift_score (ENH-309)
+
+For each analysis, calculate and report:
+
+```
+release_drift_score = |npm dist-tag(stable).version - bkit recommended (conservative).version|
+                       (minor integer difference, e.g. v2.1.128 vs v2.1.123 = 5)
+```
+
+Threshold actions:
+- 0~3 drift: no user-facing action needed
+- 4~7 drift: warning — recommend README/CHANGELOG note
+- 8+ drift: critical — recommend user advisory + accelerated validation
+
+Source policy: `docs/06-guide/version-policy.guide.md` §2 (dist-tag 3-Bucket
+Framework — stable / latest / next).
+
+### Differentiation Impact Assessment
+
+For each new ENH candidate, evaluate against bkit's 6 differentiations:
+
+| # | Differentiation | ENH | Note |
+|:-:|------|-----|------|
+| 1 | Memory Enforcer (CC advisory → enforced) | ENH-286 | Sub-Sprint 4 |
+| 2 | Defense Layer 6 (post-hoc audit + alarm + auto-rollback) | ENH-289 | Sub-Sprint 2 |
+| 3 | Sequential dispatch (sub-agent caching 10x mitigation) | ENH-292 | Sub-Sprint 1 |
+| 4 | Effort-aware Adaptive Defense | ENH-300 | Sub-Sprint 4 |
+| 5 | PostToolUse continueOnBlock | ENH-303 | Sub-Sprint 2 |
+| 6 | Heredoc-pipe bypass defense (CC #58904 immune) | ENH-310 | Sub-Sprint 2 |
+
+Report whether the CC change auto-strengthens an existing differentiation,
+introduces a new differentiation candidate, or has no differentiation impact.

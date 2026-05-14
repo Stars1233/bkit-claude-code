@@ -167,6 +167,55 @@ When the user requests a multi-feature initiative (project-level scope/budget gr
 - **Multi-feature with shared scope/budget/timeline** → Sprint (8-phase: prd→...→archived) via sprint-* spawn patterns
 - Both may coexist (sprint contains features, each feature optionally runs PDCA cycle inside)
 
+### v2.1.14 Sub-agent Dispatch Policy — Sequential (post-warmup) (ENH-292, differentiation #3)
+
+> Source of truth: `lib/orchestrator/sub-agent-dispatcher.js` (8-state state machine).
+> The five Council/Swarm patterns above (Plan Parallel, Design Council, Do Swarm,
+> Check Council, Act Iteration) describe **logical concurrency intent**. The
+> dispatcher converts that intent into a **physical dispatch strategy** based on
+> cache hit-rate, Trust Level, and opt-out flags.
+
+**Rationale**: CC #56293 (11-streak v2.1.128~v2.1.141 unresolved) — parallel
+`Task` spawns from a single parent currently miss the parent prefix cache,
+producing ~10x `cache_creation_input_tokens` per spawn. Anthropic's own guidance
+("fork operations must share the parent's prefix") is not enforced by CC; bkit
+enforces it by dispatching the first sibling sequentially, observing the warmup
+sample, then restoring parallel for subsequent siblings.
+
+**Dispatch decision** (consult before every multi-spawn batch — `dispatch(agents)`):
+
+| Condition (evaluated in order) | Decision | State |
+|--------------------------------|----------|-------|
+| `BKIT_SEQUENTIAL_DISPATCH=0` env set | `fallback` (accept parallel, log reason) | `OPT_OUT_ENABLED` |
+| First spawn latency > 30s (LATENCY_GUARD_MS) | `parallel` (sticky, R1 mitigation) | `LATENCY_GUARD` |
+| Trust Level = L4 | **`sequential` forced** | `FIRST_SPAWN_SEQUENTIAL` |
+| State = `CACHE_WARMUP_DETECTED` (analyzer reports avgHitRate ≥ 0.10) | `parallel` | `PARALLEL_RESTORE` |
+| samples < 3 (cold start) | `sequential` | `FIRST_SPAWN_SEQUENTIAL` |
+| avgHitRate ≥ 0.40 | `parallel` | (analyzer high) |
+| avgHitRate ≥ 0.10 (warming) | `sequential` | (analyzer medium) |
+| Otherwise | `sequential` | (analyzer low) |
+
+**Applied transformation** (read existing Council/Swarm patterns above through this lens):
+
+| Pattern | Logical intent | Physical dispatch (v2.1.14+) |
+|---------|---------------|------------------------------|
+| Plan phase Parallel (2 Task) | "do them concurrently" | First spawn sequential → warmup sample → second spawn parallel |
+| Design phase Council (4 Task) | "council deliberation" | First sequential → 3 parallel after warmup |
+| Do phase Swarm (3 Task) | "swarm impl" | First sequential → 2 parallel after warmup |
+| Check phase Council (3 Task) | "council review" | First sequential → 2 parallel after warmup |
+| Sprint Initialization (2 Task) | already documented Sequential above | unchanged |
+
+**Edge cases**:
+- L4 enforces sequential regardless of warmup (operator chose maximum cache safety).
+- If first spawn exceeds 30s, dispatcher sticks to `LATENCY_GUARD` parallel — never trap user in pathological cold-cache loop.
+- Opt-out flag bypasses the entire ladder and accepts the caller's intent (`fallback` mode) for users who explicitly know their context is small enough to absorb the regression.
+
+**Observability**: Each spawn emits a `CacheMetrics` record via `caching-cost.port`
+(implemented by `lib/infra/caching-cost-cli.js`). `scripts/subagent-stop-handler.js`
+captures the transcript usage block at SubagentStop, builds metrics, and calls
+`port.emit()` — this is the cache hit-rate feedback loop that drives state
+transitions in subsequent dispatches.
+
 ### Quality Gates
 
 - Plan document must exist before Design phase

@@ -96,7 +96,71 @@ try {
   }
 } catch (_) {}
 
-// Output allow (PostToolUse doesn't block)
+// ============================================================
+// v2.1.14 Sub-Sprint 2: PostToolUse Layer-6 Tier 1 audit (ENH-289 #2)
+// + continueOnBlock deny-reason emission (ENH-303 #5)
+//
+// Runs after loop-breaker recordAction so the same input is observed by both
+// the loop guard and the layer-6 classifier. Fail-silent in all branches —
+// PostToolUse never blocks normal tool flow today; this hook only widens
+// observability + sets up the auto-rollback decision at L4.
+//
+// Reachability ping (MON-CC-NEW-PLUGIN-HOOK-DROP): touch the reachability
+// state file so SessionStart can detect silent CC plugin-hook drops.
+// ============================================================
+try {
+  const toolInput = input.tool_input || {};
+  const toolOutput = input.tool_response || input.tool_output || {};
+  const layer6Mod = require('../lib/defense/layer-6-audit');
+  const auditLogger = require('../lib/audit/audit-logger');
+  let checkpointMgr = null;
+  try { checkpointMgr = require('../lib/control/checkpoint-manager'); } catch (_) { /* graceful */ }
+  let ac = null;
+  try { ac = require('../lib/control/automation-controller'); } catch (_) { /* graceful */ }
+  const trustLevel = (() => {
+    try { const lv = ac && ac.getCurrentLevel(); return typeof lv === 'string' ? lv : (lv != null ? `L${lv}` : 'L2'); }
+    catch (_) { return 'L2'; }
+  })();
+  if (checkpointMgr) {
+    const layer6 = layer6Mod.createLayer6Audit({
+      audit: auditLogger,
+      checkpoint: checkpointMgr,
+      trustLevelProvider: () => trustLevel,
+      // suppress console.warn in hook context — audit-logger captures it
+      warn: () => {},
+    });
+    // Fire-and-forget; PostToolUse must not await beyond timeout budget
+    layer6.auditPostHoc({
+      tool: 'Bash',
+      toolInput,
+      toolOutput,
+      feature: input.feature || (input.context && input.context.feature),
+      phase: input.phase || (input.context && input.context.phase),
+    }).catch(() => { /* graceful */ });
+  }
+} catch (_) { /* layer-6 unavailable — fail-open */ }
+
+// Reachability ping — touch atomic-rename state so SessionStart can verify
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const dir = path.join(root, '.bkit', 'runtime');
+  const file = path.join(dir, 'hook-reachability.json');
+  fs.mkdirSync(dir, { recursive: true });
+  let state = {};
+  try { state = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { state = {}; }
+  state.bash_post = { ts: new Date().toISOString(), version: '2.1.14' };
+  const tmp = file + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2), 'utf8');
+  fs.renameSync(tmp, file);
+} catch (_) { /* graceful */ }
+
+// Output allow (PostToolUse doesn't block normal flow)
+// v2.1.14 ENH-303: emit hookSpecificOutput with continueOnBlock=true and
+// audit reason for any downstream block decisions. PostToolUse outputAllow
+// already produces the minimal envelope; the layer-6-audit alarm/rollback
+// path emits its own audit log entries via auditLogger.
 outputAllow('', 'PostToolUse');
 
 debugLog('UnifiedBashPost', 'Hook completed');

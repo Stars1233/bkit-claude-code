@@ -253,6 +253,202 @@ if (!blocked) {
 }
 
 // ============================================================
+// v2.1.14 Sub-Sprint 2: Heredoc Bypass Defense (ENH-310, 차별화 #6)
+// Catches `cat <<EOF | bash`-style permission bypass (CC #58904 regression).
+// Runs after destructive-detector so destructive patterns in plain commands
+// take precedence; heredoc-detector then catches the heredoc-encapsulated
+// case that destructive-detector cannot see (heredoc body is invisible to
+// substring match). All IO is best-effort, never throws.
+// ============================================================
+if (!blocked) {
+  try {
+    const { detect: detectHeredoc } = require('../lib/defense/heredoc-detector');
+    const toolInput = parseHookInput(input);
+    const verdict = detectHeredoc(toolInput.command || '');
+    if (verdict.matched && verdict.severity === 'critical') {
+      // Audit before block — fail-silent so block path still fires
+      try {
+        const audit = require('../lib/audit/audit-logger');
+        audit.writeAuditLog({
+          actor: 'hook', actorId: 'unified-bash-pre',
+          action: 'heredoc_bypass_blocked', category: 'control',
+          target: (toolInput.command || '').substring(0, 200), targetType: 'file',
+          details: { pattern: verdict.pattern, vector: verdict.vector },
+          result: 'blocked', destructiveOperation: true, blastRadius: 'critical',
+          reason: verdict.reason,
+        });
+      } catch (_) { /* audit failure non-fatal */ }
+      outputBlockWithContext(verdict.reason, verdict.alternatives, 'PreToolUse');
+      blocked = true;
+    }
+    // warning severity → allow with audit-only (no block, no additionalContext spam)
+    if (!blocked && verdict.matched && verdict.severity === 'warning') {
+      try {
+        const audit = require('../lib/audit/audit-logger');
+        audit.writeAuditLog({
+          actor: 'hook', actorId: 'unified-bash-pre',
+          action: 'heredoc_bypass_blocked', category: 'control',
+          target: (toolInput.command || '').substring(0, 200), targetType: 'file',
+          details: { pattern: verdict.pattern, vector: verdict.vector, severity: 'warning' },
+          result: 'success',
+          reason: verdict.reason,
+        });
+      } catch (_) { /* graceful */ }
+    }
+  } catch (_) { /* heredoc-detector unavailable — fail-open */ }
+}
+
+// ============================================================
+// v2.1.14 Sub-Sprint 2: Push Event Guard (ENH-298)
+// Distinguishes fork-push (allowed at L0-L3) from upstream-push (always asks),
+// and denies force pushes regardless. Runs after heredoc-detector; the two
+// guards are independent (a heredoc-wrapped git push would already have been
+// blocked at the heredoc stage).
+// ============================================================
+if (!blocked) {
+  try {
+    const guard = require('../lib/defense/push-event-guard');
+    const toolInput = parseHookInput(input);
+    const parsed = guard.detectPushCommand(toolInput.command || '');
+    if (parsed.isPush) {
+      const ac2 = require('../lib/control/automation-controller');
+      const trustLevel = (() => {
+        try { const lv = ac2.getCurrentLevel(); return typeof lv === 'string' ? lv : `L${lv}`; }
+        catch (_) { return 'L2'; }
+      })();
+      const classified = guard.classifyRemote(parsed.remote || 'origin');
+      const verdict = guard.shouldGuard(parsed, classified, trustLevel);
+      try {
+        const audit = require('../lib/audit/audit-logger');
+        audit.writeAuditLog({
+          actor: 'hook', actorId: 'unified-bash-pre',
+          action: 'git_push_intercepted', category: 'control',
+          target: parsed.remote || 'origin', targetType: 'config',
+          details: {
+            force: parsed.force, branch: parsed.branch,
+            kind: classified.kind, isFork: classified.isFork,
+            trustLevel, action: verdict.action,
+          },
+          result: verdict.action === 'allow' ? 'success' : 'blocked',
+          destructiveOperation: parsed.force === true,
+          blastRadius: parsed.force ? 'high' : null,
+          reason: verdict.reason,
+        });
+      } catch (_) { /* graceful */ }
+      if (verdict.action === 'deny' || verdict.action === 'ask') {
+        outputBlockWithContext(verdict.reason, verdict.alternatives, 'PreToolUse');
+        blocked = true;
+      }
+    }
+  } catch (_) { /* push-event-guard unavailable — fail-open */ }
+}
+
+// ============================================================
+// v2.1.14 Sub-Sprint 4 Stage 4 (ENH-300, differentiation #4): effort-aware
+// ------------------------------------------------------------
+// CC v2.1.133+ exposes the model's effort/reasoning budget as `effort.level`
+// on the tool_input (when present) and as $CLAUDE_EFFORT in the hook env.
+// We don't gate on it (the model's self-report is advisory) but we DO use it
+// to adjust defense verbosity and audit detail: 'low' → terse, 'high' →
+// verbose. The value is normalized through the domain invariant-10 guard so
+// out-of-range strings degrade safely to 'medium' instead of disabling
+// downstream defenses.
+// ============================================================
+let effortLevel = 'medium';
+if (!blocked) {
+  try {
+    const inv10 = require('../lib/domain/guards/invariant-10-effort-aware');
+    const fromPayload = input && input.tool_input && typeof input.tool_input.effort === 'object'
+      ? input.tool_input.effort.level
+      : undefined;
+    const fromEnv = process.env.CLAUDE_EFFORT;
+    const raw = (typeof fromPayload === 'string' && fromPayload.length > 0) ? fromPayload : fromEnv;
+    const guardResult = inv10.check({
+      effortLevel: raw,
+      source: fromPayload !== undefined ? 'payload' : (fromEnv ? 'env' : 'default'),
+      scope: 'unified-bash-pre',
+    });
+    if (guardResult.hit) {
+      debugLog('UnifiedBashPre', 'invariant-10 effort-aware guard hit', guardResult.meta);
+    }
+    effortLevel = inv10.normalize(raw);
+    debugLog('UnifiedBashPre', 'effort-aware intensity resolved', { effortLevel });
+  } catch (_) { /* effort-aware unavailable — fail-open with default 'medium' */ }
+}
+
+// ============================================================
+// v2.1.14 Sub-Sprint 4 Stage 5 (ENH-286, differentiation #1): Memory Enforcer
+// ------------------------------------------------------------
+// CC treats CLAUDE.md as advisory (issues #56865, #57485, #58887 show the
+// model overriding directives via R-3 evolved forms). bkit hard-enforces by
+// extracting "Do NOT", "NEVER", "FORBIDDEN", "MUST NOT" directives at
+// SessionStart, caching them to .bkit/runtime/memory-directives.json, and
+// matching tool_input here on every Bash PreToolUse. A deny match short-
+// circuits the hook with audit `memory_directive_enforced`. Verbosity scales
+// with effortLevel ('low' → bare reason, 'high' → full directive context).
+// ============================================================
+if (!blocked) {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    const cacheFile = path.join(root, '.bkit', 'runtime', 'memory-directives.json');
+    let directives = [];
+    if (fs.existsSync(cacheFile)) {
+      try {
+        const payload = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+        const { deserializeMemoryDirectives } = require('../lib/defense');
+        directives = deserializeMemoryDirectives(payload);
+      } catch (e) {
+        debugLog('UnifiedBashPre', 'memory-directives cache parse failed', { error: e.message });
+      }
+    }
+    if (directives.length > 0) {
+      const { enforceMemoryDirectives } = require('../lib/defense');
+      const toolCall = {
+        tool: 'Bash',
+        command: (input && input.tool_input && input.tool_input.command) || '',
+      };
+      const verdict = enforceMemoryDirectives(toolCall, directives);
+      if (!verdict.allowed && verdict.deniedBy) {
+        const d = verdict.deniedBy;
+        const verbose = effortLevel === 'high';
+        const baseReason = `bkit Memory Enforcer: directive "${d.text.slice(0, 80)}" denied this command (rule: ${d.rule}, source: ${d.source}).`;
+        const reason = verbose
+          ? baseReason + ` Matched pattern: /${d.pattern.slice(0, 60)}/i. Edit ${d.source} or scope the command if intentional.`
+          : baseReason;
+        try {
+          const audit = require('../lib/audit/audit-logger');
+          audit.writeAuditLog({
+            actor: 'hook', actorId: 'unified-bash-pre',
+            action: 'memory_directive_enforced', category: 'control',
+            target: toolCall.command.slice(0, 240) || 'unknown', targetType: 'tool_call',
+            details: {
+              tool: 'Bash',
+              rule: d.rule,
+              source: d.source,
+              pattern: d.pattern.slice(0, 80),
+              effortLevel,
+              warnings: verdict.warnings.length,
+            },
+            result: 'blocked',
+            destructiveOperation: false,
+            reason,
+          });
+        } catch (_) { /* graceful */ }
+        outputBlock('deny', reason, 'PreToolUse');
+        blocked = true;
+      } else if (verdict.warnings.length > 0 && effortLevel === 'high') {
+        // High-effort mode surfaces soft warnings to the user via debug log.
+        debugLog('UnifiedBashPre', 'memory-directive warn matched', {
+          count: verdict.warnings.length, first: verdict.warnings[0].rule,
+        });
+      }
+    }
+  } catch (_) { /* memory-enforcer unavailable — fail-open */ }
+}
+
+// ============================================================
 // v2.0.0: Scope Limiter (Control Module)
 // ============================================================
 if (!blocked) {
