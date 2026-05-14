@@ -180,10 +180,12 @@ function sc06() {
   assert(match, 'ACTION_TYPES array literal not found');
   const entries = match[1].match(/'[^']+'/g) || [];
   // v2.1.13 DEEP-4 fix: added 'task_created' (ENH-156 was emitting but enum
-  // missed registration; previously bypassed normalizeEntry validation via
-  // entry.action fallback).
-  assert.strictEqual(entries.length, 20,
-    'ACTION_TYPES expected 20 entries, got ' + entries.length);
+  // missed registration). v2.1.14 Sub-Sprint 2 (Defense) added 7 entries
+  // (layer_6_audit_completed/alarm_triggered, heredoc_bypass_blocked,
+  // git_push_intercepted, post_tool_block_recorded, hook_reachability_lost,
+  // memory_directive_enforced). Total 20 → 27.
+  assert.strictEqual(entries.length, 27,
+    'ACTION_TYPES expected 27 entries, got ' + entries.length);
   const flat = entries.join(',');
   assert(flat.includes('sprint_paused'), 'sprint_paused missing from ACTION_TYPES');
   assert(flat.includes('sprint_resumed'), 'sprint_resumed missing from ACTION_TYPES');

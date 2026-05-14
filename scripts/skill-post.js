@@ -231,6 +231,24 @@ async function main() {
       }
     }
 
+    // v2.1.14 Sub-Sprint 2: Reachability ping (MON-CC-NEW-PLUGIN-HOOK-DROP)
+    // SessionStart compares the ts of each PostToolUse stamp to detect silent
+    // CC plugin-hook drops (#57317 5-streak surface).
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const root = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+      const dir = path.join(root, '.bkit', 'runtime');
+      const file = path.join(dir, 'hook-reachability.json');
+      fs.mkdirSync(dir, { recursive: true });
+      let state = {};
+      try { state = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { state = {}; }
+      state.skill_post = { ts: new Date().toISOString(), version: '2.1.14', skillName };
+      const tmp = file + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify(state, null, 2), 'utf8');
+      fs.renameSync(tmp, file);
+    } catch (_) { /* graceful */ }
+
   } catch (e) {
     debugLog('SkillPost', 'Error in post-execution', { error: e.message });
     console.log(JSON.stringify({

@@ -86,6 +86,30 @@ function main() {
     }
   } catch (_e) { /* fail-silent */ }
 
+  // v2.1.14 Sub-Sprint 1 (ENH-292): caching-cost.port emit for sub-agent
+  // dispatch warmup detection. Fail-silent — sub-agent-dispatcher tolerates
+  // missing samples (cold-start safety branch). See lib/orchestrator/
+  // cache-cost-analyzer.js MIN_SAMPLES_FOR_TREND.
+  try {
+    const usage = hookContext.usage || hookContext.token_usage || null;
+    if (usage && (usage.cache_creation_input_tokens != null || usage.cache_read_input_tokens != null)) {
+      const { createCachingCostCli, buildMetrics } = require('../lib/infra/caching-cost-cli');
+      const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+      const port = createCachingCostCli({ projectRoot });
+      const sessionHash = String(hookContext.session_id || hookContext.session_hash || '');
+      const metrics = buildMetrics({
+        cacheCreationTokens: Number(usage.cache_creation_input_tokens) || 0,
+        cacheReadTokens: Number(usage.cache_read_input_tokens) || 0,
+        requestTokens: Number(usage.input_tokens) || 0,
+        sessionHash,
+        agent: agentType,
+        dispatchMode: hookContext.dispatch_mode || 'sequential',
+      });
+      // Fire-and-forget — port.emit is fail-silent on IO errors.
+      port.emit(metrics).catch(() => { /* fail-silent */ });
+    }
+  } catch (_e) { /* fail-silent */ }
+
   // v2.1.10 Sprint 7c (G-J-06): Next Action suggestion on SubagentStop
   let nextActionHint = null;
   try {

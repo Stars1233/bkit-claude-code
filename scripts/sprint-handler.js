@@ -111,9 +111,22 @@ function parseFlags(argv) {
  */
 function getInfra(opts) {
   const o = opts || {};
+  // v2.1.14 ENH-281+293: prefer OTEL_EXPORTER_OTLP_ENDPOINT (standard) over the
+  // legacy OTEL_ENDPOINT, and hydrate from .bkit/runtime/otel-env.json when the
+  // hook-subprocess env was stripped at the CC plugin boundary.
+  let otelEndpoint = o.otelEndpoint;
+  try {
+    if (!otelEndpoint) {
+      const capturer = require('../lib/infra/otel-env-capturer');
+      capturer.hydrateEnv({ overwrite: false });
+      otelEndpoint = capturer.resolveOtelEndpoint(process.env);
+    }
+  } catch (_) {
+    otelEndpoint = otelEndpoint || process.env.OTEL_ENDPOINT;
+  }
   return createSprintInfra({
     projectRoot: o.projectRoot || process.cwd(),
-    otelEndpoint: o.otelEndpoint || process.env.OTEL_ENDPOINT,
+    otelEndpoint,
     otelServiceName: o.otelServiceName || process.env.OTEL_SERVICE_NAME,
     agentId: o.agentId || process.env.CLAUDE_AGENT_ID,
     parentAgentId: o.parentAgentId || process.env.CLAUDE_PARENT_AGENT_ID,
